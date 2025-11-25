@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@theme {
+  /* Custom font families can be added here later */
+}
+
+body {
+  background-color: #fdfdfd; /* warm off-white */
+}
+
+::selection {
+  background-color: #fef08a; /* yellow-200 */
+}

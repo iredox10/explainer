@@ -1,16 +1,50 @@
 ---
+import MainLayout from "../layouts/MainLayout.astro";
+import HeroLoop from "../components/HeroLoop.astro";
+import Highlighter from "../components/Highlighter.jsx";
+import ScrollyIsland from "../components/ScrollyIsland.jsx";
+import { sanityClient } from "../lib/sanity";
 
+const query = `*[_type == "explainer"][0]{
+  headline,
+  subhead,
+  "videoUrl": heroVideo.asset->url,
+  scrollySections[]{
+    type,
+    text,
+    label,
+    viewBox,
+    highlight,
+    "chartData": chartData,
+    "accentColor": accentColor
+  }
+}`;
+
+const story = await sanityClient.fetch(query);
+
+if (!story) return;
+
+const { headline, subhead, videoUrl, scrollySections } = story;
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<MainLayout title={headline}>
+	<HeroLoop headline={headline} subhead={subhead} videoUrl={videoUrl} />
+
+	<section
+		class="mx-auto max-w-3xl px-6 py-24 text-xl leading-relaxed text-gray-800"
+	>
+		<p class="mb-6">
+			Lagos is no longer just a city; it is a phenomenon. From the
+			bustling markets of Yaba to the glass towers of Victoria Island, a
+			new energy is pulsing through the streets.
+		</p>
+		<p>
+			It is a story of resilience, innovation, and sheer willpower. And at
+			the center of it all is a simple truth: <Highlighter client:visible
+				>Nigeria is ready to lead.</Highlighter
+			>
+		</p>
+	</section>
+
+	<ScrollyIsland client:only="react" steps={scrollySections} />
+</MainLayout>

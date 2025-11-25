@@ -1,0 +1,38 @@
+---
+interface Props {
+    headline: string;
+    subhead: string;
+    videoUrl: string;
+}
+
+const { headline, subhead, videoUrl } = Astro.props;
+---
+
+<div class="relative h-screen w-full overflow-hidden bg-black">
+    <video
+        class="absolute inset-0 h-full w-full object-cover opacity-60"
+        autoplay
+        muted
+        loop
+        playsinline
+    >
+        <source src={videoUrl} type="video/mp4" />
+    </video>
+
+    <div
+        class="relative z-10 flex h-full flex-col justify-center px-6 sm:px-12 lg:px-24"
+    >
+        <div class="max-w-4xl">
+            <h1
+                class="text-6xl font-extrabold tracking-tighter text-white drop-shadow-2xl sm:text-8xl"
+            >
+                {headline}
+            </h1>
+            <p
+                class="mt-6 inline-block border-l-4 border-yellow-400 bg-black/60 px-4 py-2 text-xl font-light text-white"
+            >
+                {subhead}
+            </p>
+        </div>
+    </div>
+</div>
