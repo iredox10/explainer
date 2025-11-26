@@ -1,0 +1,80 @@
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+import HeroLoop from "../../components/HeroLoop.astro";
+import Highlighter from "../../components/Highlighter.jsx";
+import ScrollyIsland from "../../components/ScrollyIsland.jsx";
+
+const { slug } = Astro.params;
+
+const mockStories = {
+	"lagos-rising": {
+		headline: "Lagos Is Rewriting Africa's Future",
+		subhead:
+			"Tech, culture, and policy shifts are converging to make Lagos the continent's most influential megacity.",
+		videoUrl: "https://storage.googleapis.com/coverr-main/mp4/Mt_Baker.mp4",
+		scrollySections: [
+			{
+				type: "map",
+				text: "Africa's commercial pulse is shifting steadily toward West Africa.",
+				label: "West Africa",
+				viewBox: "0 0 600 600",
+				highlight: "nigeria",
+			},
+			{
+				type: "chart",
+				text: "Nigeria's GDP now outpaces growth in many emerging economies.",
+				label: "GDP projections",
+				chartData: [2, 4, 5, 6, 7, 9, 11],
+				accentColor: "#fbbf24",
+			},
+		],
+	},
+	default: {
+		headline: "The Science of Scrollytelling",
+		subhead: "How immersive visual journalism helps audiences understand complex issues in minutes, not hours.",
+		videoUrl: "https://storage.googleapis.com/coverr-main/mp4/Mt_Baker.mp4",
+		scrollySections: [
+			{
+				type: "map",
+				text: "Readers retain 3x more context when geography is animated.",
+				label: "Global context",
+				viewBox: "0 0 600 600",
+				highlight: "global",
+			},
+			{
+				type: "chart",
+				text: "Animated charts keep people scrolling past the 70% mark.",
+				label: "Engagement curve",
+				chartData: [1, 2, 3, 5, 8, 13, 21],
+				accentColor: "#34d399",
+			},
+		],
+	},
+};
+
+const resolvedStory = mockStories[slug] ?? mockStories.default;
+
+const { headline, subhead, videoUrl, scrollySections } = resolvedStory;
+---
+
+<MainLayout title={headline}>
+	<HeroLoop headline={headline} subhead={subhead} videoUrl={videoUrl} />
+
+	<section
+		class="mx-auto max-w-3xl px-6 py-24 text-xl leading-relaxed text-gray-800"
+	>
+		<p class="mb-6">
+			Lagos is no longer just a city; it is a phenomenon. From the
+			bustling markets of Yaba to the glass towers of Victoria Island, a
+			new energy is pulsing through the streets.
+		</p>
+		<p>
+			It is a story of resilience, innovation, and sheer willpower. And at
+			the center of it all is a simple truth: <Highlighter client:visible
+				>Nigeria is ready to lead.</Highlighter
+			>
+		</p>
+	</section>
+
+	<ScrollyIsland client:only="react" steps={scrollySections} />
+</MainLayout>
