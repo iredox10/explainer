@@ -16,7 +16,7 @@ const { videos } = Astro.props;
     <div class="mb-10 border-b border-gray-800 pb-4 flex items-end justify-between">
       <div>
          <h2 class="text-3xl font-black text-white mb-1">Latest Video</h2>
-         <div class="h-1 w-24 bg-[#FAFF00]"></div>
+         <div class="h-1 w-24 bg-[#008751]"></div>
       </div>
       <a href="#" class="text-gray-400 text-sm uppercase font-bold tracking-wider hover:text-white transition-colors">View All Videos</a>
     </div>
@@ -35,7 +35,7 @@ const { videos } = Astro.props;
             <!-- Play Button Overlay -->
             <div class="absolute inset-0 flex items-center justify-center">
               <div class="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <svg class="w-5 h-5 text-black ml-1" fill="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 text-black ml-1 group-hover:text-[#008751] transition-colors" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </div>
@@ -52,7 +52,7 @@ const { videos } = Astro.props;
             <span class="text-gray-400 text-xs uppercase tracking-widest font-bold block mb-1">
               {video.seriesName}
             </span>
-            <h3 class="text-lg font-bold leading-tight group-hover:text-[#FAFF00] transition-colors duration-200">
+            <h3 class="text-lg font-bold leading-tight group-hover:text-[#008751] transition-colors duration-200">
               {video.title}
             </h3>
           </div>

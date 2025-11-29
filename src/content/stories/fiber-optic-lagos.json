@@ -1,0 +1,22 @@
+{
+  "layout": "standard",
+  "headline": "The hidden fiber optic cables connecting Lagos to the world",
+  "subhead": "How a new generation of subsea cables is dropping latency and driving the startup boom.",
+  "category": "Technology / Infrastructure",
+  "author": "Chioma Okereke",
+  "role": "Senior Tech Correspondent",
+  "date": "Nov 29, 2025",
+  "readTime": "8 min read",
+  "heroImage": "https://images.unsplash.com/photo-1544197150-b99a580bbcbf?w=2000&auto=format&fit=crop",
+  "content": [
+    { "type": "p", "text": "Thirty feet beneath the Atlantic Ocean, a cable no thicker than a garden hose is pulsing with light. This light carries the hopes of a continent." },
+    { "type": "p", "text": "For years, internet access in West Africa was defined by scarcity. High costs, low speeds, and frequent outages were the norm. But the landing of the 2Africa cable in Lagos changed the calculus overnight." },
+    { "type": "quote", "text": "This isn't just about Netflix streaming faster. This is about a surgeon in London guiding a robot in Lagos in real-time.", "author": "Dr. Tunde Alabi, Network Architect" },
+    { "type": "p", "text": "The impact on the local startup ecosystem has been immediate. Latency—the time it takes for data to travel—has dropped by 40%. For fintech companies relying on high-frequency trading algorithms, this is the difference between profit and loss." },
+    { "type": "callout", "title": "The Numbers", "text": "Since the cable activation, cloud computing costs in the region have dropped by 18% year-over-year." }
+  ],
+  "related": [
+    { "title": "Why Starlink changes everything for rural devs", "image": "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=400" },
+    { "title": "The 50 most influential startups in Yaba", "image": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400" }
+  ]
+}

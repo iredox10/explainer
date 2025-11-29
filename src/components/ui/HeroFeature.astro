@@ -27,12 +27,12 @@ const { article } = Astro.props;
 
   <!-- Right: Content (40% -> 2/5 cols) -->
   <div class="md:col-span-2 flex flex-col justify-center">
-    <span class="text-yellow-600 font-bold uppercase text-xs tracking-widest mb-3">
+    <span class="text-[#008751] font-bold uppercase text-xs tracking-widest mb-3">
       {article.category}
     </span>
     
     <h1 class="text-4xl md:text-5xl font-extrabold leading-tight mb-4 text-black">
-      <a href={`/article/${article.slug}`} class="group-hover:underline group-hover:decoration-yellow-400 group-hover:decoration-4 underline-offset-4">
+      <a href={`/article/${article.slug}`} class="group-hover:underline group-hover:decoration-[#008751] group-hover:decoration-4 underline-offset-4">
         {article.headline}
       </a>
     </h1>

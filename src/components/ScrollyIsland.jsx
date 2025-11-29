@@ -22,8 +22,8 @@ function AnimatedMap({ viewBox, highlight, label }) {
                 {/* Nigeria Outline (Simplified, roughly positioned) */}
                 <motion.path
                     d="M220,320 L280,320 L280,380 L220,380 Z"
-                    fill="#facc15" // Yellow-400
-                    stroke="#ca8a04"
+                    fill="#008751" // Nigerian Green
+                    stroke="#006b3f"
                     strokeWidth="2"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: highlight === 'nigeria' ? 1 : 0 }}

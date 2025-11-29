@@ -1,0 +1,21 @@
+---
+import { getCollection } from 'astro:content';
+import ScrollyTemplate from '../../components/templates/ScrollyTemplate.astro';
+import StandardTemplate from '../../components/templates/StandardTemplate.astro';
+
+export async function getStaticPaths() {
+  const stories = await getCollection('stories');
+  return stories.map(story => ({
+    params: { slug: story.id },
+    props: { story: story.data },
+  }));
+}
+
+const { story } = Astro.props;
+---
+
+{story.layout === 'scrolly' ? (
+  <ScrollyTemplate story={story} />
+) : (
+  <StandardTemplate story={story} />
+)}

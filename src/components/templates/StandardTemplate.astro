@@ -1,0 +1,180 @@
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+import ProgressBar from "../../components/ui/ProgressBar.jsx";
+import { Share2, Bookmark, MessageCircle, ArrowLeft, Twitter, Facebook, Mail } from 'lucide-react';
+
+const { story } = Astro.props;
+const ARTICLE_DATA = story;
+---
+
+<MainLayout title={ARTICLE_DATA.headline} showNav={false}>
+  <div class="bg-[#fdfdfd] text-[#121212] font-sans antialiased selection:bg-green-200 min-h-screen">
+    <ProgressBar client:load />
+
+    {/* NavBar */}
+    <nav class="sticky top-0 z-40 bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6">
+      <div class="flex items-center gap-4">
+        <a href="/" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <ArrowLeft className="w-5 h-5" />
+        </a>
+        <div class="font-black tracking-tighter uppercase text-xl hidden md:block">
+          VOX<span class="text-[#008751]">.</span>AFRICA
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="p-2 hover:bg-gray-100 rounded-full text-gray-500 hover:text-blue-500"><Twitter className="w-4 h-4" /></button>
+        <button class="p-2 hover:bg-gray-100 rounded-full text-gray-500 hover:text-blue-700"><Facebook className="w-4 h-4" /></button>
+        <button class="bg-[#008751] text-white px-4 py-2 text-xs font-bold uppercase tracking-widest hover:bg-black transition-colors">
+          Subscribe
+        </button>
+      </div>
+    </nav>
+
+    <main>
+      {/* HERO HEADER */}
+      <header class="max-w-4xl mx-auto px-6 pt-12 pb-8 text-center">
+        <div class="inline-block bg-green-50 text-[#008751] px-3 py-1 text-xs font-bold uppercase tracking-widest mb-6 rounded-sm">
+          {ARTICLE_DATA.category}
+        </div>
+        <h1 class="text-4xl md:text-6xl font-black tracking-tighter leading-none mb-6 text-gray-900">
+          {ARTICLE_DATA.headline}
+        </h1>
+        <p class="text-xl md:text-2xl text-gray-500 font-serif leading-relaxed max-w-2xl mx-auto">
+          {ARTICLE_DATA.subhead}
+        </p>
+      </header>
+
+      {/* HERO IMAGE */}
+      <div class="w-full h-[50vh] md:h-[70vh] mb-16 overflow-hidden">
+        <img src={ARTICLE_DATA.heroImage} class="w-full h-full object-cover" alt="Hero" />
+      </div>
+
+      {/* CONTENT GRID */}
+      <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 pb-24">
+        
+        {/* Main Content Column (Centered) */}
+        <article class="lg:col-span-8 lg:col-start-3 lg:pr-12">
+          {/* Author Block */}
+          <div class="flex items-center gap-4 mb-8 border-t border-b border-gray-100 py-6">
+            <div class="w-12 h-12 bg-gray-200 rounded-full overflow-hidden">
+              <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${ARTICLE_DATA.author}`} class="w-full h-full object-cover" />
+            </div>
+            <div>
+              <div class="font-bold text-sm text-gray-900">{ARTICLE_DATA.author}</div>
+              <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">{ARTICLE_DATA.role}</div>
+              <div class="text-xs text-gray-400 font-serif flex items-center gap-2">
+                <span>{ARTICLE_DATA.date}</span>
+                <span>•</span>
+                <span>{ARTICLE_DATA.readTime}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Social Share Mobile */}
+          <div class="flex gap-4 mb-8 lg:hidden text-gray-400">
+             <Share2 className="w-5 h-5" />
+             <Bookmark className="w-5 h-5" />
+             <MessageCircle className="w-5 h-5" />
+          </div>
+
+          {/* Article Content */}
+          <div class="space-y-8">
+            {ARTICLE_DATA.content.map((block) => {
+              if (block.type === 'p') {
+                return <p class="text-lg md:text-xl leading-relaxed font-serif text-gray-800">{block.text}</p>;
+              }
+              if (block.type === 'quote') {
+                return (
+                  <figure class="my-10 border-l-4 border-[#008751] pl-6 py-2">
+                    <blockquote class="text-2xl font-black italic text-gray-900 mb-4 leading-tight">
+                      "{block.text}"
+                    </blockquote>
+                    {block.author && (
+                      <figcaption class="text-sm font-bold uppercase tracking-widest text-gray-500">
+                        — {block.author}
+                      </figcaption>
+                    )}
+                  </figure>
+                );
+              }
+              if (block.type === 'callout') {
+                return (
+                  <div class="bg-gray-50 p-6 rounded-lg my-8 border border-gray-100">
+                    <h4 class="font-bold uppercase tracking-widest text-xs text-[#008751] mb-2 flex items-center gap-2">
+                       <span class="w-2 h-2 rounded-full bg-[#008751] animate-pulse"></span>
+                       {block.title}
+                    </h4>
+                    <p class="font-bold text-lg leading-tight">{block.text}</p>
+                  </div>
+                );
+              }
+              if (block.type === 'image') {
+                return (
+                  <figure class="my-10">
+                    <img 
+                      src={block.url} 
+                      alt={block.caption || "Article image"} 
+                      class="w-full h-auto rounded-lg shadow-sm"
+                    />
+                    {block.caption && (
+                      <figcaption class="mt-3 text-sm text-gray-500 font-sans text-center">
+                        {block.caption}
+                      </figcaption>
+                    )}
+                  </figure>
+                );
+              }
+            })}
+            
+            {/* Newsletter Inline */}
+            <div class="bg-black text-white p-8 my-12 text-center">
+              <div class="flex justify-center mb-4">
+                <Mail className="w-8 h-8 text-[#008751]" />
+              </div>
+              <h3 class="font-bold text-xl mb-2">Understand the future of Africa</h3>
+              <p class="text-gray-400 text-sm mb-6 max-w-sm mx-auto">Get our weekly breakdown of tech, policy, and culture in your inbox.</p>
+              <div class="flex gap-2 max-w-sm mx-auto">
+                <input type="email" placeholder="Email address" class="flex-1 bg-white/10 border border-white/20 px-4 py-2 text-sm text-white focus:outline-none focus:border-[#008751]" />
+                <button class="bg-[#008751] text-white px-4 py-2 font-bold text-sm hover:bg-white hover:text-black transition-colors">
+                  Sign Up
+                </button>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        {/* Right Sidebar (Desktop Only) */}
+        <aside class="hidden lg:block lg:col-span-2">
+          <div class="flex gap-6 mb-12 text-gray-400 justify-center border-b border-gray-100 pb-8">
+             <button class="hover:text-black transition-colors"><Share2 className="w-5 h-5" /></button>
+             <button class="hover:text-black transition-colors"><Bookmark className="w-5 h-5" /></button>
+             <button class="hover:text-black transition-colors"><MessageCircle className="w-5 h-5" /></button>
+          </div>
+          
+          <div class="sticky top-24">
+            {ARTICLE_DATA.related && (
+              <>
+                <h4 class="font-bold uppercase text-xs tracking-widest border-b border-black pb-2 mb-6">Read Next</h4>
+                <div class="space-y-6">
+                  {ARTICLE_DATA.related.map((article) => (
+                    <div class="group cursor-pointer flex gap-4 items-start">
+                      <div class="w-20 h-20 shrink-0 bg-gray-100 overflow-hidden">
+                        <img src={article.image} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      </div>
+                      <div>
+                        <h5 class="font-bold text-sm leading-snug group-hover:text-[#008751] transition-colors line-clamp-3">
+                          {article.title}
+                        </h5>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </aside>
+
+      </div>
+    </main>
+  </div>
+</MainLayout>

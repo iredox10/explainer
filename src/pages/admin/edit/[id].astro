@@ -1,0 +1,27 @@
+---
+import StoryEditor from '../../../components/admin/StoryEditor.jsx';
+import '../../../styles/global.css';
+
+export function getStaticPaths() {
+  return [
+    { params: { id: 'giant-wakes' } },
+    { params: { id: 'fiber-optic' } },
+    { params: { id: 'draft-1' } },
+    { params: { id: 'new-story' } },
+  ];
+}
+
+const { id } = Astro.params;
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width" />
+        <title>Editor - Vox CMS</title>
+    </head>
+    <body>
+        <StoryEditor client:only="react" storyId={id} />
+    </body>
+</html>

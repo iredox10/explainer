@@ -1,0 +1,27 @@
+{
+  "layout": "scrolly",
+  "headline": "Lagos Is Rewriting Africa's Future",
+  "subhead": "Tech, culture, and policy shifts are converging to make Lagos the continent's most influential megacity.",
+  "category": "Super Feature",
+  "author": "Chioma Okafor",
+  "date": "Nov 29, 2025",
+  "videoUrl": "https://storage.googleapis.com/coverr-main/mp4/Mt_Baker.mp4",
+  "scrollySections": [
+    {
+      "type": "map",
+      "text": "Africa's commercial pulse is shifting steadily toward West Africa.",
+      "label": "West Africa",
+      "viewBox": "0 0 600 600",
+      "highlight": "nigeria"
+    },
+    {
+      "type": "chart",
+      "text": "Nigeria's GDP now outpaces growth in many emerging economies.",
+      "label": "GDP projections",
+      "chartData": [2, 4, 5, 6, 7, 9, 11],
+      "accentColor": "#fbbf24"
+    }
+  ],
+  "content": [],
+  "related": []
+}

@@ -12,7 +12,8 @@ export const VOX_HOME_DATA = {
             title: "Why your rent is so high (and why it's not going down)",
             category: "Economy",
             imageUrl: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80",
-            readTime: "8 min"
+            readTime: "8 min",
+            slug: "fiber-optic-lagos"
         },
         {
             title: "The hidden cost of 'fast fashion' isn't just environmental",
