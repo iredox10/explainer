@@ -1,0 +1,48 @@
+---
+interface Props {
+  article: {
+    headline: string;
+    subhead: string;
+    author: string;
+    imageUrl: string;
+    category: string;
+    slug: string;
+  };
+}
+
+const { article } = Astro.props;
+---
+
+<article class="group grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-8 mb-12">
+  <!-- Left: Massive Image (60% -> 3/5 cols) -->
+  <div class="md:col-span-3 relative overflow-hidden">
+    <a href={`/article/${article.slug}`} class="block w-full aspect-[4/3] md:aspect-video">
+      <img
+        src={article.imageUrl}
+        alt={article.headline}
+        class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+      />
+    </a>
+  </div>
+
+  <!-- Right: Content (40% -> 2/5 cols) -->
+  <div class="md:col-span-2 flex flex-col justify-center">
+    <span class="text-yellow-600 font-bold uppercase text-xs tracking-widest mb-3">
+      {article.category}
+    </span>
+    
+    <h1 class="text-4xl md:text-5xl font-extrabold leading-tight mb-4 text-black">
+      <a href={`/article/${article.slug}`} class="group-hover:underline group-hover:decoration-yellow-400 group-hover:decoration-4 underline-offset-4">
+        {article.headline}
+      </a>
+    </h1>
+    
+    <p class="text-lg text-gray-600 mb-4 leading-relaxed">
+      {article.subhead}
+    </p>
+    
+    <div class="text-sm font-serif text-gray-500 border-t border-gray-200 pt-4 mt-2">
+      {article.author}
+    </div>
+  </div>
+</article>

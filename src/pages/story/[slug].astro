@@ -4,6 +4,13 @@ import HeroLoop from "../../components/HeroLoop.astro";
 import Highlighter from "../../components/Highlighter.jsx";
 import ScrollyIsland from "../../components/ScrollyIsland.jsx";
 
+export async function getStaticPaths() {
+  return [
+    { params: { slug: 'lagos-rising' } },
+    { params: { slug: 'scrolly-science' } }, // Mapping to default
+  ];
+}
+
 const { slug } = Astro.params;
 
 const mockStories = {
@@ -29,7 +36,7 @@ const mockStories = {
 			},
 		],
 	},
-	default: {
+	"scrolly-science": { // Renamed from default for clarity in URL
 		headline: "The Science of Scrollytelling",
 		subhead: "How immersive visual journalism helps audiences understand complex issues in minutes, not hours.",
 		videoUrl: "https://storage.googleapis.com/coverr-main/mp4/Mt_Baker.mp4",
@@ -52,7 +59,7 @@ const mockStories = {
 	},
 };
 
-const resolvedStory = mockStories[slug] ?? mockStories.default;
+const resolvedStory = mockStories[slug] || mockStories["scrolly-science"];
 
 const { headline, subhead, videoUrl, scrollySections } = resolvedStory;
 ---

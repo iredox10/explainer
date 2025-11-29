@@ -1,12 +1,12 @@
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 @import "tailwindcss";
 
 @theme {
   /* Custom font families can be added here later */
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 }
-
-/* Import Inter font */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 body {
   background-color: #fdfdfd; /* warm off-white */

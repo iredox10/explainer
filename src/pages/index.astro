@@ -1,318 +1,76 @@
 ---
 import MainLayout from "../layouts/MainLayout.astro";
-import Navbar from "../components/Navbar.astro";
-import FeaturedHero from "../components/FeaturedHero.astro";
-import StoryCard from "../components/StoryCard.astro";
-import TopicPill from "../components/TopicPill.astro";
-import NewsletterSignup from "../components/NewsletterSignup.astro";
-import Footer from "../components/Footer.astro";
+import HeroFeature from "../components/ui/HeroFeature.astro";
+import StreamCard from "../components/ui/StreamCard.astro";
+import VideoSection from "../components/ui/VideoSection.astro";
+import { VOX_HOME_DATA } from "../data/mock";
 
-// Mock data for demonstration - in production, fetch from Sanity
-const heroStory = {
-    headline: "The Rise of Lagos: How Africa's Megacity is Reshaping the Continent",
-    subhead:
-        "From tech startups to cultural exports, Lagos is becoming the center of African innovation. Here's what's driving the transformation.",
-    category: "Africa",
-    slug: "lagos-rising",
-    videoUrl: "https://storage.googleapis.com/coverr-main/mp4/Mt_Baker.mp4",
-    readTime: "12 min",
-};
-
-const latestStories = [
-    {
-        headline: "Why Global Supply Chains Are Breaking Down",
-        subhead: "The pandemic exposed fragile systems. Climate change is making them worse.",
-        category: "Economy",
-        slug: "supply-chain-crisis",
-        imageUrl: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80",
-        readTime: "8 min",
-        date: "Nov 24, 2025",
-    },
-    {
-        headline: "The AI Revolution in Healthcare",
-        subhead: "Machine learning is transforming how we diagnose and treat diseases.",
-        category: "Technology",
-        slug: "ai-healthcare",
-        imageUrl: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80",
-        readTime: "10 min",
-        date: "Nov 22, 2025",
-    },
-    {
-        headline: "Climate Migration: The Next Great Movement",
-        subhead: "Billions may be displaced by 2050. Where will they go?",
-        category: "Climate",
-        slug: "climate-migration",
-        imageUrl: "https://images.unsplash.com/photo-1569163139599-0f4517e36f51?w=800&q=80",
-        readTime: "15 min",
-        date: "Nov 20, 2025",
-    },
-];
-
-const trendingStories = [
-    {
-        headline: "The End of Remote Work? Not So Fast",
-        category: "Work",
-        slug: "remote-work-future",
-        imageUrl: "https://images.unsplash.com/photo-1521898284481-a5ec348cb555?w=800&q=80",
-        readTime: "6 min",
-    },
-    {
-        headline: "Nuclear Power's Second Coming",
-        category: "Energy",
-        slug: "nuclear-renaissance",
-        imageUrl: "https://images.unsplash.com/photo-1591436248970-740485cd45d4?w=800&q=80",
-        readTime: "9 min",
-    },
-    {
-        headline: "How Social Media Rewired Teen Brains",
-        category: "Science",
-        slug: "social-media-teens",
-        imageUrl: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&q=80",
-        readTime: "11 min",
-    },
-    {
-        headline: "The Battle for Water Rights",
-        category: "Environment",
-        slug: "water-wars",
-        imageUrl: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&q=80",
-        readTime: "7 min",
-    },
-];
-
-const deepDives = [
-    {
-        headline: "Inside the Electric Vehicle Revolution",
-        subhead: "How batteries are reshaping transportation and global politics.",
-        category: "Technology",
-        slug: "ev-revolution",
-        imageUrl: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=800&q=80",
-        readTime: "20 min",
-        date: "Nov 18, 2025",
-    },
-    {
-        headline: "The New Space Race",
-        subhead: "Private companies are racing to colonize the solar system.",
-        category: "Space",
-        slug: "space-race-2025",
-        imageUrl: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800&q=80",
-        readTime: "18 min",
-        date: "Nov 15, 2025",
-    },
-];
-
-const topics = [
-    { name: "Climate", slug: "climate", color: "green", count: 42 },
-    { name: "Technology", slug: "technology", color: "blue", count: 38 },
-    { name: "Economy", slug: "economy", color: "yellow", count: 31 },
-    { name: "Politics", slug: "politics", color: "red", count: 27 },
-    { name: "Health", slug: "health", color: "purple", count: 24 },
-    { name: "Science", slug: "science", color: "orange", count: 19 },
+const trending = [
+  "The case for abolishing the penny",
+  "Why everyone is playing this word game",
+  "How to sleep better",
+  "The future of electric planes",
+  "Why coffee is getting more expensive"
 ];
 ---
 
-<MainLayout title="Explainer - Visual Journalism That Makes Sense of the World">
-    <Navbar transparent />
+<MainLayout title="Explainer - Understand the News">
+  <!-- Main Content Wrapper -->
+  <main class="max-w-6xl mx-auto px-6 py-10">
+    
+    <!-- Hero Section -->
+    <HeroFeature article={VOX_HOME_DATA.hero} />
 
-    <!-- Featured Hero -->
-    <FeaturedHero story={heroStory} />
+    <!-- Divider -->
+    <hr class="border-gray-200 my-16" />
 
-    <!-- Latest Stories Section -->
-    <section id="latest" class="bg-white py-20">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="flex items-end justify-between border-b-2 border-gray-900 pb-4">
-                <h2 class="text-3xl font-black text-gray-900">Latest</h2>
-                <a
-                    href="/stories"
-                    class="text-sm font-semibold text-yellow-600 hover:text-yellow-700"
-                >
-                    View All →
+    <!-- Middle Section: Stream + Trending -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+      
+      <!-- Main Stream (2/3) -->
+      <div class="lg:col-span-2">
+        <div class="flex items-center justify-between mb-8 border-b border-black pb-2">
+           <h2 class="text-xl font-black uppercase tracking-tight">Latest Stories</h2>
+        </div>
+        
+        <div class="flex flex-col">
+          {VOX_HOME_DATA.latest.map((article) => (
+            <StreamCard article={article} />
+          ))}
+        </div>
+      </div>
+
+      <!-- Sidebar: Trending (1/3) -->
+      <div class="hidden lg:block">
+        <div class="sticky top-24">
+          <div class="flex items-center justify-between mb-6 border-b border-black pb-2">
+            <h2 class="text-xl font-black uppercase tracking-tight">Trending</h2>
+          </div>
+          
+          <ol class="list-decimal list-inside space-y-4">
+            {trending.map((item) => (
+              <li class="pl-2">
+                <a href="#" class="text-lg font-bold leading-tight text-black hover:text-gray-600 hover:underline decoration-yellow-400 decoration-2 underline-offset-2">
+                  {item}
                 </a>
+              </li>
+            ))}
+          </ol>
+          
+          <!-- Ad / Promo Placeholder -->
+          <div class="mt-12 bg-gray-100 p-6 text-center rounded-sm">
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Advertisement</p>
+            <div class="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-400 text-sm font-mono">
+              [Ad Space]
             </div>
-
-            <div class="mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                {latestStories.map((story) => (
-                    <StoryCard story={story} variant="medium" />
-                ))}
-            </div>
+          </div>
         </div>
-    </section>
+      </div>
 
-    <!-- Trending + Topics Section -->
-    <section class="bg-gray-50 py-20">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="grid gap-12 lg:grid-cols-3">
-                <!-- Trending Stories -->
-                <div class="lg:col-span-2">
-                    <div class="flex items-end justify-between border-b-2 border-gray-900 pb-4">
-                        <h2 class="text-2xl font-black text-gray-900">
-                            🔥 Trending
-                        </h2>
-                    </div>
-                    <div class="mt-8 grid gap-6 sm:grid-cols-2">
-                        {trendingStories.map((story) => (
-                            <StoryCard story={story} variant="small" />
-                        ))}
-                    </div>
-                </div>
+    </div>
+  </main>
 
-                <!-- Topics -->
-                <div id="topics">
-                    <div class="flex items-end justify-between border-b-2 border-gray-900 pb-4">
-                        <h2 class="text-2xl font-black text-gray-900">Topics</h2>
-                    </div>
-                    <div class="mt-8 flex flex-wrap gap-3">
-                        {topics.map((topic) => (
-                            <TopicPill topic={topic} />
-                        ))}
-                    </div>
+  <!-- Full Bleed Video Section -->
+  <VideoSection videos={VOX_HOME_DATA.videos} />
 
-                    <!-- Quick Stats -->
-                    <div class="mt-10 rounded-xl bg-gray-900 p-6 text-white">
-                        <h3 class="text-lg font-bold">By the Numbers</h3>
-                        <div class="mt-4 space-y-3">
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">Stories</span>
-                                <span class="font-bold text-yellow-400">247</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">Topics</span>
-                                <span class="font-bold text-yellow-400">18</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-400">Countries Covered</span>
-                                <span class="font-bold text-yellow-400">89</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Deep Dives Section -->
-    <section id="featured" class="bg-white py-20">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="flex items-end justify-between border-b-2 border-gray-900 pb-4">
-                <div>
-                    <span class="text-sm font-bold uppercase tracking-wider text-yellow-600">
-                        Long Form
-                    </span>
-                    <h2 class="mt-1 text-3xl font-black text-gray-900">
-                        Deep Dives
-                    </h2>
-                </div>
-                <a
-                    href="/deep-dives"
-                    class="text-sm font-semibold text-yellow-600 hover:text-yellow-700"
-                >
-                    View All →
-                </a>
-            </div>
-
-            <div class="mt-10 grid gap-8 lg:grid-cols-2">
-                {deepDives.map((story) => (
-                    <StoryCard story={story} variant="large" />
-                ))}
-            </div>
-        </div>
-    </section>
-
-    <!-- Video Explainers Section -->
-    <section class="bg-gray-900 py-20">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="flex items-end justify-between border-b-2 border-white/20 pb-4">
-                <div>
-                    <span class="text-sm font-bold uppercase tracking-wider text-yellow-400">
-                        Watch
-                    </span>
-                    <h2 class="mt-1 text-3xl font-black text-white">
-                        Video Explainers
-                    </h2>
-                </div>
-                <a
-                    href="/videos"
-                    class="text-sm font-semibold text-yellow-400 hover:text-yellow-300"
-                >
-                    View All →
-                </a>
-            </div>
-
-            <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {[1, 2, 3].map((i) => (
-                    <article class="group cursor-pointer">
-                        <div class="relative aspect-video overflow-hidden rounded-lg bg-gray-800">
-                            <div class="absolute inset-0 flex items-center justify-center">
-                                <div class="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 transition-transform group-hover:scale-110">
-                                    <svg
-                                        class="ml-1 h-8 w-8 text-gray-900"
-                                        fill="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path d="M8 5v14l11-7z" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="absolute bottom-2 right-2 rounded bg-black/70 px-2 py-1 text-xs text-white">
-                                {["8:32", "12:15", "6:45"][i - 1]}
-                            </div>
-                        </div>
-                        <h3 class="mt-4 text-lg font-bold text-white group-hover:text-yellow-400">
-                            {[
-                                "How Inflation Actually Works",
-                                "The Science of Pandemics",
-                                "Why Cities Keep Getting Bigger"
-                            ][i - 1]}
-                        </h3>
-                        <p class="mt-2 text-sm text-gray-400">
-                            {["2.1M views", "1.8M views", "980K views"][i - 1]}
-                        </p>
-                    </article>
-                ))}
-            </div>
-        </div>
-    </section>
-
-    <!-- Newsletter Signup -->
-    <NewsletterSignup />
-
-    <!-- About Section -->
-    <section id="about" class="bg-white py-20">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="mx-auto max-w-3xl text-center">
-                <h2 class="text-3xl font-black text-gray-900">
-                    Making Sense of a Complex World
-                </h2>
-                <p class="mt-6 text-lg leading-relaxed text-gray-600">
-                    Explainer combines rigorous journalism with innovative visual
-                    storytelling. We believe that understanding complex issues
-                    shouldn't require a PhD. Our interactive explainers use
-                    scrollytelling, data visualization, and compelling narratives
-                    to help you understand the forces shaping our world.
-                </p>
-                <div class="mt-10 flex flex-wrap justify-center gap-4">
-                    <a
-                        href="/about"
-                        class="rounded-lg bg-gray-900 px-6 py-3 font-semibold text-white transition-colors hover:bg-gray-800"
-                    >
-                        Learn More About Us
-                    </a>
-                    <a
-                        href="/contact"
-                        class="rounded-lg border-2 border-gray-900 px-6 py-3 font-semibold text-gray-900 transition-colors hover:bg-gray-100"
-                    >
-                        Get in Touch
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <Footer />
 </MainLayout>
-
-<style>
-    /* Smooth scroll behavior */
-    html {
-        scroll-behavior: smooth;
-    }
-</style>

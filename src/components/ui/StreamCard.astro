@@ -1,0 +1,43 @@
+---
+interface Props {
+  article: {
+    title: string;
+    category: string;
+    imageUrl: string;
+    readTime: string;
+    slug?: string; // Optional if not in mock yet
+  };
+}
+
+const { article } = Astro.props;
+---
+
+<article class="flex flex-row mb-8 group border-b border-gray-100 pb-8 last:border-0 last:pb-0">
+  <!-- Image -->
+  <div class="w-1/3 aspect-video overflow-hidden bg-gray-100">
+    <img
+      src={article.imageUrl}
+      alt={article.title}
+      class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+    />
+  </div>
+
+  <!-- Content -->
+  <div class="w-2/3 pl-6 flex flex-col justify-center">
+    <span class="text-yellow-600 font-bold uppercase text-[10px] tracking-widest mb-1">
+      {article.category}
+    </span>
+    
+    <h3 class="text-2xl font-bold leading-tight text-black mb-2">
+      <a href="#" class="group-hover:bg-[#FAFF00] transition-colors duration-200">
+        {article.title}
+      </a>
+    </h3>
+    
+    <div class="text-gray-500 text-sm font-serif flex items-center gap-2">
+      <span>By Vox Staff</span>
+      <span class="w-1 h-1 rounded-full bg-gray-300"></span>
+      <span>{article.readTime}</span>
+    </div>
+  </div>
+</article>
