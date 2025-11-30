@@ -1,0 +1,68 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+import VoxNav from "../components/ui/VoxNav.astro";
+---
+
+<MainLayout title="About Us - Explainer">
+    <VoxNav />
+    <main class="bg-[#fdfdfd] min-h-screen font-sans text-[#121212]">
+        <div class="max-w-3xl mx-auto px-6 py-24">
+            <header class="mb-16 text-center">
+                <span class="text-yellow-600 font-bold uppercase text-xs tracking-widest block mb-4">Our Mission</span>
+                <h1 class="font-serif-display text-5xl md:text-7xl font-black leading-tight mb-8">
+                    We explain the world.
+                </h1>
+                <p class="text-2xl text-gray-500 font-serif leading-relaxed">
+                    Explainer is a new kind of media company. We believe that rigorous journalism and visual storytelling can make the most complex topics clear, engaging, and actionable.
+                </p>
+            </header>
+
+            <hr class="border-gray-200 my-16" />
+
+            <div class="prose prose-lg prose-headings:font-black prose-headings:font-sans prose-p:font-serif prose-p:text-gray-800 prose-a:text-yellow-600 prose-a:no-underline hover:prose-a:bg-yellow-200 transition-colors">
+                <h3>Why We Exist</h3>
+                <p>
+                    The world is getting more complicated. Climate change, artificial intelligence, global supply chains—these aren't just headlines; they are systems that shape our lives. Traditional news often focuses on the "what" (the breaking event) but misses the "why" and "how" (the context).
+                </p>
+                <p>
+                    We bridge that gap. Our team of journalists, designers, and engineers work together to build interactive stories that respect your intelligence and your time.
+                </p>
+
+                <h3>Our Values</h3>
+                <ul class="list-none pl-0 space-y-6">
+                    <li class="flex items-start gap-4">
+                        <span class="text-yellow-400 font-black text-2xl">01</span>
+                        <div>
+                            <strong class="block text-black font-bold uppercase tracking-wide text-sm mb-1">Clarity over Simplicity</strong>
+                            We don't dumb things down. We make them clear. We believe you can understand anything if it's explained well.
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-4">
+                        <span class="text-yellow-400 font-black text-2xl">02</span>
+                        <div>
+                            <strong class="block text-black font-bold uppercase tracking-wide text-sm mb-1">Visual First</strong>
+                            Data visualization isn't decoration. It's evidence. We use maps, charts, and interactive models to show you the truth.
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-4">
+                        <span class="text-yellow-400 font-black text-2xl">03</span>
+                        <div>
+                            <strong class="block text-black font-bold uppercase tracking-wide text-sm mb-1">Public Interest</strong>
+                            We are independent and reader-supported. Our only loyalty is to the truth and to our audience.
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="mt-24 bg-gray-100 p-12 text-center rounded-sm">
+                <h3 class="font-black text-2xl mb-4">Join Our Team</h3>
+                <p class="text-gray-600 mb-8 max-w-md mx-auto">
+                    We're looking for writers, developers, and designers who want to change how news is made.
+                </p>
+                <a href="#" class="inline-block bg-black text-white px-8 py-4 font-bold uppercase tracking-widest hover:bg-yellow-400 hover:text-black transition-colors">
+                    View Open Roles
+                </a>
+            </div>
+        </div>
+    </main>
+</MainLayout>

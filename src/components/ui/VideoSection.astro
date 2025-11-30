@@ -11,53 +11,69 @@ interface Props {
 const { videos } = Astro.props;
 ---
 
-<section class="bg-[#121212] text-white py-16 border-t border-gray-800">
-  <div class="max-w-6xl mx-auto px-6">
-    <div class="mb-10 border-b border-gray-800 pb-4 flex items-end justify-between">
+<section class="bg-[#121212] text-white py-24 relative overflow-hidden">
+  <!-- Background Noise Texture (Optional, using CSS) -->
+  <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"></div>
+
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
+    
+    <div class="flex items-end justify-between mb-16">
       <div>
-         <h2 class="text-3xl font-black text-white mb-1">Latest Video</h2>
-         <div class="h-1 w-24 bg-[#008751]"></div>
+         <span class="text-yellow-400 font-bold uppercase tracking-widest text-xs mb-2 block">Multimedia</span>
+         <h2 class="text-4xl md:text-5xl font-serif-display font-black text-white">Featured Video</h2>
       </div>
-      <a href="#" class="text-gray-400 text-sm uppercase font-bold tracking-wider hover:text-white transition-colors">View All Videos</a>
+      <a href="#" class="hidden md:inline-flex items-center gap-2 text-white/60 hover:text-yellow-400 transition-colors text-sm uppercase font-bold tracking-wider">
+        View All Library
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+      </a>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      {videos.map((video) => (
-        <article class="group cursor-pointer">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+      {videos.map((video, i) => (
+        <article class="group cursor-pointer flex flex-col">
           <!-- Thumbnail Container -->
-          <div class="relative aspect-video bg-gray-800 mb-4 overflow-hidden">
+          <div class="relative aspect-[16/9] bg-gray-900 mb-6 overflow-hidden">
             <img 
               src={video.thumbUrl} 
               alt={video.title}
-              class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+              class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-out"
             />
             
-            <!-- Play Button Overlay -->
+            <!-- Play Button Overlay - Minimal -->
             <div class="absolute inset-0 flex items-center justify-center">
-              <div class="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <svg class="w-5 h-5 text-black ml-1 group-hover:text-[#008751] transition-colors" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
+              <div class="w-16 h-16 border-2 border-white/30 rounded-full flex items-center justify-center group-hover:border-yellow-400 group-hover:bg-yellow-400/20 backdrop-blur-sm transition-all duration-300">
+                <div class="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center pl-1 shadow-xl group-hover:scale-110 transition-transform">
+                  <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                </div>
               </div>
             </div>
 
             <!-- Timestamp -->
-            <div class="absolute bottom-2 right-2 bg-black px-1.5 py-0.5 text-xs font-bold font-mono tracking-wide text-white">
+            <div class="absolute top-2 right-2 bg-black/80 backdrop-blur px-2 py-1 text-[10px] font-bold font-mono tracking-wider text-white uppercase">
               {video.duration}
             </div>
           </div>
 
           <!-- Content -->
-          <div class="pr-4">
-            <span class="text-gray-400 text-xs uppercase tracking-widest font-bold block mb-1">
-              {video.seriesName}
-            </span>
-            <h3 class="text-lg font-bold leading-tight group-hover:text-[#008751] transition-colors duration-200">
+          <div class="flex flex-col flex-grow">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="text-yellow-400/80 text-[10px] uppercase tracking-[0.2em] font-bold">
+                {video.seriesName}
+              </span>
+              <span class="h-px w-4 bg-white/20"></span>
+            </div>
+            
+            <h3 class="text-xl font-bold leading-tight text-white group-hover:text-yellow-400 transition-colors duration-300">
               {video.title}
             </h3>
           </div>
         </article>
       ))}
     </div>
+    
+    <div class="mt-12 text-center md:hidden">
+      <a href="#" class="text-white/60 hover:text-white uppercase text-xs font-bold tracking-widest border-b border-white/20 pb-1">View All Videos</a>
+    </div>
+
   </div>
 </section>

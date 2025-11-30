@@ -13,36 +13,72 @@ interface Props {
 const { article } = Astro.props;
 ---
 
-<article class="group grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-8 mb-12">
-  <!-- Left: Massive Image (60% -> 3/5 cols) -->
-  <div class="md:col-span-3 relative overflow-hidden">
-    <a href={`/article/${article.slug}`} class="block w-full aspect-[4/3] md:aspect-video">
-      <img
-        src={article.imageUrl}
-        alt={article.headline}
-        class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-      />
-    </a>
-  </div>
+<article class="group relative w-full mb-24">
+  <!-- Top Accent -->
+  <div class="w-full h-1 bg-black mb-8 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-1000 ease-out"></div>
 
-  <!-- Right: Content (40% -> 2/5 cols) -->
-  <div class="md:col-span-2 flex flex-col justify-center">
-    <span class="text-[#008751] font-bold uppercase text-xs tracking-widest mb-3">
-      {article.category}
-    </span>
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-16 items-center">
     
-    <h1 class="text-4xl md:text-5xl font-extrabold leading-tight mb-4 text-black">
-      <a href={`/article/${article.slug}`} class="group-hover:underline group-hover:decoration-[#008751] group-hover:decoration-4 underline-offset-4">
-        {article.headline}
-      </a>
-    </h1>
-    
-    <p class="text-lg text-gray-600 mb-4 leading-relaxed">
-      {article.subhead}
-    </p>
-    
-    <div class="text-sm font-serif text-gray-500 border-t border-gray-200 pt-4 mt-2">
-      {article.author}
+    <!-- Content Side (Left) -->
+    <div class="lg:col-span-5 flex flex-col justify-center lg:order-1 order-2 relative z-10">
+      <!-- Category Tag -->
+      <div class="flex items-center gap-3 mb-6 overflow-hidden">
+        <span class="h-px w-12 bg-yellow-500 inline-block"></span>
+        <span class="text-yellow-600 font-bold uppercase text-xs tracking-[0.25em] translate-y-0 transition-transform">
+          {article.category}
+        </span>
+      </div>
+      
+      <!-- Headline -->
+      <h1 class="font-serif-display text-5xl md:text-6xl lg:text-7xl font-black leading-[0.9] mb-8 text-black tracking-tight">
+        <a href={`/article/${article.slug}`} class="block">
+          <span class="bg-left-bottom bg-gradient-to-r from-yellow-300 to-yellow-300 bg-[length:0%_10px] bg-no-repeat group-hover:bg-[length:100%_10px] transition-[background-size] duration-700 ease-out text-balance">
+            {article.headline}
+          </span>
+        </a>
+      </h1>
+      
+      <!-- Subhead -->
+      <p class="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed font-light text-balance border-l-2 border-yellow-400/0 group-hover:border-yellow-400 pl-0 group-hover:pl-6 transition-all duration-500">
+        {article.subhead}
+      </p>
+      
+      <!-- Metadata -->
+      <div class="flex items-center gap-4 text-sm font-sans font-bold tracking-wide text-gray-400">
+        <span class="uppercase text-black">{article.author}</span>
+        <span>/</span>
+        <span>8 min read</span>
+      </div>
+
+      <!-- CTA Button -->
+      <div class="mt-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 delay-200 transform translate-y-4 group-hover:translate-y-0">
+        <a href={`/article/${article.slug}`} class="inline-flex items-center gap-3 text-sm font-black uppercase tracking-widest hover:gap-4 transition-all">
+          Read Full Story
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Image Side (Right) -->
+    <div class="lg:col-span-7 relative lg:order-2 order-1">
+      <div class="aspect-[4/5] md:aspect-[16/10] lg:aspect-[3/4] xl:aspect-[4/3] overflow-hidden relative">
+        <!-- Parallax-like Image Container -->
+        <a href={`/article/${article.slug}`} class="block w-full h-full">
+          <img
+            src={article.imageUrl}
+            alt={article.headline}
+            class="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-110 grayscale-[30%] group-hover:grayscale-0"
+          />
+        </a>
+        
+        <!-- Overlay Gradient for text readability on mobile if needed, mostly aesthetic -->
+        <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      </div>
+      
+      <!-- Decorative Elements -->
+      <div class="absolute -bottom-16 -left-16 hidden xl:block z-0 pointer-events-none">
+         <span class="text-[16rem] font-black text-gray-100/50 font-serif-display leading-none select-none">01</span>
+      </div>
     </div>
   </div>
 </article>
