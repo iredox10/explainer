@@ -56,5 +56,61 @@ export const VOX_HOME_DATA = {
             duration: "12:15",
             thumbUrl: "https://images.unsplash.com/photo-1532906619279-a75a0fdd75ad?w=800&q=80"
         }
+    ],
+    politics: [
+        {
+            title: "The new geopolitical map of Africa",
+            imageUrl: "https://images.unsplash.com/photo-1529101091760-61df6be16102?w=800&q=80",
+            author: "Yara Shahidi"
+        },
+        {
+            title: "Why voting laws are changing everywhere",
+            imageUrl: "https://images.unsplash.com/photo-1540910419868-474947ce531c?w=800&q=80",
+            author: "Carlos M."
+        },
+        {
+            title: "The climate refugees no one talks about",
+            imageUrl: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80",
+            author: "Sarah Jenkins"
+        }
+    ],
+    culture: [
+        {
+            title: "Afrobeats is taking over the world. Here's why.",
+            imageUrl: "https://images.unsplash.com/photo-1493225255756-d9584f8606e9?w=800&q=80",
+            category: "Music"
+        },
+        {
+            title: "The chaotic joy of Lagos street fashion",
+            imageUrl: "https://images.unsplash.com/photo-1581338834647-b0fb40704e21?w=800&q=80",
+            category: "Style"
+        },
+        {
+            title: "Nollywood's new golden age",
+            imageUrl: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&q=80",
+            category: "Film"
+        },
+        {
+            title: "Why everyone is reading African sci-fi",
+            imageUrl: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&q=80",
+            category: "Books"
+        }
+    ],
+    futurePerfect: [
+        {
+            title: "Can we cool the planet by blocking the sun?",
+            subhead: "Solar geoengineering is risky, controversial, and might be our only hope.",
+            imageUrl: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=800&q=80"
+        },
+        {
+            title: "The end of meat is closer than you think",
+            subhead: "Lab-grown steak is hitting shelves. Is it any good?",
+            imageUrl: "https://images.unsplash.com/photo-1615937657715-bc7b4b7962c1?w=800&q=80"
+        },
+        {
+            title: "How AI discovers new drugs",
+            subhead: "DeepMind's latest breakthrough could cure malaria.",
+            imageUrl: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&q=80"
+        }
     ]
 };

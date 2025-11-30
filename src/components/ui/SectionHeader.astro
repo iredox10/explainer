@@ -1,0 +1,26 @@
+---
+interface Props {
+  title: string;
+  color?: string;
+  linkText?: string;
+  linkUrl?: string;
+}
+
+const { title, color = "bg-black", linkText = "View All", linkUrl = "#" } = Astro.props;
+---
+
+<div class="flex items-end justify-between mb-8 border-b border-gray-200 pb-4">
+  <div class="relative">
+     <h2 class="text-3xl md:text-4xl font-serif-display font-black text-black relative z-10 inline-block">
+       {title}
+     </h2>
+     <div class={`absolute bottom-1 left-0 w-full h-3 ${color} -z-0 opacity-40`}></div>
+  </div>
+  
+  {linkUrl && (
+    <a href={linkUrl} class="hidden md:flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
+      {linkText}
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+    </a>
+  )}
+</div>

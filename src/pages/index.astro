@@ -3,6 +3,8 @@ import MainLayout from "../layouts/MainLayout.astro";
 import HeroFeature from "../components/ui/HeroFeature.astro";
 import StreamCard from "../components/ui/StreamCard.astro";
 import VideoSection from "../components/ui/VideoSection.astro";
+import SectionHeader from "../components/ui/SectionHeader.astro";
+import Footer from "../components/Footer.astro";
 import { VOX_HOME_DATA } from "../data/mock";
 
 const trending = [
@@ -22,7 +24,7 @@ const trending = [
     <HeroFeature article={VOX_HOME_DATA.hero} />
 
     <!-- Middle Section: Stream + Trending -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-24">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-24 border-b border-gray-200 pb-24">
       
       <!-- Sidebar: Trending (Left - 3 cols) -->
       <div class="hidden lg:block lg:col-span-3">
@@ -63,11 +65,86 @@ const trending = [
            </a>
         </div>
       </div>
-
     </div>
+
+    <!-- Politics Section -->
+    <div class="py-24 border-b border-gray-200">
+      <SectionHeader title="Politics" color="bg-blue-200" />
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {VOX_HOME_DATA.politics.map((article) => (
+          <article class="group">
+            <div class="aspect-[3/2] overflow-hidden mb-4 bg-gray-100 relative">
+              <img src={article.imageUrl} class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              <div class="absolute inset-0 bg-blue-900/0 group-hover:bg-blue-900/10 transition-colors"></div>
+            </div>
+            <span class="text-xs font-bold uppercase tracking-widest text-blue-600 mb-2 block">Policy</span>
+            <h3 class="font-serif-display font-bold text-2xl leading-tight group-hover:underline decoration-blue-300 decoration-4 underline-offset-2">
+              <a href="#">{article.title}</a>
+            </h3>
+            <p class="text-sm text-gray-500 mt-2 font-sans font-bold uppercase tracking-wider">By {article.author}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+
+    <!-- Culture Section -->
+    <div class="py-24">
+      <SectionHeader title="Culture" color="bg-pink-200" />
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        {VOX_HOME_DATA.culture.map((article, i) => (
+          <article class="group flex flex-col sm:flex-row gap-6 items-start">
+             <div class="w-full sm:w-1/2 aspect-square bg-gray-100 overflow-hidden">
+               <img src={article.imageUrl} class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+             </div>
+             <div class="flex-1 py-2">
+               <span class="text-xs font-black uppercase tracking-widest text-pink-600 mb-2 block">{article.category}</span>
+               <h3 class="font-serif-display font-bold text-3xl leading-tight mb-4 group-hover:text-gray-600 transition-colors">
+                 <a href="#">{article.title}</a>
+               </h3>
+               <p class="text-gray-500 text-sm leading-relaxed">
+                 A deep dive into the cultural phenomenon sweeping the nation and redefining how we consume art.
+               </p>
+             </div>
+          </article>
+        ))}
+      </div>
+    </div>
+
   </main>
+
+  <!-- Future Perfect Section (Dark Theme) -->
+  <section class="bg-gray-900 text-white py-24">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex items-end justify-between mb-16 border-b border-gray-700 pb-4">
+        <div>
+           <span class="text-[#FAFF00] font-bold uppercase tracking-widest text-xs mb-2 block">Science & Tech</span>
+           <h2 class="text-5xl font-serif-display font-black text-white">Future Perfect</h2>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {VOX_HOME_DATA.futurePerfect.map((article) => (
+          <article class="group border-t border-gray-700 pt-6 hover:border-[#FAFF00] transition-colors duration-300">
+             <div class="aspect-video bg-gray-800 mb-6 overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-500">
+               <img src={article.imageUrl} class="w-full h-full object-cover opacity-80 group-hover:opacity-100" />
+             </div>
+             <h3 class="font-bold text-xl leading-tight mb-3 group-hover:text-[#FAFF00] transition-colors">
+               {article.title}
+             </h3>
+             <p class="text-gray-400 text-sm leading-relaxed">
+               {article.subhead}
+             </p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
 
   <!-- Full Bleed Video Section -->
   <VideoSection videos={VOX_HOME_DATA.videos} />
+  
+  <Footer />
 
 </MainLayout>
