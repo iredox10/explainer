@@ -9,29 +9,32 @@ export const VOX_HOME_DATA = {
     },
     latest: [
         {
+            title: "The hidden fiber optic cables connecting Lagos to the world",
+            category: "Technology",
+            imageUrl: "https://images.unsplash.com/photo-1544197150-b99a580bbcbf?w=800&q=80",
+            readTime: "8 min",
+            slug: "fiber-optic-lagos"
+        },
+        {
             title: "Why your rent is so high (and why it's not going down)",
             category: "Economy",
             imageUrl: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80",
             readTime: "8 min",
-            slug: "fiber-optic-lagos"
+            slug: "fiber-optic-lagos" 
         },
         {
             title: "The hidden cost of 'fast fashion' isn't just environmental",
             category: "Culture",
             imageUrl: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=800&q=80",
-            readTime: "6 min"
+            readTime: "6 min",
+            slug: "fiber-optic-lagos"
         },
         {
             title: "How AI is quietly rewriting the internet",
             category: "Technology",
             imageUrl: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&q=80",
-            readTime: "12 min"
-        },
-        {
-            title: "The scientific case for a four-day work week",
-            category: "Science",
-            imageUrl: "https://images.unsplash.com/photo-1593642632823-8f7856677741?w=800&q=80",
-            readTime: "9 min"
+            readTime: "12 min",
+            slug: "fiber-optic-lagos"
         }
     ],
     videos: [

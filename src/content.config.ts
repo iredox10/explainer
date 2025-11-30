@@ -18,6 +18,7 @@ const stories = defineCollection({
     // Standard Content
     content: z.array(
       z.union([
+        z.object({ type: z.literal('heading'), text: z.string() }),
         z.object({ type: z.literal('p'), text: z.string() }),
         z.object({ type: z.literal('quote'), text: z.string(), author: z.string().optional() }),
         z.object({ type: z.literal('callout'), title: z.string(), text: z.string() }),

@@ -2,135 +2,179 @@
 import MainLayout from "../../layouts/MainLayout.astro";
 import VoxNav from "../../components/ui/VoxNav.astro";
 import ProgressBar from "../../components/ui/ProgressBar.jsx";
-import { Share2, Bookmark, MessageCircle, Facebook, Twitter, Linkedin, Mail } from 'lucide-react';
+import { Share2, Bookmark, MessageCircle, Facebook, Twitter, Linkedin, Mail, Clock, Calendar } from 'lucide-react';
 
 const { story } = Astro.props;
 const ARTICLE_DATA = story;
 ---
 
 <MainLayout title={ARTICLE_DATA.headline} showNav={false}>
-  <div class="bg-[#fdfdfd] text-[#121212] font-sans antialiased min-h-screen selection:bg-yellow-200 selection:text-black">
+  <div class="bg-[#fff] text-[#121212] font-sans antialiased min-h-screen selection:bg-yellow-300 selection:text-black">
     <ProgressBar client:load />
     <VoxNav />
 
     <main>
-      {/* ARTICLE HEADER AREA */}
-      <header class="max-w-[1400px] mx-auto px-6 pt-12 pb-8 lg:pb-12 lg:pt-20 grid grid-cols-1 lg:grid-cols-12 gap-12">
-        
-        {/* Header Content (Left) */}
-        <div class="lg:col-span-8 flex flex-col justify-center">
-          <div class="flex items-center gap-3 mb-6">
-             <span class="bg-yellow-300 h-px w-8"></span>
-             <span class="text-yellow-600 font-bold uppercase text-xs tracking-[0.2em]">
-                {ARTICLE_DATA.category}
-             </span>
+      {/* --- HERO SECTION --- */}
+      <div class="relative w-full pt-12 pb-16 md:pt-20 md:pb-24 px-6 bg-[#f8f9fa] border-b border-gray-200">
+          <div class="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
+              
+              {/* Header Text */}
+              <div class="lg:col-span-7 lg:pr-12">
+                  <div class="flex items-center gap-3 mb-8">
+                      <span class="bg-black text-white px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-yellow-400 hover:text-black transition-colors cursor-pointer">
+                          {ARTICLE_DATA.category}
+                      </span>
+                  </div>
+
+                  <h1 class="font-serif-display text-5xl md:text-7xl lg:text-[5.5rem] font-black tracking-tighter leading-[0.95] mb-8 text-black text-balance">
+                      {ARTICLE_DATA.headline}
+                  </h1>
+
+                  <p class="text-xl md:text-2xl text-gray-600 font-serif leading-relaxed text-balance mb-8 border-l-4 border-yellow-400 pl-6">
+                      {ARTICLE_DATA.subhead}
+                  </p>
+
+                  {/* Author Meta */}
+                  <div class="flex flex-wrap items-center gap-6 text-sm font-bold tracking-wide border-t border-gray-200 pt-6">
+                      <div class="flex items-center gap-3">
+                          <div class="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
+                              <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${ARTICLE_DATA.author}`} class="w-full h-full object-cover" />
+                          </div>
+                          <div>
+                              <div class="uppercase text-black text-xs tracking-widest">{ARTICLE_DATA.author}</div>
+                              <div class="text-gray-500 text-[10px] uppercase tracking-widest font-normal">{ARTICLE_DATA.role}</div>
+                          </div>
+                      </div>
+                      
+                      <div class="h-8 w-px bg-gray-300 hidden sm:block"></div>
+
+                      <div class="flex items-center gap-2 text-gray-500 text-xs uppercase tracking-widest">
+                          <Calendar className="w-4 h-4" />
+                          {ARTICLE_DATA.date}
+                      </div>
+                      
+                      <div class="flex items-center gap-2 text-gray-500 text-xs uppercase tracking-widest">
+                          <Clock className="w-4 h-4" />
+                          {ARTICLE_DATA.readTime}
+                      </div>
+                  </div>
+              </div>
+
+              {/* Hero Image (Parallax feel) */}
+              <div class="lg:col-span-5 relative h-full min-h-[400px] md:min-h-[600px] w-full overflow-hidden rounded-sm group shadow-2xl">
+                  <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors z-10"></div>
+                  <img 
+                      src={ARTICLE_DATA.heroImage} 
+                      class="absolute inset-0 w-full h-full object-cover transform scale-105 group-hover:scale-100 transition-transform duration-[1.5s] ease-out" 
+                      alt="Hero" 
+                  />
+                  <div class="absolute bottom-4 left-4 z-20 bg-white/90 backdrop-blur px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-gray-600">
+                      Fig. 1.0 — Network Infrastructure
+                  </div>
+              </div>
           </div>
-
-          <h1 class="font-serif-display text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter leading-[0.9] mb-8 text-black text-balance">
-            {ARTICLE_DATA.headline}
-          </h1>
-          
-          <p class="text-xl md:text-2xl text-gray-600 font-sans font-light leading-relaxed max-w-3xl text-balance border-l-4 border-gray-200 pl-6 mb-8">
-            {ARTICLE_DATA.subhead}
-          </p>
-
-          {/* Author & Meta - Compact */}
-          <div class="flex items-center gap-4 text-sm font-bold tracking-wide">
-             <div class="flex items-center gap-2">
-               <span class="uppercase text-black border-b-2 border-yellow-300">{ARTICLE_DATA.author}</span>
-             </div>
-             <span class="text-gray-300">/</span>
-             <span class="text-gray-500">{ARTICLE_DATA.date}</span>
-             <span class="text-gray-300">/</span>
-             <span class="text-gray-500">{ARTICLE_DATA.readTime}</span>
-          </div>
-        </div>
-      </header>
-
-      {/* HERO IMAGE - Wide but not full bleed */}
-      <div class="w-full max-w-[1400px] mx-auto mb-16 md:mb-24 px-0 md:px-6">
-        <div class="aspect-[3/2] md:aspect-[21/9] overflow-hidden relative group">
-           <img src={ARTICLE_DATA.heroImage} class="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-105" alt="Hero" />
-           <div class="absolute bottom-0 right-0 bg-white/90 backdrop-blur px-4 py-2 text-[10px] font-mono uppercase tracking-widest text-gray-500">
-              Image: Getty / Vox Media
-           </div>
-        </div>
       </div>
 
-      {/* CONTENT GRID */}
-      <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 pb-32 relative">
+      {/* --- CONTENT BODY --- */}
+      <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 py-16 lg:py-24">
         
-        {/* Sidebar (Left - Sticky Share) */}
-        <aside class="hidden lg:block lg:col-span-1 h-full">
-           <div class="sticky top-32 flex flex-col gap-4 items-center">
-             <button class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-black hover:border-black hover:bg-yellow-300 transition-all duration-200 group">
-               <Share2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-             </button>
-             <button class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-600 transition-all duration-200 group">
-               <Twitter className="w-4 h-4 group-hover:scale-110 transition-transform" />
-             </button>
-             <button class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-blue-800 hover:border-blue-800 transition-all duration-200 group">
-               <Facebook className="w-4 h-4 group-hover:scale-110 transition-transform" />
-             </button>
-             <div class="w-px h-12 bg-gray-200 my-2"></div>
-             <button class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-all duration-200 group">
-               <Bookmark className="w-4 h-4 group-hover:scale-110 transition-transform" />
+        {/* Left Sidebar: Social Sticky */}
+        <aside class="hidden lg:block lg:col-span-2">
+           <div class="sticky top-32 flex flex-col gap-6 items-start">
+             <span class="text-[10px] font-black uppercase tracking-widest text-gray-400">Share</span>
+             <div class="flex flex-col gap-3">
+                <button class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-white hover:bg-black hover:border-black transition-all duration-200 shadow-sm hover:shadow-md">
+                   <Twitter className="w-4 h-4" />
+                </button>
+                <button class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#1877F2] hover:border-[#1877F2] transition-all duration-200 shadow-sm hover:shadow-md">
+                   <Facebook className="w-4 h-4" />
+                </button>
+                <button class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#0A66C2] hover:border-[#0A66C2] transition-all duration-200 shadow-sm hover:shadow-md">
+                   <Linkedin className="w-4 h-4" />
+                </button>
+                <button class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#008751] hover:border-[#008751] transition-all duration-200 shadow-sm hover:shadow-md">
+                   <Mail className="w-4 h-4" />
+                </button>
+             </div>
+             
+             <div class="w-8 h-px bg-gray-200 my-4"></div>
+
+             <button class="group flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
+                <Bookmark className="w-4 h-4 group-hover:fill-black" />
+                Save
              </button>
            </div>
         </aside>
 
-        {/* Main Content Column */}
-        <article class="lg:col-span-7 lg:col-start-3">
-          
-          {/* Article Body */}
-          <div class="space-y-8 font-serif text-[1.125rem] md:text-[1.25rem] leading-[1.85] text-gray-900 drop-cap-container">
+        {/* Main Article Text */}
+        <article class="lg:col-span-7">
+          <div class="font-serif text-[1.15rem] md:text-[1.3rem] leading-[1.8] text-gray-900">
             {ARTICLE_DATA.content.map((block, index) => {
+              
+              if (block.type === 'heading') {
+                return (
+                  <h2 class="font-sans font-black text-3xl md:text-4xl text-black mt-16 mb-8 tracking-tight leading-none border-b-4 border-yellow-300 inline-block pb-1">
+                    {block.text}
+                  </h2>
+                );
+              }
+
               if (block.type === 'p') {
-                 // Add a special class to the first paragraph for Drop Cap styling
+                 // First paragraph drop cap
                 const isFirst = index === 0;
                 return (
-                  <p class={isFirst ? "first-letter:float-left first-letter:text-[5.5rem] first-letter:font-black first-letter:font-serif-display first-letter:text-black first-letter:leading-[0.85] first-letter:mr-3 first-letter:mt-[-6px]" : ""}>
+                  <p class={`mb-8 ${isFirst ? "first-letter:float-left first-letter:text-[6rem] first-letter:font-black first-letter:font-serif-display first-letter:text-black first-letter:leading-[0.75] first-letter:mr-4 first-letter:mt-2" : ""}`}>
                     {block.text}
                   </p>
                 );
               }
+
               if (block.type === 'quote') {
                 return (
-                  <figure class="my-14 relative group">
-                    <div class="absolute left-0 top-0 w-1 h-full bg-yellow-300 transform origin-top scale-y-0 group-hover:scale-y-100 transition-transform duration-500"></div>
-                    <blockquote class="pl-6 md:pl-8 text-2xl md:text-3xl font-serif-display font-black italic text-black leading-tight">
-                      "{block.text}"
+                  <div class="my-16 relative">
+                    <div class="absolute -left-4 md:-left-12 top-0 text-8xl text-gray-100 font-serif-display font-black -z-10 select-none">“</div>
+                    <blockquote class="text-3xl md:text-4xl font-serif-display font-bold italic text-black leading-[1.15] mb-6">
+                      {block.text}
                     </blockquote>
                     {block.author && (
-                      <figcaption class="pl-6 md:pl-8 mt-4 text-xs font-sans font-bold uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2">
-                        <span class="w-4 h-px bg-gray-300"></span>
-                        {block.author}
-                      </figcaption>
+                      <div class="flex items-center gap-3">
+                         <div class="h-px w-12 bg-black"></div>
+                         <cite class="text-xs font-sans font-black uppercase tracking-[0.2em] text-gray-500 not-italic">
+                           {block.author}
+                         </cite>
+                      </div>
                     )}
-                  </figure>
-                );
-              }
-              if (block.type === 'callout') {
-                return (
-                  <div class="bg-gray-50 p-8 my-12 border-t-4 border-black relative overflow-hidden">
-                    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-yellow-300 rounded-full opacity-20 blur-2xl"></div>
-                    <h4 class="font-sans font-black uppercase tracking-widest text-xs text-gray-400 mb-3 relative z-10">
-                       Key Insight
-                    </h4>
-                    <p class="font-sans font-bold text-xl leading-tight text-black relative z-10">{block.text}</p>
                   </div>
                 );
               }
+
+              if (block.type === 'callout') {
+                return (
+                  <div class="bg-gray-50 p-8 md:p-10 my-12 border-t-4 border-black relative shadow-sm">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
+                        <h4 class="font-sans font-black uppercase tracking-widest text-xs text-gray-400">
+                           {block.title}
+                        </h4>
+                    </div>
+                    <p class="font-sans font-bold text-xl md:text-2xl leading-tight text-black">{block.text}</p>
+                  </div>
+                );
+              }
+
               if (block.type === 'image') {
                 return (
-                  <figure class="my-14 -mx-6 md:-mx-12 lg:-mx-24 relative">
-                    <img 
-                      src={block.url} 
-                      alt={block.caption || "Article image"} 
-                      class="w-full h-auto shadow-sm"
-                    />
+                  <figure class="my-16 -mx-6 md:-mx-12 lg:-mx-24 group">
+                    <div class="overflow-hidden">
+                        <img 
+                          src={block.url} 
+                          alt={block.caption || "Article image"} 
+                          class="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                        />
+                    </div>
                     {block.caption && (
-                      <figcaption class="mt-3 text-xs text-gray-500 font-sans font-medium text-center uppercase tracking-wider">
+                      <figcaption class="mt-3 px-6 md:px-0 text-xs text-gray-500 font-mono font-medium text-center uppercase tracking-wider flex items-center justify-center gap-2">
+                        <span class="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>
                         {block.caption}
                       </figcaption>
                     )}
@@ -138,57 +182,58 @@ const ARTICLE_DATA = story;
                 );
               }
             })}
-            
-            {/* Newsletter Inline - Minimalist */}
-            <div class="my-16 pt-8 border-t-2 border-black">
-              <h3 class="font-serif-display font-black text-3xl mb-4">Get the full picture.</h3>
-              <p class="text-gray-600 mb-6 text-lg">Join 25,000+ subscribers who get our weekly deep dives.</p>
-              <div class="flex flex-col sm:flex-row gap-3">
-                <input type="email" placeholder="Enter your email" class="bg-gray-100 px-4 py-3 font-bold text-black focus:outline-none focus:ring-2 focus:ring-yellow-400 flex-1" />
-                <button class="bg-black text-white px-8 py-3 font-black text-xs uppercase tracking-widest hover:bg-yellow-400 hover:text-black transition-colors">
-                  Subscribe
-                </button>
-              </div>
+
+            {/* Newsletter / Footer for Article */}
+            <div class="mt-20 pt-10 border-t border-black">
+                <p class="font-sans font-bold text-xs uppercase tracking-widest text-gray-400 mb-2">Written By</p>
+                <div class="flex items-center gap-4 mb-10">
+                    <div class="w-16 h-16 rounded-full bg-gray-200 overflow-hidden">
+                        <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${ARTICLE_DATA.author}`} class="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                        <h3 class="font-serif-display font-bold text-xl text-black">{ARTICLE_DATA.author}</h3>
+                        <p class="text-sm text-gray-500">{ARTICLE_DATA.role || "Staff Writer"}</p>
+                    </div>
+                </div>
+
+                <div class="bg-[#FAFF00] p-10 text-center relative overflow-hidden">
+                   <div class="absolute -top-10 -left-10 w-32 h-32 bg-white/20 rounded-full blur-3xl"></div>
+                   <div class="relative z-10">
+                      <h3 class="font-black font-serif-display text-3xl mb-2">Support Independent Journalism</h3>
+                      <p class="text-black/70 mb-6 max-w-md mx-auto font-sans text-sm">Our work is powered by readers like you. Become a member today to unlock deep dives and exclusive reports.</p>
+                      <button class="bg-black text-white px-8 py-3 font-bold uppercase tracking-widest text-xs hover:scale-105 transition-transform shadow-lg">
+                         Become a Member
+                      </button>
+                   </div>
+                </div>
             </div>
           </div>
         </article>
 
-        {/* Right Sidebar (Desktop Only - Most Read / Related) */}
+        {/* Right Sidebar: Read Next */}
         <aside class="hidden lg:block lg:col-span-3 lg:pl-8">
-           <div class="sticky top-32">
-             <div class="mb-12">
-                <h4 class="font-sans font-black uppercase text-[10px] tracking-[0.2em] text-gray-400 mb-6 border-b border-gray-200 pb-2">Most Read</h4>
-                <ol class="space-y-6 list-decimal list-inside text-gray-300 font-serif-display font-bold text-xl">
-                  <li class="group cursor-pointer">
-                     <span class="text-black text-base font-sans font-bold group-hover:text-gray-600 leading-tight transition-colors inline-block pl-2">Why electric planes are inevitable</span>
-                  </li>
-                  <li class="group cursor-pointer">
-                     <span class="text-black text-base font-sans font-bold group-hover:text-gray-600 leading-tight transition-colors inline-block pl-2">The end of the open office</span>
-                  </li>
-                  <li class="group cursor-pointer">
-                     <span class="text-black text-base font-sans font-bold group-hover:text-gray-600 leading-tight transition-colors inline-block pl-2">How TikTok changed pop music</span>
-                  </li>
-                </ol>
-             </div>
-
-             {ARTICLE_DATA.related && (
-              <div>
-                <h4 class="font-sans font-black uppercase text-[10px] tracking-[0.2em] text-gray-400 mb-6 border-b border-gray-200 pb-2">Related Stories</h4>
-                <div class="space-y-8">
-                  {ARTICLE_DATA.related.map((article) => (
-                    <div class="group cursor-pointer flex flex-col gap-3">
-                      <div class="w-full aspect-[3/2] bg-gray-100 overflow-hidden relative">
-                        <img src={article.image} class="w-full h-full object-cover transition-all duration-500 group-hover:scale-105" />
-                      </div>
-                      <h5 class="font-serif-display font-bold text-lg leading-tight group-hover:underline decoration-yellow-400 decoration-2 underline-offset-2 transition-all">
-                        {article.title}
-                      </h5>
-                    </div>
-                  ))}
+          <div class="sticky top-32">
+            <div class="border-l border-gray-200 pl-8">
+                <h4 class="font-sans font-black uppercase text-[10px] tracking-[0.2em] text-gray-400 mb-8">Up Next</h4>
+                
+                <div class="space-y-10">
+                    {ARTICLE_DATA.related && ARTICLE_DATA.related.map((article) => (
+                        <div class="group cursor-pointer flex flex-col gap-4">
+                            <div class="w-full aspect-[3/2] bg-gray-100 overflow-hidden relative rounded-sm">
+                                <img src={article.image} class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
+                                <div class="absolute inset-0 ring-4 ring-inset ring-[#FAFF00] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            </div>
+                            <div>
+                                <h5 class="font-serif-display font-bold text-xl leading-tight group-hover:text-gray-600 transition-colors mb-2">
+                                    {article.title}
+                                </h5>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-yellow-600 group-hover:underline">Read Story →</span>
+                            </div>
+                        </div>
+                    ))}
                 </div>
-              </div>
-            )}
-           </div>
+            </div>
+          </div>
         </aside>
 
       </div>

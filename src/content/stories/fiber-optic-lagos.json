@@ -1,22 +1,38 @@
 {
   "layout": "standard",
-  "headline": "The hidden fiber optic cables connecting Lagos to the world",
-  "subhead": "How a new generation of subsea cables is dropping latency and driving the startup boom.",
-  "category": "Technology / Infrastructure",
+  "headline": "The Invisible Network That Runs Lagos",
+  "subhead": "Deep beneath the chaotic streets of Africa's largest city, a fiber optic revolution is quietly building the continent's digital future.",
+  "category": "Technology",
   "author": "Chioma Okereke",
   "role": "Senior Tech Correspondent",
   "date": "Nov 29, 2025",
-  "readTime": "8 min read",
-  "heroImage": "https://images.unsplash.com/photo-1544197150-b99a580bbcbf?w=2000&auto=format&fit=crop",
+  "readTime": "12 min read",
+  "heroImage": "https://images.unsplash.com/photo-1518432031352-d6fc5c10da5a?q=80&w=2574&auto=format&fit=crop",
   "content": [
-    { "type": "p", "text": "Thirty feet beneath the Atlantic Ocean, a cable no thicker than a garden hose is pulsing with light. This light carries the hopes of a continent." },
-    { "type": "p", "text": "For years, internet access in West Africa was defined by scarcity. High costs, low speeds, and frequent outages were the norm. But the landing of the 2Africa cable in Lagos changed the calculus overnight." },
-    { "type": "quote", "text": "This isn't just about Netflix streaming faster. This is about a surgeon in London guiding a robot in Lagos in real-time.", "author": "Dr. Tunde Alabi, Network Architect" },
-    { "type": "p", "text": "The impact on the local startup ecosystem has been immediate. Latency—the time it takes for data to travel—has dropped by 40%. For fintech companies relying on high-frequency trading algorithms, this is the difference between profit and loss." },
-    { "type": "callout", "title": "The Numbers", "text": "Since the cable activation, cloud computing costs in the region have dropped by 18% year-over-year." }
+    { "type": "p", "text": "The first thing you notice about the internet in Lagos is not the speed, but the noise. Not the digital noise of Twitter notifications or Slack pings, but the physical cacophony of the generators that keep the servers running. In Yaba, the city's tech cluster, the hum is constant—a reminder that here, connectivity is a battle against entropy." },
+    { "type": "p", "text": "But thirty feet beneath the Atlantic Ocean, a different kind of hum is taking over. A cable no thicker than a garden hose, pulsing with light, has just made landfall at a high-security beach station in Lekki. This is 2Africa, one of the longest subsea cables in the world, and it carries with it the hopes of a continent." },
+    
+    { "type": "heading", "text": "The Speed of Light" },
+    { "type": "p", "text": "For years, internet access in West Africa was defined by scarcity. High costs, low speeds, and frequent outages were the norm. Data had to travel all the way to Europe and back just to send an email from Lagos to Accra." },
+    { "type": "quote", "text": "This isn't just about Netflix streaming faster. This is about a surgeon in London guiding a robot in Lagos in real-time. It's about the latency of life.", "author": "Dr. Tunde Alabi, Network Architect" },
+    { "type": "p", "text": "The new cable changes the calculus overnight. Latency—the time it takes for data to travel—has dropped by 40%. For fintech companies like Paystack and Flutterwave, relying on high-frequency trading algorithms and instant verifications, this is the difference between profit and loss." },
+    
+    { "type": "callout", "title": "By The Numbers", "text": "Since the cable activation, cloud computing costs in the region have dropped by 18% year-over-year, while average download speeds have tripled." },
+    
+    { "type": "image", "url": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2670&auto=format&fit=crop", "caption": "Server racks at the MainOne data center in Lekki." },
+
+    { "type": "heading", "text": "The Last Mile Problem" },
+    { "type": "p", "text": "However, the distribution of this new bandwidth remains unequal. While the coastal cities and tech parks enjoy fiber speeds, the interior still relies on congested 4G networks. The 'last mile' problem remains the final boss of African connectivity." },
+    { "type": "p", "text": "Digging trenches for fiber cables in Lagos is a logistical nightmare. Roads are unmapped, permits are expensive, and construction crews often accidentally sever existing lines. It's a chaotic dance of infrastructure development." },
+    { "type": "quote", "text": "We are laying the tracks for a train that hasn't been built yet. But we know the passengers are waiting.", "author": "Sarah Mensah, CEO of FibreOne" },
+
+    { "type": "heading", "text": "A New Digital Class" },
+    { "type": "p", "text": "The influx of bandwidth is creating a new social strata: the fiber-connected versus the mobile-dependent. In coworking spaces across Yaba, developers push code to GitHub repositories in San Francisco as if they were in Silicon Valley. Meanwhile, a mile away, a market trader waits minutes for a WhatsApp payment to confirm." },
+    { "type": "p", "text": "This digital divide is the next great challenge for Lagos. But for now, the light in the cable keeps pulsing, bringing the world closer, one millisecond at a time." }
   ],
   "related": [
-    { "title": "Why Starlink changes everything for rural devs", "image": "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=400" },
-    { "title": "The 50 most influential startups in Yaba", "image": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400" }
+    { "title": "Why Starlink changes everything for rural devs", "image": "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=400", "slug": "fiber-optic-lagos" },
+    { "title": "The 50 most influential startups in Yaba", "image": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400", "slug": "fiber-optic-lagos" },
+    { "title": "Crypto adoption rates in 2025", "image": "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=400", "slug": "fiber-optic-lagos" }
   ]
 }
