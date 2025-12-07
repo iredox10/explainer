@@ -2,6 +2,7 @@
 import MainLayout from "../../layouts/MainLayout.astro";
 import VoxNav from "../../components/ui/VoxNav.astro";
 import ProgressBar from "../../components/ui/ProgressBar.jsx";
+import BeforeAfter from "../../components/ui/BeforeAfter.jsx";
 import { Share2, Bookmark, MessageCircle, Facebook, Twitter, Linkedin, Mail, Clock, Calendar } from 'lucide-react';
 
 const { story } = Astro.props;
@@ -179,6 +180,19 @@ const ARTICLE_DATA = story;
                       </figcaption>
                     )}
                   </figure>
+                );
+              }
+
+              if (block.type === 'beforeAfter') {
+                return (
+                  <BeforeAfter 
+                    client:visible
+                    leftImage={block.leftImage}
+                    rightImage={block.rightImage}
+                    leftLabel={block.leftLabel}
+                    rightLabel={block.rightLabel}
+                    caption={block.caption}
+                  />
                 );
               }
             })}

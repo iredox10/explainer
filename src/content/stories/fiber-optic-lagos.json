@@ -23,6 +23,16 @@
 
     { "type": "heading", "text": "The Last Mile Problem" },
     { "type": "p", "text": "However, the distribution of this new bandwidth remains unequal. While the coastal cities and tech parks enjoy fiber speeds, the interior still relies on congested 4G networks. The 'last mile' problem remains the final boss of African connectivity." },
+    
+    {
+      "type": "beforeAfter",
+      "leftImage": "https://images.unsplash.com/photo-1544257750-572358f550ed?w=2000&q=80",
+      "rightImage": "https://images.unsplash.com/photo-1571238052771-c6e35627d357?w=2000&q=80",
+      "leftLabel": "2015 (Pre-Cable)",
+      "rightLabel": "2025 (Post-Cable)",
+      "caption": "Satellite imagery showing the rapid urbanization and infrastructure density of the Lekki Free Trade Zone."
+    },
+
     { "type": "p", "text": "Digging trenches for fiber cables in Lagos is a logistical nightmare. Roads are unmapped, permits are expensive, and construction crews often accidentally sever existing lines. It's a chaotic dance of infrastructure development." },
     { "type": "quote", "text": "We are laying the tracks for a train that hasn't been built yet. But we know the passengers are waiting.", "author": "Sarah Mensah, CEO of FibreOne" },
 

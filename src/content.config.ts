@@ -23,6 +23,14 @@ const stories = defineCollection({
         z.object({ type: z.literal('quote'), text: z.string(), author: z.string().optional() }),
         z.object({ type: z.literal('callout'), title: z.string(), text: z.string() }),
         z.object({ type: z.literal('image'), url: z.string(), caption: z.string().optional() }),
+        z.object({ 
+            type: z.literal('beforeAfter'), 
+            leftImage: z.string(), 
+            rightImage: z.string(), 
+            leftLabel: z.string().optional(), 
+            rightLabel: z.string().optional(), 
+            caption: z.string().optional() 
+        }),
       ])
     ).optional(),
     
