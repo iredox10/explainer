@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, FileText, Settings, PenTool } from 'lucide-react';
+import { Layout, FileText, Settings, PenTool, Tags, Shield } from 'lucide-react';
 
 export default function AdminSidebar({ activePage }) {
   return (
@@ -30,6 +30,15 @@ export default function AdminSidebar({ activePage }) {
           Stories
         </a>
         <a 
+          href="/admin/categories" 
+          className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+            activePage === 'categories' ? 'bg-[#008751] text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'
+          }`}
+        >
+          <Tags className="w-4 h-4" />
+          Categories
+        </a>
+        <a 
           href="/admin/authors" 
           className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
             activePage === 'authors' ? 'bg-[#008751] text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'
@@ -37,6 +46,15 @@ export default function AdminSidebar({ activePage }) {
         >
           <PenTool className="w-4 h-4" />
           Authors
+        </a>
+        <a 
+          href="/admin/admins" 
+          className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+            activePage === 'admins' ? 'bg-[#008751] text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'
+          }`}
+        >
+          <Shield className="w-4 h-4" />
+          Admins
         </a>
       </nav>
 

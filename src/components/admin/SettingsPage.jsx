@@ -1,8 +1,15 @@
-import React from 'react';
-import { Save, Globe, Bell, Shield, Users } from 'lucide-react';
+import React, { useState } from 'react';
+import { Save, Globe, Bell, Shield, Users, CheckCircle } from 'lucide-react';
 import AdminSidebar from './AdminSidebar';
 
 export default function SettingsPage() {
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = () => {
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex font-sans text-gray-900">
       <AdminSidebar activePage="settings" />
@@ -13,9 +20,14 @@ export default function SettingsPage() {
             <h1 className="text-2xl font-black text-gray-900">Settings</h1>
             <p className="text-gray-500 text-sm mt-1">Configure your site preferences</p>
           </div>
-          <button className="bg-[#008751] hover:bg-[#006b3f] text-white px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors shadow-sm">
-            <Save className="w-4 h-4" />
-            Save Changes
+          <button 
+            onClick={handleSave}
+            className={`px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-all shadow-sm ${
+              saved ? 'bg-green-100 text-green-700' : 'bg-[#008751] hover:bg-[#006b3f] text-white'
+            }`}
+          >
+            {saved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+            {saved ? 'Saved Successfully' : 'Save Changes'}
           </button>
         </header>
 
@@ -66,6 +78,26 @@ export default function SettingsPage() {
                   <span className="text-sm font-mono text-gray-600">#d1fae5</span>
                 </div>
               </div>
+            </div>
+          </section>
+
+          {/* Section: Notifications */}
+          <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
+              <Bell className="w-4 h-4 text-gray-500" />
+              <h3 className="font-bold text-sm text-gray-700 uppercase tracking-wider">Notifications</h3>
+            </div>
+            <div className="p-6 space-y-4">
+               <div className="flex items-center justify-between">
+                  <div>
+                     <h4 className="text-sm font-bold text-gray-900">Email Alerts</h4>
+                     <p className="text-xs text-gray-500">Receive summaries of new content.</p>
+                  </div>
+                  <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                    <input type="checkbox" name="toggle" id="toggle" className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-[#008751]" defaultChecked/>
+                    <label htmlFor="toggle" className="toggle-label block overflow-hidden h-5 rounded-full bg-[#008751] cursor-pointer"></label>
+                  </div>
+               </div>
             </div>
           </section>
 
