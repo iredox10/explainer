@@ -1,17 +1,32 @@
 ---
-import { getCollection } from 'astro:content';
+import { storyService } from '../../lib/services';
 import ScrollyTemplate from '../../components/templates/ScrollyTemplate.astro';
 import StandardTemplate from '../../components/templates/StandardTemplate.astro';
 
+// Since we are using SSG (static), we need to define all possible paths.
+// With Appwrite, this would fetch from the live DB.
 export async function getStaticPaths() {
-  const stories = await getCollection('stories');
-  return stories.map(story => ({
-    params: { slug: story.id },
-    props: { story: story.data },
+  const stories = await storyService.getPublishedStories();
+  
+  // We also need to account for specific slugs that might not be in the 'published' list yet but exist in mock
+  const slugs = ['fiber-optic-lagos', 'giant-wakes'];
+  
+  const paths = await Promise.all(slugs.map(async (slug) => {
+      const story = await storyService.getStoryBySlug(slug);
+      return {
+          params: { slug },
+          props: { story }
+      };
   }));
+
+  return paths;
 }
 
 const { story } = Astro.props;
+
+if (!story) {
+    return Astro.redirect('/404');
+}
 ---
 
 {story.layout === 'scrolly' ? (

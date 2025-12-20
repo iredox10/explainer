@@ -1,19 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Shield, Trash2, Mail, X } from 'lucide-react';
 import AdminSidebar from './AdminSidebar';
-
-const INITIAL_ADMINS = [
-  { id: 1, name: "System Admin", email: "admin@vox.africa", role: "Super Admin", status: "Active", lastActive: "Now", assignedCategories: [] },
-  { id: 2, name: "Editor in Chief", email: "editor@vox.africa", role: "Editor", status: "Active", lastActive: "2h ago", assignedCategories: ["Technology", "Culture"] },
-  { id: 3, name: "Guest Contributor", email: "guest@vox.africa", role: "Contributor", status: "Inactive", lastActive: "5d ago", assignedCategories: ["Politics"] },
-];
+import { getCurrentUser, ROLES } from '../../lib/authStore';
 
 const AVAILABLE_CATEGORIES = ["Technology", "Culture", "Politics", "Science", "Economy", "Super Feature"];
 
 export default function AdminsPage() {
-  const [admins, setAdmins] = useState(INITIAL_ADMINS);
+  const [user, setUser] = useState(null);
+  const [admins, setAdmins] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newUser, setNewUser] = useState({ name: "", email: "", role: "Contributor", assignedCategories: [] });
+
+  useEffect(() => {
+    const u = getCurrentUser();
+    if (!u) {
+      window.location.href = '/admin/login';
+    } else if (u.role !== ROLES.ADMIN) {
+      window.location.href = '/admin';
+    } else {
+      setUser(u);
+      setAdmins([
+        { id: 1, name: "System Admin", email: "admin@vox.africa", role: ROLES.ADMIN, status: "Active", lastActive: "Now", assignedCategories: [] },
+        { id: 2, name: "Editor in Chief", email: "editor@vox.africa", role: ROLES.EDITOR, status: "Active", lastActive: "2h ago", assignedCategories: ["Technology", "Culture"] },
+      ]);
+    }
+  }, []);
 
   const handleDelete = (id) => {
     if (confirm("Revoke access for this user? This action is permanent.")) {
@@ -23,8 +34,6 @@ export default function AdminsPage() {
 
   const handleInviteUser = (e) => {
     e.preventDefault();
-    // For Super Admin, assigned categories are irrelevant/all-inclusive conceptually, but let's keep array empty or all.
-    // If Contributor/Editor, we use the selected categories.
     setAdmins([...admins, { id: Date.now(), ...newUser, status: "Invited", lastActive: "Never" }]);
     setNewUser({ name: "", email: "", role: "Contributor", assignedCategories: [] });
     setIsModalOpen(false);
@@ -38,6 +47,8 @@ export default function AdminsPage() {
         return { ...prev, assignedCategories: cats };
     });
   };
+
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 flex font-sans text-gray-900">
@@ -86,16 +97,16 @@ export default function AdminsPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1.5">
-                        <Shield className={`w-3 h-3 ${user.role === 'Super Admin' ? 'text-[#008751]' : 'text-gray-400'}`} />
+                        <Shield className={`w-3 h-3 ${user.role === ROLES.ADMIN ? 'text-[#008751]' : 'text-gray-400'}`} />
                         <span className="text-sm font-medium text-gray-700">{user.role}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    {user.role === 'Super Admin' ? (
+                    {user.role === ROLES.ADMIN ? (
                         <span className="text-xs font-bold bg-black text-white px-2 py-1 rounded-sm uppercase tracking-wider">Full Access</span>
                     ) : (
                         <div className="flex flex-wrap gap-1">
-                            {user.assignedCategories.length > 0 ? user.assignedCategories.map(cat => (
+                            {user.assignedCategories?.length > 0 ? user.assignedCategories.map(cat => (
                                 <span key={cat} className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-200">
                                     {cat}
                                 </span>
@@ -121,7 +132,7 @@ export default function AdminsPage() {
                   </td>
 
                   <td className="px-6 py-4 text-right">
-                    {user.role !== 'Super Admin' && (
+                    {user.role !== ROLES.ADMIN && (
                         <button onClick={() => handleDelete(user.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
                             <Trash2 className="w-4 h-4" />
                         </button>
@@ -174,14 +185,13 @@ export default function AdminsPage() {
                     value={newUser.role}
                     onChange={e => setNewUser({...newUser, role: e.target.value})}
                   >
-                    <option>Contributor</option>
-                    <option>Editor</option>
-                    <option>Super Admin</option>
+                    <option value={ROLES.CONTRIBUTOR}>Contributor</option>
+                    <option value={ROLES.EDITOR}>Editor</option>
+                    <option value={ROLES.ADMIN}>Super Admin</option>
                   </select>
                 </div>
 
-                {/* Category Access Selection (Only if NOT Super Admin) */}
-                {newUser.role !== 'Super Admin' && (
+                {newUser.role !== ROLES.ADMIN && (
                     <div>
                         <label className="block text-xs font-bold text-gray-500 mb-2">Assign Access (Categories)</label>
                         <div className="grid grid-cols-2 gap-2">
@@ -205,26 +215,15 @@ export default function AdminsPage() {
                 )}
 
                 <div className="pt-4 flex justify-end gap-3">
-                  <button 
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit"
-                    className="bg-[#008751] text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-[#006b3f] transition-colors shadow-sm flex items-center gap-2"
-                  >
-                    <Mail className="w-4 h-4" />
-                    Send Invitation
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors">Cancel</button>
+                  <button type="submit" className="bg-[#008751] text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-[#006b3f] transition-colors shadow-sm flex items-center gap-2">
+                    <Mail className="w-4 h-4" /> Send Invitation
                   </button>
                 </div>
               </form>
             </div>
           </div>
         )}
-
       </main>
     </div>
   );

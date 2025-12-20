@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Plus, Search, MoreVertical, Trash2, Edit2, CheckCircle, ShieldAlert } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Search, MoreVertical, Trash2, Edit2, CheckCircle, ShieldAlert, FileText, Send, Clock, CheckSquare } from 'lucide-react';
 import AdminSidebar from './AdminSidebar';
+import { getCurrentUser, setCurrentUser, ROLES } from '../../lib/authStore';
 
 const INITIAL_STORIES = [
   {
@@ -15,14 +16,14 @@ const INITIAL_STORIES = [
     id: "fiber-optic",
     headline: "The hidden fiber optic cables connecting Lagos to the world",
     author: "Chioma Okereke",
-    status: "Published",
+    status: "Pending Review",
     date: "Nov 29, 2025",
     category: "Technology"
   },
   {
     id: "draft-1",
     headline: "Untitled Draft: The Future of Nollywood",
-    author: "Admin",
+    author: "Guest Contributor",
     status: "Draft",
     date: "Just now",
     category: "Culture"
@@ -31,15 +32,20 @@ const INITIAL_STORIES = [
 
 // Mock User Roles for Simulation
 const USER_ROLES = [
-    { id: 1, name: "Super Admin", role: "Super Admin", categories: [] }, // Access All
-    { id: 2, name: "Tech Editor", role: "Editor", categories: ["Technology", "Super Feature"] }, // Access Only Tech + Super Feature
-    { id: 3, name: "Culture Contributor", role: "Contributor", categories: ["Culture"] }, // Access Only Culture
+    { id: 1, name: "System Admin", role: ROLES.ADMIN, categories: [] }, // God Tier
+    { id: 2, name: "Chioma Okereke", role: ROLES.EDITOR, categories: ["Technology", "Super Feature"] }, // Gatekeeper
+    { id: 3, name: "Guest Contributor", role: ROLES.CONTRIBUTOR, categories: ["Culture"] }, // Talent
 ];
 
 export default function StoriesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [stories, setStories] = useState(INITIAL_STORIES);
-  const [currentUser, setCurrentUser] = useState(USER_ROLES[0]); // Default to Super Admin
+  const [user, setUser] = useState(getCurrentUser());
+  const [activeTab, setActiveTab] = useState("all"); // 'all' or 'my_stories'
+
+  useEffect(() => {
+    setUser(getCurrentUser());
+  }, []);
 
   const handleDelete = (id) => {
     if (confirm("Are you sure you want to delete this story?")) {
@@ -47,17 +53,47 @@ export default function StoriesPage() {
     }
   };
 
-  // Permission Logic
-  const canAccessStory = (story) => {
-    if (currentUser.role === 'Super Admin') return true;
-    return currentUser.categories.includes(story.category);
+  const handleRoleSwitch = (e) => {
+      const newUser = USER_ROLES.find(u => u.id === Number(e.target.value));
+      setCurrentUser(newUser);
+      setUser(newUser);
   };
+
+  // --- PERMISSION LOGIC ---
+  const isContributor = user.role === ROLES.CONTRIBUTOR;
+  const isEditor = user.role === ROLES.EDITOR;
+  const isAdmin = user.role === ROLES.ADMIN;
 
   const filteredStories = stories.filter(story => {
     const matchesSearch = story.headline.toLowerCase().includes(searchTerm.toLowerCase());
-    const hasPermission = canAccessStory(story);
-    return matchesSearch && hasPermission;
+    
+    // Contributor: Only see own stories
+    if (isContributor) {
+        return matchesSearch && story.author === user.name;
+    }
+
+    // Editor: See own stories OR stories in their assigned categories
+    if (isEditor) {
+        if (activeTab === 'my_stories') {
+            return matchesSearch && story.author === user.name;
+        }
+        // Gatekeeping view: See stories in my category that are Pending or Published (or drafts if I made them)
+        const isInMyCategory = user.categories.includes(story.category);
+        return matchesSearch && isInMyCategory;
+    }
+
+    // Admin: See everything
+    return matchesSearch;
   });
+
+  const getStatusColor = (status) => {
+      switch(status) {
+          case 'Published': return 'bg-green-50 text-[#008751] border-green-100';
+          case 'Pending Review': return 'bg-orange-50 text-orange-700 border-orange-100';
+          case 'Draft': return 'bg-gray-100 text-gray-500 border-gray-200';
+          default: return 'bg-gray-100 text-gray-500';
+      }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex font-sans text-gray-900">
@@ -65,19 +101,19 @@ export default function StoriesPage() {
 
       <main className="ml-64 flex-1 p-8">
         
-        {/* Role Simulator (For Demo Purposes) */}
+        {/* Role Simulator (For Demo) */}
         <div className="mb-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center justify-between">
             <div className="flex items-center gap-3">
                 <ShieldAlert className="w-5 h-5 text-yellow-600" />
                 <div>
-                    <span className="text-xs font-bold uppercase tracking-wider text-yellow-700 block">Simulate Role</span>
-                    <span className="text-sm font-medium text-gray-700">Viewing as: <strong>{currentUser.name}</strong> ({currentUser.role})</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-yellow-700 block">Simulate Permissions</span>
+                    <span className="text-sm font-medium text-gray-700">Currently: <strong>{user.name}</strong> ({user.role})</span>
                 </div>
             </div>
             <select 
                 className="bg-white border border-yellow-300 text-sm rounded px-3 py-1 outline-none"
-                value={currentUser.id}
-                onChange={(e) => setCurrentUser(USER_ROLES.find(u => u.id === Number(e.target.value)))}
+                value={user.id}
+                onChange={handleRoleSwitch}
             >
                 {USER_ROLES.map(role => (
                     <option key={role.id} value={role.id}>{role.name} ({role.role})</option>
@@ -89,13 +125,33 @@ export default function StoriesPage() {
         <header className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-2xl font-black text-gray-900">Stories</h1>
-            <p className="text-gray-500 text-sm mt-1">Manage your explainer articles</p>
+            <p className="text-gray-500 text-sm mt-1">
+                {isContributor ? "Manage your drafts and submissions" : "Manage editorial content"}
+            </p>
           </div>
           <a href="/admin/edit/new-story" className="bg-[#121212] hover:bg-[#008751] text-white px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors shadow-sm">
             <Plus className="w-4 h-4" />
             New Story
           </a>
         </header>
+
+        {/* Tabs (For Editors/Admins) */}
+        {!isContributor && (
+            <div className="flex gap-6 border-b border-gray-200 mb-6">
+                <button 
+                    onClick={() => setActiveTab('all')}
+                    className={`pb-3 text-sm font-bold uppercase tracking-wider transition-colors ${activeTab === 'all' ? 'border-b-2 border-[#008751] text-[#008751]' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                    All Stories
+                </button>
+                <button 
+                    onClick={() => setActiveTab('my_stories')}
+                    className={`pb-3 text-sm font-bold uppercase tracking-wider transition-colors ${activeTab === 'my_stories' ? 'border-b-2 border-[#008751] text-[#008751]' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                    My Articles
+                </button>
+            </div>
+        )}
 
         {/* Filters */}
         <div className="bg-white p-4 rounded-t-xl border border-gray-200 border-b-0 flex justify-between items-center">
@@ -158,23 +214,23 @@ export default function StoriesPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold flex items-center w-fit gap-1.5 ${
-                          story.status === 'Published' 
-                            ? 'bg-green-50 text-[#008751] border border-green-100' 
-                            : 'bg-yellow-50 text-yellow-700 border border-yellow-100'
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${story.status === 'Published' ? 'bg-[#008751]' : 'bg-yellow-500'}`}></span>
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold flex items-center w-fit gap-1.5 border ${getStatusColor(story.status)}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full bg-current opacity-50`}></span>
                           {story.status}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2">
-                            <a href={`/admin/edit/${story.id}`} className="p-2 text-gray-400 hover:text-[#008751] hover:bg-gray-100 rounded-lg transition-colors">
+                            <a href={`/admin/edit/${story.id}`} className="p-2 text-gray-400 hover:text-[#008751] hover:bg-gray-100 rounded-lg transition-colors" title="Edit">
                                 <Edit2 className="w-4 h-4" />
                             </a>
-                            <button onClick={() => handleDelete(story.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                                <Trash2 className="w-4 h-4" />
-                            </button>
+                            
+                            {/* Delete Permission: Only Admins or Users deleting their own DRAFTS */}
+                            {(isAdmin || (story.author === user.name && story.status === 'Draft')) && (
+                                <button onClick={() => handleDelete(story.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            )}
                         </div>
                       </td>
                     </tr>
@@ -183,7 +239,9 @@ export default function StoriesPage() {
                   <tr>
                       <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
                           <p className="font-medium">No stories found.</p>
-                          <p className="text-sm mt-1">Either none match your search, or you don't have permission to view them.</p>
+                          <p className="text-sm mt-1">
+                              {isContributor ? "You haven't written any stories yet." : "No stories match your criteria."}
+                          </p>
                       </td>
                   </tr>
               )}

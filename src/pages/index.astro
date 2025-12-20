@@ -3,9 +3,17 @@ import MainLayout from "../layouts/MainLayout.astro";
 import HeroFeature from "../components/ui/HeroFeature.astro";
 import StreamCard from "../components/ui/StreamCard.astro";
 import VideoSection from "../components/ui/VideoSection.astro";
-import SectionHeader from "../components/ui/SectionHeader.astro";
 import Footer from "../components/Footer.astro";
+import { storyService } from "../lib/services";
 import { VOX_HOME_DATA } from "../data/mock";
+
+// In a real build with Appwrite, this would be:
+// const publishedStories = await storyService.getPublishedStories();
+// For now, we use the enriched mock data structure
+const heroStory = VOX_HOME_DATA.hero;
+const latestStories = VOX_HOME_DATA.latest;
+const politicsStories = VOX_HOME_DATA.politics;
+const cultureStories = VOX_HOME_DATA.culture;
 
 const trending = [
   "The case for abolishing the penny",
@@ -16,133 +24,154 @@ const trending = [
 ];
 ---
 
-<MainLayout title="Explainer - Visual Journalism">
-  <!-- Main Content Wrapper -->
+<MainLayout title="Explainer - Visual Journalism That Makes Sense of the World">
+  
   <main class="max-w-7xl mx-auto px-6 py-12">
     
-    <!-- Hero Section -->
-    <HeroFeature article={VOX_HOME_DATA.hero} />
+    {/* 1. HERO FEATURE - The "Super Feature" */}
+    <HeroFeature article={heroStory} />
 
-    <!-- Middle Section: Stream + Trending -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-24 border-b border-gray-200 pb-24">
+    {/* 2. THE LATEST STREAM + SIDEBAR */}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-24 border-b border-gray-100 pb-24">
       
-      <!-- Sidebar: Trending (Left - 3 cols) -->
+      {/* Sidebar: Trending (Left) */}
       <div class="hidden lg:block lg:col-span-3">
         <div class="sticky top-32">
-          <h2 class="text-sm font-black uppercase tracking-[0.2em] mb-8 text-gray-400">Trending Now</h2>
+          <h2 class="text-[10px] font-black uppercase tracking-[0.25em] mb-10 text-gray-400 border-b border-gray-100 pb-2">Trending Now</h2>
           
-          <div class="space-y-8">
+          <div class="space-y-10">
             {trending.map((item, i) => (
               <div class="group cursor-pointer">
-                <div class="text-4xl font-serif-display font-bold text-gray-200 group-hover:text-yellow-400 transition-colors mb-2">
+                <div class="text-5xl font-serif-display font-black text-gray-100 group-hover:text-[#FAFF00] transition-colors leading-none mb-2">
                   0{i + 1}
                 </div>
-                <a href="#" class="text-md font-bold leading-snug text-black group-hover:text-gray-600 transition-colors">
+                <a href="#" class="text-lg font-bold leading-tight text-black group-hover:text-gray-600 transition-colors block">
                   {item}
                 </a>
               </div>
             ))}
           </div>
+          
+          {/* Ad Placeholder */}
+          <div class="mt-16 bg-gray-50 p-6 rounded border border-gray-100 text-center">
+             <span class="text-[9px] font-black uppercase tracking-widest text-gray-300 block mb-4">Advertisement</span>
+             <div class="aspect-square bg-white border border-gray-200 flex items-center justify-center text-gray-300 font-mono text-xs italic">
+                Promotion Space
+             </div>
+          </div>
         </div>
       </div>
 
-      <!-- Main Stream (Right - 9 cols) -->
-      <div class="lg:col-span-9">
+      {/* Main Stream (Right) */}
+      <div class="lg:col-span-9 lg:pl-12">
         <div class="flex items-end justify-between mb-12">
-           <h2 class="text-6xl font-serif-display font-black text-black">Latest</h2>
-           <span class="hidden md:block h-px flex-1 bg-gray-200 ml-8 mb-4"></span>
+           <h2 class="text-6xl md:text-7xl font-serif-display font-black text-black tracking-tighter">Latest</h2>
+           <div class="hidden md:block h-px flex-1 bg-gray-200 ml-8 mb-4"></div>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-1 gap-x-12">
-          {VOX_HOME_DATA.latest.map((article) => (
+        <div class="flex flex-col">
+          {latestStories.map((article) => (
             <StreamCard article={article} />
           ))}
         </div>
         
-        <div class="mt-12 text-center">
-           <a href="#" class="inline-block px-12 py-4 border border-black font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-colors">
+        <div class="mt-16 text-center">
+           <button class="px-16 py-5 bg-black text-white font-black uppercase tracking-[0.2em] text-xs hover:bg-[#FAFF00] hover:text-black transition-all shadow-xl hover:-translate-y-1">
              Load More Stories
-           </a>
+           </button>
         </div>
       </div>
     </div>
 
-    <!-- Politics Section -->
-    <div class="py-24 border-b border-gray-200">
-      <SectionHeader title="Politics" color="bg-blue-200" />
-      
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {VOX_HOME_DATA.politics.map((article) => (
-          <article class="group">
-            <div class="aspect-[3/2] overflow-hidden mb-4 bg-gray-100 relative">
-              <img src={article.imageUrl} class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-              <div class="absolute inset-0 bg-blue-900/0 group-hover:bg-blue-900/10 transition-colors"></div>
+    {/* 3. NEWSLETTER BREAK */}
+    <section class="py-24 my-12 border-b border-gray-100">
+        <div class="bg-[#FAFF00] p-12 md:p-20 relative overflow-hidden rounded-sm shadow-2xl">
+            <div class="absolute -top-20 -right-20 w-64 h-64 bg-white/20 rounded-full blur-3xl"></div>
+            <div class="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h2 class="font-serif-display font-black text-5xl md:text-6xl leading-[0.9] text-black mb-6">Understand the news, for real.</h2>
+                    <p class="text-xl font-medium text-black/70 max-w-md">Our weekly newsletter breaks down the biggest stories into clear, actionable insights.</p>
+                </div>
+                <form class="flex flex-col sm:flex-row gap-3">
+                    <input type="email" placeholder="you@work.com" class="flex-1 bg-white border-2 border-black/10 px-6 py-4 font-bold text-black focus:outline-none focus:border-black transition-colors" />
+                    <button class="bg-black text-white px-10 py-4 font-black uppercase tracking-widest text-sm hover:scale-105 transition-transform">Sign Me Up</button>
+                </form>
             </div>
-            <span class="text-xs font-bold uppercase tracking-widest text-blue-600 mb-2 block">Policy</span>
-            <h3 class="font-serif-display font-bold text-2xl leading-tight group-hover:underline decoration-blue-300 decoration-4 underline-offset-2">
-              <a href="#">{article.title}</a>
-            </h3>
-            <p class="text-sm text-gray-500 mt-2 font-sans font-bold uppercase tracking-wider">By {article.author}</p>
-          </article>
-        ))}
-      </div>
-    </div>
+        </div>
+    </section>
 
-    <!-- Culture Section -->
-    <div class="py-24">
-      <SectionHeader title="Culture" color="bg-pink-200" />
-      
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {VOX_HOME_DATA.culture.map((article, i) => (
-          <article class="group flex flex-col sm:flex-row gap-6 items-start">
-             <div class="w-full sm:w-1/2 aspect-square bg-gray-100 overflow-hidden">
-               <img src={article.imageUrl} class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-             </div>
-             <div class="flex-1 py-2">
-               <span class="text-xs font-black uppercase tracking-widest text-pink-600 mb-2 block">{article.category}</span>
-               <h3 class="font-serif-display font-bold text-3xl leading-tight mb-4 group-hover:text-gray-600 transition-colors">
-                 <a href="#">{article.title}</a>
-               </h3>
-               <p class="text-gray-500 text-sm leading-relaxed">
-                 A deep dive into the cultural phenomenon sweeping the nation and redefining how we consume art.
-               </p>
-             </div>
-          </article>
-        ))}
-      </div>
+    {/* 4. CATEGORY HIGHLIGHTS */}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 py-24">
+        
+        {/* Section: Politics */}
+        <div>
+            <div class="flex items-center gap-4 mb-12">
+                <h3 class="text-4xl font-serif-display font-black text-black">Politics</h3>
+                <span class="h-px flex-1 bg-blue-100"></span>
+                <a href="/topic/politics" class="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:underline">View Section →</a>
+            </div>
+            <div class="space-y-12">
+                {politicsStories.map((s, i) => (
+                    <article class={`group ${i === 0 ? '' : 'flex gap-6 items-start border-t border-gray-100 pt-8'}`}>
+                        {i === 0 ? (
+                            <>
+                                <div class="aspect-video overflow-hidden mb-6 bg-gray-100 relative">
+                                    <img src={s.imageUrl} class="w-full h-full object-cover grayscale-[50%] group-hover:grayscale-0 transition-all duration-700" />
+                                    <div class="absolute inset-0 ring-inset ring-1 ring-black/10 group-hover:ring-blue-500/50 transition-all"></div>
+                                </div>
+                                <h4 class="text-3xl font-serif-display font-bold leading-tight group-hover:underline decoration-blue-400 underline-offset-4">{s.title}</h4>
+                                <p class="text-gray-500 mt-4 line-clamp-2">Deep analysis into the changing landscape of global power and policy.</p>
+                            </>
+                        ) : (
+                            <>
+                                <div class="w-24 h-24 shrink-0 bg-gray-100 overflow-hidden">
+                                    <img src={s.imageUrl} class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" />
+                                </div>
+                                <h4 class="text-xl font-serif-display font-bold leading-tight group-hover:text-blue-600 transition-colors">{s.title}</h4>
+                            </>
+                        )}
+                    </article>
+                ))}
+            </div>
+        </div>
+
+        {/* Section: Culture */}
+        <div>
+            <div class="flex items-center gap-4 mb-12">
+                <h3 class="text-4xl font-serif-display font-black text-black">Culture</h3>
+                <span class="h-px flex-1 bg-pink-100"></span>
+                <a href="/topic/culture" class="text-[10px] font-black uppercase tracking-widest text-pink-600 hover:underline">View Section →</a>
+            </div>
+            <div class="space-y-12">
+                {cultureStories.map((s, i) => (
+                    <article class={`group ${i === 0 ? '' : 'flex gap-6 items-start border-t border-gray-100 pt-8'}`}>
+                        {i === 0 ? (
+                            <>
+                                <div class="aspect-video overflow-hidden mb-6 bg-gray-100 relative">
+                                    <img src={s.imageUrl} class="w-full h-full object-cover grayscale-[50%] group-hover:grayscale-0 transition-all duration-700" />
+                                    <div class="absolute inset-0 ring-inset ring-1 ring-black/10 group-hover:ring-pink-500/50 transition-all"></div>
+                                </div>
+                                <h4 class="text-3xl font-serif-display font-bold leading-tight group-hover:underline decoration-pink-400 underline-offset-4">{s.title}</h4>
+                                <p class="text-gray-500 mt-4 line-clamp-2">Exploring the intersections of identity, creativity, and the digital zeitgeist.</p>
+                            </>
+                        ) : (
+                            <>
+                                <div class="w-24 h-24 shrink-0 bg-gray-100 overflow-hidden">
+                                    <img src={s.imageUrl} class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" />
+                                </div>
+                                <h4 class="text-xl font-serif-display font-bold leading-tight group-hover:text-pink-600 transition-colors">{s.title}</h4>
+                            </>
+                        )}
+                    </article>
+                ))}
+            </div>
+        </div>
+
     </div>
 
   </main>
 
-  <!-- Future Perfect Section (Dark Theme) -->
-  <section class="bg-gray-900 text-white py-24">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="flex items-end justify-between mb-16 border-b border-gray-700 pb-4">
-        <div>
-           <span class="text-[#FAFF00] font-bold uppercase tracking-widest text-xs mb-2 block">Science & Tech</span>
-           <h2 class="text-5xl font-serif-display font-black text-white">Future Perfect</h2>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {VOX_HOME_DATA.futurePerfect.map((article) => (
-          <article class="group border-t border-gray-700 pt-6 hover:border-[#FAFF00] transition-colors duration-300">
-             <div class="aspect-video bg-gray-800 mb-6 overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-500">
-               <img src={article.imageUrl} class="w-full h-full object-cover opacity-80 group-hover:opacity-100" />
-             </div>
-             <h3 class="font-bold text-xl leading-tight mb-3 group-hover:text-[#FAFF00] transition-colors">
-               {article.title}
-             </h3>
-             <p class="text-gray-400 text-sm leading-relaxed">
-               {article.subhead}
-             </p>
-          </article>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <!-- Full Bleed Video Section -->
+  <!-- 5. FEATURED VIDEO (Full Bleed) -->
   <VideoSection videos={VOX_HOME_DATA.videos} />
   
   <Footer />
