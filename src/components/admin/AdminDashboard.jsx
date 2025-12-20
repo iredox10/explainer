@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Layout, FileText, Settings, PenTool, TrendingUp, Users, Clock, ArrowUpRight } from 'lucide-react';
 import AdminSidebar from './AdminSidebar';
 import { getCurrentUser, ROLES } from '../../lib/authStore';
+import { storyService } from '../../lib/services';
 
 const STATS = [
   { label: "Total Views", value: "2.4M", change: "+12%", icon: TrendingUp, color: "text-green-600", bg: "bg-green-100" },
@@ -19,6 +20,7 @@ const RECENT_ACTIVITY = [
 
 export default function AdminDashboard() {
   const [user, setUser] = useState(null);
+  const [stats, setStats] = useState(STATS);
 
   useEffect(() => {
     const u = getCurrentUser();
@@ -26,8 +28,16 @@ export default function AdminDashboard() {
       window.location.href = '/admin/login';
     } else {
       setUser(u);
+      loadLiveStats();
     }
   }, []);
+
+  const loadLiveStats = async () => {
+      try {
+          const stories = await storyService.getAllStories();
+          setStats(prev => prev.map(s => s.label === "Stories Published" ? { ...s, value: stories.length.toString() } : s));
+      } catch (e) { console.error(e); }
+  };
 
   if (!user) return null;
 
@@ -43,7 +53,7 @@ export default function AdminDashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {STATS.map((stat, index) => (
+          {stats.map((stat, index) => (
             <div key={index} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-4">
                 <div className={`p-3 rounded-lg ${stat.bg}`}>

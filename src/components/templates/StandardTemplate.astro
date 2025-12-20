@@ -7,6 +7,22 @@ import { Share2, Bookmark, MessageCircle, Facebook, Twitter, Linkedin, Mail, Clo
 
 const { story } = Astro.props;
 const ARTICLE_DATA = story;
+
+// Helper to parse content safely
+const getBlocks = (content) => {
+    if (!content) return [];
+    if (Array.isArray(content)) return content;
+    if (typeof content === 'string') {
+        try {
+            return JSON.parse(content);
+        } catch (e) {
+            return [];
+        }
+    }
+    return [];
+};
+
+const blocks = getBlocks(ARTICLE_DATA.content);
 ---
 
 <MainLayout title={ARTICLE_DATA.headline} showNav={false}>
@@ -43,7 +59,7 @@ const ARTICLE_DATA = story;
                           </div>
                           <div>
                               <div class="uppercase text-black text-xs tracking-widest">{ARTICLE_DATA.author}</div>
-                              <div class="text-gray-500 text-[10px] uppercase tracking-widest font-normal">{ARTICLE_DATA.role}</div>
+                              <div class="text-gray-500 text-[10px] uppercase tracking-widest font-normal">{ARTICLE_DATA.role || "Staff Writer"}</div>
                           </div>
                       </div>
                       
@@ -51,12 +67,12 @@ const ARTICLE_DATA = story;
 
                       <div class="flex items-center gap-2 text-gray-500 text-xs uppercase tracking-widest">
                           <Calendar className="w-4 h-4" />
-                          {ARTICLE_DATA.date}
+                          {ARTICLE_DATA.date || "Nov 29, 2025"}
                       </div>
                       
                       <div class="flex items-center gap-2 text-gray-500 text-xs uppercase tracking-widest">
                           <Clock className="w-4 h-4" />
-                          {ARTICLE_DATA.readTime}
+                          {ARTICLE_DATA.readTime || "5 min read"}
                       </div>
                   </div>
               </div>
@@ -70,7 +86,7 @@ const ARTICLE_DATA = story;
                       alt="Hero" 
                   />
                   <div class="absolute bottom-4 left-4 z-20 bg-white/90 backdrop-blur px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-gray-600">
-                      Fig. 1.0 — Network Infrastructure
+                      Editorial Photography
                   </div>
               </div>
           </div>
@@ -110,7 +126,7 @@ const ARTICLE_DATA = story;
         {/* Main Article Text */}
         <article class="lg:col-span-7">
           <div class="font-serif text-[1.15rem] md:text-[1.3rem] leading-[1.8] text-gray-900">
-            {ARTICLE_DATA.content.map((block, index) => {
+            {blocks.map((block, index) => {
               
               if (block.type === 'heading') {
                 return (

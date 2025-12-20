@@ -1,4 +1,4 @@
-import { Client, Databases, Account } from 'appwrite';
+import { Client, Databases, Account, Storage } from 'appwrite';
 
 export const client = new Client();
 
@@ -8,8 +8,10 @@ client
 
 export const databases = new Databases(client);
 export const account = new Account(client);
+export const storage = new Storage(client);
 
 export const DB_ID = import.meta.env.PUBLIC_APPWRITE_DATABASE_ID;
+export const MEDIA_BUCKET_ID = 'media';
 export const COLLECTIONS = {
     STORIES: 'stories',
     AUTHORS: 'authors',

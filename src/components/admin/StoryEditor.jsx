@@ -1,111 +1,111 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Type, Quote, MessageSquare, Move, Map, BarChart, Video, CheckCircle, Send, CheckSquare, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Type, Quote, MessageSquare, Move, Map, BarChart, Video, CheckCircle, Send, CheckSquare, AlertCircle, Loader2, Upload } from 'lucide-react';
 import { getCurrentUser, ROLES } from '../../lib/authStore';
-
-const MOCK_DATA = {
-  "giant-wakes": {
-    layout: "scrolly",
-    headline: "Lagos Is Rewriting Africa's Future",
-    subhead: "Tech, culture, and policy shifts are converging to make Lagos the continent's most influential megacity.",
-    category: "Super Feature",
-    author: "Chioma Okafor",
-    status: "Published",
-    heroImage: "https://images.unsplash.com/photo-1569163139599-0f4517e36f51?w=1600&q=80",
-    videoUrl: "https://storage.googleapis.com/coverr-main/mp4/Mt_Baker.mp4",
-    scrollySections: [
-      { id: 1, type: "map", text: "Africa's commercial pulse is shifting steadily toward West Africa.", label: "West Africa", viewBox: "0 0 600 600", highlight: "nigeria" },
-      { id: 2, type: "chart", text: "Nigeria's GDP now outpaces growth in many emerging economies.", label: "GDP projections", chartData: [2, 4, 5, 6, 7, 9, 11], accentColor: "#fbbf24" }
-    ],
-    content: []
-  },
-  "fiber-optic": {
-    layout: "standard",
-    headline: "The hidden fiber optic cables connecting Lagos to the world",
-    subhead: "How a new generation of subsea cables is dropping latency and driving the startup boom.",
-    category: "Technology",
-    author: "Chioma Okereke",
-    status: "Pending Review",
-    heroImage: "https://images.unsplash.com/photo-1544197150-b99a580bbcbf?w=2000&auto=format&fit=crop",
-    content: [
-      { id: 1, type: "p", text: "Thirty feet beneath the Atlantic Ocean, a cable no thicker than a garden hose is pulsing with light. This light carries the hopes of a continent." },
-      { id: 2, type: "quote", text: "This isn't just about Netflix streaming faster. This is about a surgeon in London guiding a robot in Lagos in real-time.", author: "Dr. Tunde Alabi" }
-    ],
-    scrollySections: []
-  },
-  "default": {
-    layout: "standard",
-    headline: "Untitled Story",
-    subhead: "A great story starts with a great subhead.",
-    category: "Technology",
-    author: "", 
-    status: "Draft",
-    heroImage: "https://images.unsplash.com/photo-1487017159836-4e23ece2e4cf?w=1600&q=80",
-    content: [ { id: 1, type: "p", text: "Start writing your story here..." } ],
-    scrollySections: []
-  }
-};
-
-const getInitialData = (storyId, currentUser) => {
-  try {
-    const savedData = localStorage.getItem(`story_${storyId}`);
-    if (savedData) return JSON.parse(savedData);
-  } catch (e) { console.error(e); }
-  const initial = MOCK_DATA[storyId] || MOCK_DATA.default;
-  if (storyId === 'new-story' || !initial.author) initial.author = currentUser?.name || "Admin";
-  return JSON.parse(JSON.stringify(initial));
-};
+import { storyService } from '../../lib/services';
 
 export default function StoryEditor({ storyId }) {
   const [user, setUser] = useState(null);
   const [story, setStory] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
   const [saveStatus, setSaveStatus] = useState('idle');
+  const [uploadingField, setUploadingField] = useState(null); // 'hero' or block id
+
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const u = getCurrentUser();
     if (!u) {
       window.location.href = '/admin/login';
-    } else {
-      setUser(u);
-      setStory(getInitialData(storyId, u));
+      return;
     }
+    setUser(u);
+    loadStory(u);
   }, [storyId]);
 
+  const loadStory = async (currentUser) => {
+    setIsLoading(true);
+    if (storyId === 'new-story') {
+        setStory({
+            headline: "Untitled Story",
+            subhead: "",
+            category: "Technology",
+            author: currentUser.name,
+            status: "Draft",
+            layout: "standard",
+            content: JSON.stringify([{ id: 1, type: "p", text: "" }]),
+            scrollySections: JSON.stringify([]),
+            heroImage: ""
+        });
+    } else {
+        const data = await storyService.getStoryById(storyId);
+        if (data) setStory(data);
+    }
+    setIsLoading(false);
+  };
+
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="animate-spin w-12 h-12 text-[#008751]" /></div>;
   if (!user || !story) return null;
 
   const isContributor = user.role === ROLES.CONTRIBUTOR;
   const isEditor = user.role === ROLES.EDITOR;
   const isAdmin = user.role === ROLES.ADMIN;
-  const canPublish = isAdmin || (isEditor && (user.categories?.includes(story.category) || story.author === user.name));
+  const canPublish = isAdmin || (isEditor && ((user.categories || []).includes(story.category) || story.author === user.name));
   const isLocked = isContributor && story.status === 'Published'; 
 
+  const content = typeof story.content === 'string' ? JSON.parse(story.content) : (story.content || []);
+  
   const handleChange = (field, value) => { setStory(prev => ({ ...prev, [field]: value })); setIsDirty(true); setSaveStatus('idle'); };
-  const handleContentChange = (id, field, value) => { setStory(prev => ({ ...prev, content: prev.content.map(b => b.id === id ? { ...b, [field]: value } : b) })); setIsDirty(true); };
-  const addBlock = (type) => { setStory(prev => ({ ...prev, content: [...(prev.content||[]), { id: Date.now(), type, text: "" }] })); setIsDirty(true); };
-  const removeBlock = (id) => { setStory(prev => ({ ...prev, content: prev.content.filter(b => b.id !== id) })); setIsDirty(true); };
+  const updateContent = (newContent) => { handleChange('content', JSON.stringify(newContent)); };
 
-  const performSave = (newStatus) => {
-    setSaveStatus('saving');
-    const updatedStory = { ...story, status: newStatus };
-    setStory(updatedStory);
-    setTimeout(() => {
-      try { localStorage.setItem(`story_${storyId}`, JSON.stringify(updatedStory)); } catch (e) { console.error(e); }
-      setIsDirty(false); setSaveStatus('saved'); setTimeout(() => setSaveStatus('idle'), 3000);
-    }, 1000);
+  const handleFileUpload = async (e, target) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      setUploadingField(target);
+      try {
+          const url = await storyService.uploadImage(file);
+          if (target === 'hero') {
+              handleChange('heroImage', url);
+          } else {
+              const updated = content.map(b => b.id === target ? { ...b, url } : b);
+              updateContent(updated);
+          }
+      } catch (err) {
+          alert("Upload failed: " + err.message);
+      } finally {
+          setUploadingField(null);
+      }
   };
 
-  if (isLocked) {
-      return (
-          <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 font-sans text-center">
-              <div className="bg-white p-8 rounded-xl shadow-lg max-w-md">
-                  <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
-                  <h2 className="text-xl font-black mb-2 uppercase tracking-tight">Story is Live!</h2>
-                  <p className="text-gray-600 mb-6">As a contributor, you cannot edit published stories. Please reach out to your section editor for updates.</p>
-                  <a href="/admin/stories" className="bg-black text-white px-6 py-3 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-[#FAFF00] hover:text-black transition-all inline-block">Return to Dashboard</a>
-              </div>
-          </div>
-      );
-  }
+  const addBlock = (type) => {
+      const newBlock = { id: Date.now(), type, text: "", ...(type === 'image' && { url: "", caption: "" }) };
+      updateContent([...content, newBlock]);
+  };
+
+  const removeBlock = (id) => {
+      updateContent(content.filter(b => b.id !== id));
+  };
+
+  const handleContentChange = (id, field, value) => {
+      updateContent(content.map(b => b.id === id ? { ...b, [field]: value } : b));
+  };
+
+  const performSave = async (newStatus) => {
+    setSaveStatus('saving');
+    try {
+        const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...dataToSave } = { ...story, status: newStatus };
+        const result = await storyService.saveStory(storyId, dataToSave);
+        setStory(result);
+        setIsDirty(false);
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 3000);
+        if (storyId === 'new-story') window.location.href = `/admin/edit/${result.$id}`;
+    } catch (e) {
+        setSaveStatus('idle');
+        alert("Save failed: " + e.message);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900 pb-20">
@@ -122,7 +122,7 @@ export default function StoryEditor({ storyId }) {
         </div>
         <div className="flex items-center gap-3">
           {saveStatus === 'saved' && (<span className="text-xs text-green-600 font-bold flex items-center gap-1.5"><CheckCircle className="w-4 h-4" />Saved</span>)}
-          <button onClick={() => performSave(story.status)} disabled={saveStatus === 'saving' || !isDirty} className="text-gray-500 hover:text-black px-4 py-2 text-sm font-bold disabled:opacity-30">Save Draft</button>
+          <button onClick={() => performSave(story.status)} disabled={saveStatus === 'saving' || !isDirty} className="text-gray-500 hover:text-black px-4 py-2 text-sm font-bold">Save Draft</button>
           {isContributor && story.status === 'Draft' && (
               <button onClick={() => performSave('Pending Review')} className="bg-black text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-[#008751] transition-colors"><Send className="w-4 h-4" /> Submit for Review</button>
           )}
@@ -141,23 +141,85 @@ export default function StoryEditor({ storyId }) {
                 <div><label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Headline</label><textarea className="w-full text-3xl font-black leading-tight outline-none resize-none border-b border-transparent focus:border-yellow-400" rows="2" value={story.headline} onChange={(e) => handleChange('headline', e.target.value)} /></div>
                 <div><label className="block text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Subhead</label><textarea className="w-full text-xl font-serif text-gray-600 leading-relaxed outline-none resize-none border-b border-transparent focus:border-yellow-400" rows="2" value={story.subhead} onChange={(e) => handleChange('subhead', e.target.value)} /></div>
             </div>
+            
             <div className="space-y-4">
-                {(story.content || []).map((block) => (
+                {content.map((block) => (
                     <div key={block.id} className="bg-white p-6 rounded-xl border border-gray-200 relative group transition-all hover:border-gray-300">
                         <button onClick={() => removeBlock(block.id)} className="absolute top-2 right-2 p-2 text-gray-200 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4" /></button>
+                        
                         {block.type === 'p' && <textarea className="w-full text-lg font-serif outline-none resize-none leading-relaxed" rows="3" value={block.text} onChange={(e) => handleContentChange(block.id, 'text', e.target.value)} />}
+                        
+                        {block.type === 'image' && (
+                            <div className="space-y-4">
+                                {block.url ? (
+                                    <div className="relative aspect-video rounded-lg overflow-hidden border border-gray-100">
+                                        <img src={block.url} className="w-full h-full object-cover" />
+                                        <button onClick={() => handleContentChange(block.id, 'url', '')} className="absolute top-2 right-2 bg-black/50 text-white p-2 rounded-full hover:bg-red-500 transition-colors"><X className="w-4 h-4" /></button>
+                                    </div>
+                                ) : (
+                                    <div className="aspect-video bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center relative">
+                                        {uploadingField === block.id ? <Loader2 className="animate-spin text-gray-400" /> : (
+                                            <>
+                                                <Upload className="w-8 h-8 text-gray-300 mb-2" />
+                                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Upload Content Image</p>
+                                                <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileUpload(e, block.id)} />
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                                <input type="text" placeholder="Caption..." className="w-full text-sm font-medium text-gray-500 outline-none border-b border-transparent focus:border-gray-200 pb-1" value={block.caption || ""} onChange={(e) => handleContentChange(block.id, 'caption', e.target.value)} />
+                            </div>
+                        )}
                     </div>
                 ))}
-                <div className="flex justify-center py-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50"><button onClick={() => addBlock('p')} className="flex items-center gap-2 px-6 py-2 bg-white border border-gray-200 rounded-full text-xs font-black uppercase tracking-widest text-gray-500 hover:text-black hover:border-black transition-all shadow-sm"><Plus className="w-4 h-4" /> Add Section</button></div>
+                
+                <div className="flex justify-center gap-3 py-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
+                    <button onClick={() => addBlock('p')} className="flex items-center gap-2 px-6 py-2 bg-white border border-gray-200 rounded-full text-xs font-black uppercase tracking-widest text-gray-500 hover:text-black hover:border-black transition-all shadow-sm"><Type className="w-4 h-4" /> Add Text</button>
+                    <button onClick={() => addBlock('image')} className="flex items-center gap-2 px-6 py-2 bg-white border border-gray-200 rounded-full text-xs font-black uppercase tracking-widest text-gray-500 hover:text-black hover:border-black transition-all shadow-sm"><ImageIcon className="w-4 h-4" /> Add Image</button>
+                </div>
             </div>
         </div>
+
         <div className="col-span-4 space-y-6">
             <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm sticky top-24">
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-6 pb-2 border-b border-gray-50">Story Meta</h3>
                 <div className="space-y-6">
-                    <div><label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Author</label><div className="font-bold text-sm flex items-center gap-2 bg-gray-50 px-3 py-2 rounded border border-gray-100 text-gray-600">{story.author}</div></div>
-                    <div><label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Category</label><select className="w-full px-3 py-2 bg-white border border-gray-200 text-sm font-bold rounded-lg outline-none focus:ring-2 focus:ring-yellow-400" value={story.category} onChange={(e) => handleChange('category', e.target.value)}><option>Technology</option><option>Culture</option><option>Super Feature</option></select></div>
-                    <div><label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Hero Image</label><div className="aspect-video w-full rounded-lg bg-gray-100 overflow-hidden border border-gray-200"><img src={story.heroImage} className="w-full h-full object-cover" /></div></div>
+                    <div>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Author</label>
+                        <div className="font-bold text-sm bg-gray-50 px-3 py-2 rounded border border-gray-100 text-gray-600">{story.author}</div>
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Category</label>
+                        <select className="w-full px-3 py-2 bg-white border border-gray-200 text-sm font-bold rounded-lg outline-none focus:ring-2 focus:ring-yellow-400" value={story.category} onChange={(e) => handleChange('category', e.target.value)}>
+                            <option>Technology</option>
+                            <option>Culture</option>
+                            <option>Politics</option>
+                            <option>Economy</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-3">Hero Image</label>
+                        <div className="aspect-video w-full rounded-lg bg-gray-50 border-2 border-dashed border-gray-200 overflow-hidden relative group">
+                            {story.heroImage ? (
+                                <>
+                                    <img src={story.heroImage} className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <button className="bg-white text-black p-2 rounded-full shadow-lg" onClick={() => fileInputRef.current?.click()}><Upload className="w-4 h-4" /></button>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                                    {uploadingField === 'hero' ? <Loader2 className="animate-spin text-[#008751]" /> : (
+                                        <>
+                                            <Upload className="w-6 h-6 text-gray-300 mb-2" />
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Click to Upload Hero</span>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'hero')} />
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

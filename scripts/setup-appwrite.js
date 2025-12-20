@@ -1,4 +1,4 @@
-import { Client, Databases, ID } from 'node-appwrite';
+import { Client, Databases, ID, Permission, Role, Storage } from 'node-appwrite';
 import dotenv from 'dotenv';
 
 // Load environment variables
@@ -10,8 +10,11 @@ const client = new Client()
     .setKey(process.env.APPWRITE_API_KEY);
 
 const databases = new Databases(client);
+const storage = new Storage(client);
 
 const DB_NAME = 'vox_cms';
+const DB_ID = 'vox_cms'; 
+const BUCKET_ID = 'media';
 const COLLECTIONS = {
     STORIES: 'stories',
     AUTHORS: 'authors',
@@ -19,125 +22,124 @@ const COLLECTIONS = {
 };
 
 async function setup() {
-    console.log('🚀 Starting Appwrite Setup...');
+    console.log('🚀 Starting Appwrite Setup & Permissions Config...');
 
     // 1. Create Database
-    let dbId;
     try {
-        const db = await databases.create(ID.unique(), DB_NAME);
-        dbId = db.$id;
-        console.log(`✅ Database created: ${dbId}`);
+        await databases.create(DB_ID, DB_NAME);
+        console.log(`✅ Database created: ${DB_ID}`);
     } catch (e) {
-        // If it might already exist, we'd need a way to find it, but the SDK create throws if ID conflicts. 
-        // For simplicity, let's assume we are listing to find it or creating new.
-        // Actually, listing databases to find 'vox_cms' is safer if we want idempotency.
-        const dbs = await databases.list();
-        const existing = dbs.databases.find(d => d.name === DB_NAME);
-        if (existing) {
-            dbId = existing.$id;
-            console.log(`ℹ️ Database '${DB_NAME}' already exists (${dbId})`);
+        if (e.code === 409) {
+            console.log(`ℹ️ Database '${DB_NAME}' already exists.`);
         } else {
-            console.error('❌ Failed to create database and it was not found.');
-            console.error(e);
+            console.error('❌ Failed to create database.', e.message);
             return;
         }
     }
 
-    // 2. Create Collections & Attributes
-    await setupStoriesCollection(dbId);
-    await setupAuthorsCollection(dbId);
-    await setupCategoriesCollection(dbId);
+    // 2. Create Storage Bucket
+    try {
+        await storage.createBucket(BUCKET_ID, 'Media', [
+            Permission.read(Role.any()),
+            Permission.create(Role.users()),
+            Permission.update(Role.users()),
+            Permission.delete(Role.users()),
+        ], false);
+        console.log(`✅ Storage Bucket '${BUCKET_ID}' created.`);
+    } catch (e) {
+        if (e.code === 409) {
+            console.log(`ℹ️ Storage Bucket '${BUCKET_ID}' already exists.`);
+        } else {
+            console.error('❌ Failed to create storage bucket.', e.message);
+        }
+    }
+
+    // 3. Create Collections with Permissions
+    const permissions = [
+        Permission.read(Role.any()),
+        Permission.create(Role.users()),
+        Permission.update(Role.users()),
+        Permission.delete(Role.users()),
+    ];
+
+    await setupStoriesCollection(DB_ID, permissions);
+    await setupAuthorsCollection(DB_ID, permissions);
+    await setupCategoriesCollection(DB_ID, permissions);
 
     console.log('🎉 Appwrite Setup Complete!');
-    console.log(`
-Add this to your .env file:
-PUBLIC_APPWRITE_DATABASE_ID=${dbId}`);
 }
 
-async function setupStoriesCollection(dbId) {
-    let colId;
+async function setupStoriesCollection(dbId, permissions) {
+    const colId = COLLECTIONS.STORIES;
     try {
-        // Check if exists
-        const list = await databases.listCollections(dbId);
-        const existing = list.collections.find(c => c.name === COLLECTIONS.STORIES);
-        
-        if (existing) {
-            colId = existing.$id;
-            console.log(`ℹ️ Collection '${COLLECTIONS.STORIES}' already exists.`);
-        } else {
-            const col = await databases.createCollection(dbId, ID.unique(), COLLECTIONS.STORIES);
-            colId = col.$id;
-            console.log(`✅ Collection '${COLLECTIONS.STORIES}' created.`);
+        await databases.createCollection(dbId, colId, 'Stories', permissions);
+        console.log(`✅ Collection '${colId}' created with permissions.`);
 
-            // Define Attributes
-            await databases.createStringAttribute(dbId, colId, 'headline', 255, true);
-            await databases.createStringAttribute(dbId, colId, 'subhead', 1000, false);
-            await databases.createStringAttribute(dbId, colId, 'category', 100, true);
-            await databases.createStringAttribute(dbId, colId, 'author', 100, true);
-            await databases.createStringAttribute(dbId, colId, 'status', 50, true, 'Draft'); // Draft, Pending Review, Published
-            await databases.createUrlAttribute(dbId, colId, 'heroImage', false);
-            await databases.createEnumAttribute(dbId, colId, 'layout', ['standard', 'scrolly'], true, 'standard');
-            // Content is complex (JSON), so we store as stringified JSON for now
-            await databases.createStringAttribute(dbId, colId, 'content', 100000, false); 
-            await databases.createStringAttribute(dbId, colId, 'scrollySections', 100000, false);
-            await databases.createDatetimeAttribute(dbId, colId, 'publishedAt', false);
-            
-            console.log(`✅ Attributes for '${COLLECTIONS.STORIES}' created.`);
-        }
+        // Define Attributes
+        await databases.createStringAttribute(dbId, colId, 'headline', 255, true);
+        await databases.createStringAttribute(dbId, colId, 'subhead', 1000, false);
+        await databases.createStringAttribute(dbId, colId, 'category', 100, true);
+        await databases.createStringAttribute(dbId, colId, 'author', 100, true);
+        await databases.createStringAttribute(dbId, colId, 'status', 50, false, 'Draft'); 
+        await databases.createUrlAttribute(dbId, colId, 'heroImage', false);
+        await databases.createEnumAttribute(dbId, colId, 'layout', ['standard', 'scrolly'], false, 'standard');
+        await databases.createStringAttribute(dbId, colId, 'content', 100000, false); 
+        await databases.createStringAttribute(dbId, colId, 'scrollySections', 100000, false);
+        await databases.createDatetimeAttribute(dbId, colId, 'publishedAt', false);
+        await databases.createStringAttribute(dbId, colId, 'slug', 100, true);
+        
+        console.log(`✅ Attributes for '${colId}' created.`);
     } catch (e) {
-        console.error(`❌ Error setting up ${COLLECTIONS.STORIES}:`, e);
+        if (e.code === 409) {
+            console.log(`ℹ️ Collection '${colId}' already exists. Updating permissions...`);
+            await databases.updateCollection(dbId, colId, 'Stories', permissions);
+        } else {
+            console.error(`❌ Error setting up ${colId}:`, e.message);
+        }
     }
 }
 
-async function setupAuthorsCollection(dbId) {
-    let colId;
+async function setupAuthorsCollection(dbId, permissions) {
+    const colId = COLLECTIONS.AUTHORS;
     try {
-        const list = await databases.listCollections(dbId);
-        const existing = list.collections.find(c => c.name === COLLECTIONS.AUTHORS);
-        
-        if (existing) {
-            colId = existing.$id;
-            console.log(`ℹ️ Collection '${COLLECTIONS.AUTHORS}' already exists.`);
-        } else {
-            const col = await databases.createCollection(dbId, ID.unique(), COLLECTIONS.AUTHORS);
-            colId = col.$id;
-            console.log(`✅ Collection '${COLLECTIONS.AUTHORS}' created.`);
+        await databases.createCollection(dbId, colId, 'Authors', permissions);
+        console.log(`✅ Collection '${colId}' created with permissions.`);
 
-            await databases.createStringAttribute(dbId, colId, 'name', 100, true);
-            await databases.createStringAttribute(dbId, colId, 'role', 100, false);
-            await databases.createEmailAttribute(dbId, colId, 'email', true);
-            await databases.createStringAttribute(dbId, colId, 'bio', 1000, false);
-            await databases.createStringAttribute(dbId, colId, 'slug', 100, true);
-            
-            console.log(`✅ Attributes for '${COLLECTIONS.AUTHORS}' created.`);
-        }
+        await databases.createStringAttribute(dbId, colId, 'name', 100, true);
+        await databases.createStringAttribute(dbId, colId, 'role', 100, false);
+        await databases.createEmailAttribute(dbId, colId, 'email', true);
+        await databases.createStringAttribute(dbId, colId, 'bio', 1000, false);
+        await databases.createStringAttribute(dbId, colId, 'slug', 100, true);
+        
+        console.log(`✅ Attributes for '${colId}' created.`);
     } catch (e) {
-        console.error(`❌ Error setting up ${COLLECTIONS.AUTHORS}:`, e);
+        if (e.code === 409) {
+            console.log(`ℹ️ Collection '${colId}' already exists. Updating permissions...`);
+            await databases.updateCollection(dbId, colId, 'Authors', permissions);
+        } else {
+            console.error(`❌ Error setting up ${colId}:`, e.message);
+        }
     }
 }
 
-async function setupCategoriesCollection(dbId) {
-    let colId;
+async function setupCategoriesCollection(dbId, permissions) {
+    const colId = COLLECTIONS.CATEGORIES;
     try {
-        const list = await databases.listCollections(dbId);
-        const existing = list.collections.find(c => c.name === COLLECTIONS.CATEGORIES);
-        
-        if (existing) {
-            colId = existing.$id;
-            console.log(`ℹ️ Collection '${COLLECTIONS.CATEGORIES}' already exists.`);
-        } else {
-            const col = await databases.createCollection(dbId, ID.unique(), COLLECTIONS.CATEGORIES);
-            colId = col.$id;
-            console.log(`✅ Collection '${COLLECTIONS.CATEGORIES}' created.`);
+        await databases.createCollection(dbId, colId, 'Categories', permissions);
+        console.log(`✅ Collection '${colId}' created with permissions.`);
 
-            await databases.createStringAttribute(dbId, colId, 'name', 100, true);
-            await databases.createStringAttribute(dbId, colId, 'slug', 100, true);
-            await databases.createStringAttribute(dbId, colId, 'color', 20, false, '#000000');
-            
-            console.log(`✅ Attributes for '${COLLECTIONS.CATEGORIES}' created.`);
-        }
+        await databases.createStringAttribute(dbId, colId, 'name', 100, true);
+        await databases.createStringAttribute(dbId, colId, 'slug', 100, true);
+        await databases.createStringAttribute(dbId, colId, 'color', 20, false, '#000000');
+        
+        console.log(`✅ Attributes for '${colId}' created.`);
     } catch (e) {
-        console.error(`❌ Error setting up ${COLLECTIONS.CATEGORIES}:`, e);
+        if (e.code === 409) {
+            console.log(`ℹ️ Collection '${colId}' already exists. Updating permissions...`);
+            await databases.updateCollection(dbId, colId, 'Categories', permissions);
+        } else {
+            console.error(`❌ Error setting up ${colId}:`, e.message);
+        }
     }
 }
 

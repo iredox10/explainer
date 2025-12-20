@@ -2,24 +2,42 @@
 import { storyService } from '../../lib/services';
 import ScrollyTemplate from '../../components/templates/ScrollyTemplate.astro';
 import StandardTemplate from '../../components/templates/StandardTemplate.astro';
+import { VOX_HOME_DATA } from '../../data/mock';
 
-// Since we are using SSG (static), we need to define all possible paths.
-// With Appwrite, this would fetch from the live DB.
 export async function getStaticPaths() {
-  const stories = await storyService.getPublishedStories();
-  
-  // We also need to account for specific slugs that might not be in the 'published' list yet but exist in mock
-  const slugs = ['fiber-optic-lagos', 'giant-wakes'];
-  
-  const paths = await Promise.all(slugs.map(async (slug) => {
-      const story = await storyService.getStoryBySlug(slug);
-      return {
-          params: { slug },
-          props: { story }
-      };
-  }));
+  try {
+    const stories = await storyService.getPublishedStories();
+    
+    // We also need to account for specific slugs that might not be in the 'published' list yet but exist in mock
+    const mockSlugs = ['fiber-optic-lagos', 'giant-wakes'];
+    
+    // Combine real DB slugs with mock slugs
+    const dbSlugs = stories.map(s => s.slug).filter(Boolean);
+    const allSlugs = [...new Set([...mockSlugs, ...dbSlugs])];
+    
+    const paths = await Promise.all(allSlugs.map(async (slug) => {
+        let story = await storyService.getStoryBySlug(slug);
+        
+        // Fallback to mock data for essential pages if DB fetch fails or is empty
+        if (!story) {
+            if (slug === 'giant-wakes') story = { ...VOX_HOME_DATA.hero, layout: 'scrolly', scrollySections: [] };
+            if (slug === 'fiber-optic-lagos') story = VOX_HOME_DATA.latest[0];
+        }
 
-  return paths;
+        return {
+            params: { slug },
+            props: { story }
+        };
+    }));
+
+    return paths.filter(p => p.props.story);
+  } catch (e) {
+      console.error("Static paths generation failed, using mocks only", e);
+      return [
+          { params: { slug: 'giant-wakes' }, props: { story: { ...VOX_HOME_DATA.hero, layout: 'scrolly', scrollySections: [] } } },
+          { params: { slug: 'fiber-optic-lagos' }, props: { story: VOX_HOME_DATA.latest[0] } }
+      ];
+  }
 }
 
 const { story } = Astro.props;
