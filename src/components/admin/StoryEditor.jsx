@@ -94,7 +94,14 @@ export default function StoryEditor({ storyId }) {
   const performSave = async (newStatus) => {
     setSaveStatus('saving');
     try {
-        const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...dataToSave } = { ...story, status: newStatus };
+        const payload = { 
+            ...story, 
+            status: newStatus,
+            content: typeof story.content === 'string' ? story.content : JSON.stringify(story.content || []),
+            scrollySections: typeof story.scrollySections === 'string' ? story.scrollySections : JSON.stringify(story.scrollySections || [])
+        };
+        const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...dataToSave } = payload;
+        
         const result = await storyService.saveStory(storyId, dataToSave);
         setStory(result);
         setIsDirty(false);
@@ -197,6 +204,23 @@ export default function StoryEditor({ storyId }) {
                             <option>Economy</option>
                         </select>
                     </div>
+                    {canPublish && (
+                        <div className="pt-2">
+                            <label className="flex items-center gap-3 cursor-pointer group">
+                                <div className="relative inline-block w-10 h-5 transition duration-200 ease-in-out">
+                                    <input 
+                                        type="checkbox" 
+                                        className="opacity-0 w-0 h-0 peer" 
+                                        checked={story.isFeatured || false}
+                                        onChange={(e) => handleChange('isFeatured', e.target.checked)}
+                                    />
+                                    <span className="absolute inset-0 rounded-full bg-gray-200 peer-checked:bg-[#008751] transition-colors"></span>
+                                    <span className="absolute left-1 top-1 w-3 h-3 rounded-full bg-white transition-transform peer-checked:translate-x-5"></span>
+                                </div>
+                                <span className="text-xs font-black uppercase tracking-widest text-gray-500 group-hover:text-black transition-colors">Feature on Homepage</span>
+                            </label>
+                        </div>
+                    )}
                     <div>
                         <label className="block text-[10px] font-bold text-gray-400 uppercase mb-3">Hero Image</label>
                         <div className="aspect-video w-full rounded-lg bg-gray-50 border-2 border-dashed border-gray-200 overflow-hidden relative group">

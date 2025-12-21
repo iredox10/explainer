@@ -7,13 +7,27 @@ import Footer from "../components/Footer.astro";
 import { storyService } from "../lib/services";
 import { VOX_HOME_DATA } from "../data/mock";
 
-// In a real build with Appwrite, this would be:
-// const publishedStories = await storyService.getPublishedStories();
-// For now, we use the enriched mock data structure
-const heroStory = VOX_HOME_DATA.hero;
-const latestStories = VOX_HOME_DATA.latest;
-const politicsStories = VOX_HOME_DATA.politics;
-const cultureStories = VOX_HOME_DATA.culture;
+// Fetch Published Stories
+const publishedStories = await storyService.getPublishedStories();
+
+// Logic to determine which stories go where
+// 1. Hero: Use the latest 'Featured' story, then 'Super Feature', or just the newest story
+const heroStory = publishedStories.find(s => s.isFeatured) || 
+                  publishedStories.find(s => s.category === 'Super Feature') || 
+                  publishedStories[0] || 
+                  VOX_HOME_DATA.hero;
+
+// 2. Latest: Top 4 excluding the hero
+const latestStories = publishedStories.length > 0 
+    ? publishedStories.filter(s => s.$id !== heroStory.$id).slice(0, 4)
+    : VOX_HOME_DATA.latest;
+
+// 3. Politics & Culture (Filtered from live data or fallback)
+const politicsStories = publishedStories.filter(s => s.category === 'Politics').slice(0, 3);
+const displayPolitics = politicsStories.length > 0 ? politicsStories : VOX_HOME_DATA.politics;
+
+const cultureStories = publishedStories.filter(s => s.category === 'Culture').slice(0, 4);
+const displayCulture = cultureStories.length > 0 ? cultureStories : VOX_HOME_DATA.culture;
 
 const trending = [
   "The case for abolishing the penny",
@@ -28,62 +42,36 @@ const trending = [
   
   <main class="max-w-7xl mx-auto px-6 py-12">
     
-    {/* 1. HERO FEATURE - The "Super Feature" */}
     <HeroFeature article={heroStory} />
 
-    {/* 2. THE LATEST STREAM + SIDEBAR */}
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-24 border-b border-gray-100 pb-24">
-      
-      {/* Sidebar: Trending (Left) */}
       <div class="hidden lg:block lg:col-span-3">
         <div class="sticky top-32">
           <h2 class="text-[10px] font-black uppercase tracking-[0.25em] mb-10 text-gray-400 border-b border-gray-100 pb-2">Trending Now</h2>
-          
           <div class="space-y-10">
             {trending.map((item, i) => (
               <div class="group cursor-pointer">
-                <div class="text-5xl font-serif-display font-black text-gray-100 group-hover:text-[#FAFF00] transition-colors leading-none mb-2">
-                  0{i + 1}
-                </div>
-                <a href="#" class="text-lg font-bold leading-tight text-black group-hover:text-gray-600 transition-colors block">
-                  {item}
-                </a>
+                <div class="text-5xl font-serif-display font-black text-gray-100 group-hover:text-[#FAFF00] transition-colors leading-none mb-2">0{i + 1}</div>
+                <a href="#" class="text-lg font-bold leading-tight text-black group-hover:text-gray-600 transition-colors block">{item}</a>
               </div>
             ))}
-          </div>
-          
-          {/* Ad Placeholder */}
-          <div class="mt-16 bg-gray-50 p-6 rounded border border-gray-100 text-center">
-             <span class="text-[9px] font-black uppercase tracking-widest text-gray-300 block mb-4">Advertisement</span>
-             <div class="aspect-square bg-white border border-gray-200 flex items-center justify-center text-gray-300 font-mono text-xs italic">
-                Promotion Space
-             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Stream (Right) */}
       <div class="lg:col-span-9 lg:pl-12">
         <div class="flex items-end justify-between mb-12">
            <h2 class="text-6xl md:text-7xl font-serif-display font-black text-black tracking-tighter">Latest</h2>
            <div class="hidden md:block h-px flex-1 bg-gray-200 ml-8 mb-4"></div>
         </div>
-        
         <div class="flex flex-col">
           {latestStories.map((article) => (
             <StreamCard article={article} />
           ))}
         </div>
-        
-        <div class="mt-16 text-center">
-           <button class="px-16 py-5 bg-black text-white font-black uppercase tracking-[0.2em] text-xs hover:bg-[#FAFF00] hover:text-black transition-all shadow-xl hover:-translate-y-1">
-             Load More Stories
-           </button>
-        </div>
       </div>
     </div>
 
-    {/* 3. NEWSLETTER BREAK */}
     <section class="py-24 my-12 border-b border-gray-100">
         <div class="bg-[#FAFF00] p-12 md:p-20 relative overflow-hidden rounded-sm shadow-2xl">
             <div class="absolute -top-20 -right-20 w-64 h-64 bg-white/20 rounded-full blur-3xl"></div>
@@ -93,17 +81,14 @@ const trending = [
                     <p class="text-xl font-medium text-black/70 max-w-md">Our weekly newsletter breaks down the biggest stories into clear, actionable insights.</p>
                 </div>
                 <form class="flex flex-col sm:flex-row gap-3">
-                    <input type="email" placeholder="you@work.com" class="flex-1 bg-white border-2 border-black/10 px-6 py-4 font-bold text-black focus:outline-none focus:border-black transition-colors" />
+                    <input type="email" placeholder="you@work.com" class="flex-1 bg-white border-2 border-black/10 px-6 py-4 font-bold text-black focus:outline-none focus:border-black" />
                     <button class="bg-black text-white px-10 py-4 font-black uppercase tracking-widest text-sm hover:scale-105 transition-transform">Sign Me Up</button>
                 </form>
             </div>
         </div>
     </section>
 
-    {/* 4. CATEGORY HIGHLIGHTS */}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-16 py-24">
-        
-        {/* Section: Politics */}
         <div>
             <div class="flex items-center gap-4 mb-12">
                 <h3 class="text-4xl font-serif-display font-black text-black">Politics</h3>
@@ -111,31 +96,27 @@ const trending = [
                 <a href="/topic/politics" class="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:underline">View Section →</a>
             </div>
             <div class="space-y-12">
-                {politicsStories.map((s, i) => (
+                {displayPolitics.map((s, i) => (
                     <article class={`group ${i === 0 ? '' : 'flex gap-6 items-start border-t border-gray-100 pt-8'}`}>
                         {i === 0 ? (
                             <>
                                 <div class="aspect-video overflow-hidden mb-6 bg-gray-100 relative">
-                                    <img src={s.imageUrl} class="w-full h-full object-cover grayscale-[50%] group-hover:grayscale-0 transition-all duration-700" />
-                                    <div class="absolute inset-0 ring-inset ring-1 ring-black/10 group-hover:ring-blue-500/50 transition-all"></div>
+                                    <img src={s.imageUrl || s.heroImage} class="w-full h-full object-cover grayscale-[50%] group-hover:grayscale-0 transition-all duration-700" />
                                 </div>
-                                <h4 class="text-3xl font-serif-display font-bold leading-tight group-hover:underline decoration-blue-400 underline-offset-4">{s.title}</h4>
-                                <p class="text-gray-500 mt-4 line-clamp-2">Deep analysis into the changing landscape of global power and policy.</p>
+                                <h4 class="text-3xl font-serif-display font-bold leading-tight group-hover:underline decoration-blue-400 underline-offset-4">
+                                    <a href={s.slug ? `/article/${s.slug}` : '#'}>{s.headline || s.title}</a>
+                                </h4>
                             </>
                         ) : (
-                            <>
-                                <div class="w-24 h-24 shrink-0 bg-gray-100 overflow-hidden">
-                                    <img src={s.imageUrl} class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" />
-                                </div>
-                                <h4 class="text-xl font-serif-display font-bold leading-tight group-hover:text-blue-600 transition-colors">{s.title}</h4>
-                            </>
+                            <h4 class="text-xl font-serif-display font-bold leading-tight group-hover:text-blue-600 transition-colors">
+                                <a href={s.slug ? `/article/${s.slug}` : '#'}>{s.headline || s.title}</a>
+                            </h4>
                         )}
                     </article>
                 ))}
             </div>
         </div>
 
-        {/* Section: Culture */}
         <div>
             <div class="flex items-center gap-4 mb-12">
                 <h3 class="text-4xl font-serif-display font-black text-black">Culture</h3>
@@ -143,37 +124,29 @@ const trending = [
                 <a href="/topic/culture" class="text-[10px] font-black uppercase tracking-widest text-pink-600 hover:underline">View Section →</a>
             </div>
             <div class="space-y-12">
-                {cultureStories.map((s, i) => (
+                {displayCulture.map((s, i) => (
                     <article class={`group ${i === 0 ? '' : 'flex gap-6 items-start border-t border-gray-100 pt-8'}`}>
                         {i === 0 ? (
                             <>
                                 <div class="aspect-video overflow-hidden mb-6 bg-gray-100 relative">
-                                    <img src={s.imageUrl} class="w-full h-full object-cover grayscale-[50%] group-hover:grayscale-0 transition-all duration-700" />
-                                    <div class="absolute inset-0 ring-inset ring-1 ring-black/10 group-hover:ring-pink-500/50 transition-all"></div>
+                                    <img src={s.imageUrl || s.heroImage} class="w-full h-full object-cover grayscale-[50%] group-hover:grayscale-0 transition-all duration-700" />
                                 </div>
-                                <h4 class="text-3xl font-serif-display font-bold leading-tight group-hover:underline decoration-pink-400 underline-offset-4">{s.title}</h4>
-                                <p class="text-gray-500 mt-4 line-clamp-2">Exploring the intersections of identity, creativity, and the digital zeitgeist.</p>
+                                <h4 class="text-3xl font-serif-display font-bold leading-tight group-hover:underline decoration-pink-400 underline-offset-4">
+                                    <a href={s.slug ? `/article/${s.slug}` : '#'}>{s.headline || s.title}</a>
+                                </h4>
                             </>
                         ) : (
-                            <>
-                                <div class="w-24 h-24 shrink-0 bg-gray-100 overflow-hidden">
-                                    <img src={s.imageUrl} class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" />
-                                </div>
-                                <h4 class="text-xl font-serif-display font-bold leading-tight group-hover:text-pink-600 transition-colors">{s.title}</h4>
-                            </>
+                            <h4 class="text-xl font-serif-display font-bold leading-tight group-hover:text-pink-600 transition-colors">
+                                <a href={s.slug ? `/article/${s.slug}` : '#'}>{s.headline || s.title}</a>
+                            </h4>
                         )}
                     </article>
                 ))}
             </div>
         </div>
-
     </div>
-
   </main>
 
-  <!-- 5. FEATURED VIDEO (Full Bleed) -->
   <VideoSection videos={VOX_HOME_DATA.videos} />
-  
   <Footer />
-
 </MainLayout>
