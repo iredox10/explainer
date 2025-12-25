@@ -8,35 +8,62 @@ import NewsletterForm from "../components/ui/NewsletterForm.jsx";
 import { serverStoryService } from "../lib/server-appwrite.js";
 import { VOX_HOME_DATA } from "../data/mock";
 
-// Fetch Published Stories
-const publishedStories = await serverStoryService.getPublishedStories();
+// Types/Interfaces for data consistency
+interface CleanArticle {
+    $id?: string;
+    headline?: string;
+    title?: string;
+    subhead?: string;
+    author?: string;
+    imageUrl?: string;
+    heroImage?: string;
+    category: string;
+    slug?: string;
+    readTime?: string;
+    isFeatured?: boolean;
+}
+
+// Fetch Published Stories with absolute fail-safe
+let publishedStories: CleanArticle[] = [];
+try {
+    const rawStories = await serverStoryService.getPublishedStories();
+    publishedStories = (rawStories || []) as CleanArticle[];
+} catch (e) {
+    console.error("[HOME] Failed to fetch stories from Appwrite:", e);
+}
 
 // Logic to determine which stories go where
 // 1. Hero: Use the latest 'Featured' story, then 'Super Feature', or just the newest story
 const heroStory =
-    publishedStories.find((s) => s.isFeatured) ||
+    publishedStories.find((s) => s.isFeatured === true) ||
     publishedStories.find((s) => s.category === "Super Feature") ||
     publishedStories[0] ||
-    VOX_HOME_DATA.hero;
+    (VOX_HOME_DATA.hero as CleanArticle);
 
 // 2. Latest: Top 4 excluding the hero
 const latestStories =
     publishedStories.length > 0
-        ? publishedStories.filter((s) => s.$id !== heroStory.$id).slice(0, 4)
-        : VOX_HOME_DATA.latest;
+        ? publishedStories
+              .filter((s) => s.$id && s.$id !== heroStory.$id)
+              .slice(0, 4)
+        : (VOX_HOME_DATA.latest as CleanArticle[]);
 
 // 3. Politics & Culture (Filtered from live data or fallback)
-const politicsStories = publishedStories
+const politicsStories = (publishedStories || [])
     .filter((s) => s.category === "Politics")
     .slice(0, 3);
 const displayPolitics =
-    politicsStories.length > 0 ? politicsStories : VOX_HOME_DATA.politics;
+    politicsStories.length > 0
+        ? politicsStories
+        : (VOX_HOME_DATA.politics as CleanArticle[]);
 
-const cultureStories = publishedStories
+const cultureStories = (publishedStories || [])
     .filter((s) => s.category === "Culture")
     .slice(0, 4);
 const displayCulture =
-    cultureStories.length > 0 ? cultureStories : VOX_HOME_DATA.culture;
+    cultureStories.length > 0
+        ? cultureStories
+        : (VOX_HOME_DATA.culture as CleanArticle[]);
 
 const trending = [
     "The case for abolishing the penny",
@@ -49,7 +76,7 @@ const trending = [
 
 <MainLayout title="Explainer - Visual Journalism That Makes Sense of the World">
     <main class="max-w-7xl mx-auto px-6 py-12">
-        <HeroFeature article={heroStory} />
+        <HeroFeature article={heroStory as any} />
 
         <div
             class="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-24 border-b border-gray-100 pb-24"
@@ -65,7 +92,7 @@ const trending = [
                         {
                             trending.map((item, i) => (
                                 <div class="group cursor-pointer">
-                                    <div class="text-5xl font-serif-display font-black text-gray-100 group-hover:text-[#FAFF00] transition-colors leading-none mb-2">
+                                    <div class="text-5xl font-serif-display font-black text-black/10 group-hover:text-[#FAFF00] transition-colors leading-none mb-2">
                                         0{i + 1}
                                     </div>
                                     <a
@@ -96,7 +123,7 @@ const trending = [
                 <div class="flex flex-col">
                     {
                         latestStories.map((article) => (
-                            <StreamCard article={article} />
+                            <StreamCard article={article as any} />
                         ))
                     }
                 </div>
@@ -253,6 +280,6 @@ const trending = [
         </div>
     </main>
 
-    <VideoSection videos={VOX_HOME_DATA.videos} />
+    <VideoSection videos={VOX_HOME_DATA.videos as any} />
     <Footer />
 </MainLayout>

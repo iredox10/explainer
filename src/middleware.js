@@ -10,16 +10,22 @@ export const onRequest = defineMiddleware(async (context, next) => {
         return next();
     }
 
+    // 2. Defensive Routing Logic
     try {
-        // 2. Fetch system state with timeout/fail-safe
-        const settings = await serverAdminService.getSettings().catch(err => {
-            console.error("[MIDDLEWARE] Failed to fetch settings:", err.message);
-            return null;
-        });
+        // Fetch system state with timeout/fail-safe
+        // Wrap in a try block to catch any module-level failures from server-appwrite
+        const settings = await (async () => {
+            try {
+                return await serverAdminService.getSettings();
+            } catch (err) {
+                console.error("[MIDDLEWARE] Data fetch failed:", err.message);
+                return null;
+            }
+        })();
 
         const isMaintenance = settings?.maintenance_mode === true;
 
-        // 3. Routing Logic
+        // 3. Maintenance Logic
         if (isMaintenance) {
             // Divert public traffic unless it's Admin or the Maintenance page
             if (!pathname.startsWith('/admin') && pathname !== '/maintenance') {
@@ -33,8 +39,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
             return redirect('/', 302);
         }
     } catch (e) {
-        // DEFENSIVE: Never crash the entire site due to a middleware error
-        console.error("[CRITICAL] Middleware exception:", e);
+        // ABSOLUTE FAIL-SAFE: If anything fails, let the request through to avoid 500
+        console.error("[CRITICAL] Middleware bypassed due to error:", e);
     }
 
     return next();

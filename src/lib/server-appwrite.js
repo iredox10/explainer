@@ -1,14 +1,30 @@
 // Server-side Appwrite client using API key for authenticated operations
-import { Client, Databases, Query, ID } from 'node-appwrite';
+import { Client, Databases, Query } from 'node-appwrite';
 
-const client = new Client()
-    .setEndpoint(import.meta.env.PUBLIC_APPWRITE_ENDPOINT)
-    .setProject(import.meta.env.PUBLIC_APPWRITE_PROJECT_ID)
-    .setKey(import.meta.env.APPWRITE_API_KEY);
+// DEFENSIVE: Retrieve environment variables with fallbacks
+const ENDPOINT = import.meta.env.PUBLIC_APPWRITE_ENDPOINT || process.env.PUBLIC_APPWRITE_ENDPOINT;
+const PROJECT_ID = import.meta.env.PUBLIC_APPWRITE_PROJECT_ID || process.env.PUBLIC_APPWRITE_PROJECT_ID;
+const API_KEY = import.meta.env.APPWRITE_API_KEY || process.env.APPWRITE_API_KEY;
+const DB_ID = import.meta.env.PUBLIC_APPWRITE_DATABASE_ID || process.env.PUBLIC_APPWRITE_DATABASE_ID || 'vox_cms';
 
-export const serverDatabases = new Databases(client);
+// Module-level client initialization
+let client;
+let serverDatabases;
 
-export const DB_ID = import.meta.env.PUBLIC_APPWRITE_DATABASE_ID || 'vox_cms';
+try {
+    if (ENDPOINT && PROJECT_ID && API_KEY) {
+        client = new Client()
+            .setEndpoint(ENDPOINT)
+            .setProject(PROJECT_ID)
+            .setKey(API_KEY);
+        serverDatabases = new Databases(client);
+    } else {
+        console.warn('[SERVER-APPWRITE] Incomplete configuration. Check your environment variables.');
+    }
+} catch (e) {
+    console.error('[SERVER-APPWRITE] Fatal initialization error:', e.message);
+}
+
 export const COLLECTIONS = {
     STORIES: 'stories',
     AUTHORS: 'authors',
@@ -19,6 +35,7 @@ export const COLLECTIONS = {
 
 export const serverStoryService = {
     async getStoryById(id) {
+        if (!serverDatabases) return null;
         try {
             return await serverDatabases.getDocument(DB_ID, COLLECTIONS.STORIES, id);
         } catch (error) {
@@ -28,6 +45,7 @@ export const serverStoryService = {
     },
 
     async getStoryBySlug(slug) {
+        if (!serverDatabases) return null;
         try {
             const response = await serverDatabases.listDocuments(DB_ID, COLLECTIONS.STORIES, [
                 Query.equal('slug', slug),
@@ -41,6 +59,7 @@ export const serverStoryService = {
     },
 
     async getPublishedStories() {
+        if (!serverDatabases) return [];
         try {
             const response = await serverDatabases.listDocuments(DB_ID, COLLECTIONS.STORIES, [
                 Query.equal('status', 'Published'),
@@ -54,6 +73,7 @@ export const serverStoryService = {
     },
 
     async getAllStories() {
+        if (!serverDatabases) return [];
         try {
             const response = await serverDatabases.listDocuments(DB_ID, COLLECTIONS.STORIES, [
                 Query.orderDesc('$createdAt')
@@ -68,6 +88,7 @@ export const serverStoryService = {
 
 export const serverAdminService = {
     async getSettings() {
+        if (!serverDatabases) return null;
         try {
             const response = await serverDatabases.listDocuments(DB_ID, COLLECTIONS.CONFIGS, [Query.limit(1)]);
             return response.documents[0] || null;
