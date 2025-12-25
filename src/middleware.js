@@ -1,36 +1,40 @@
 import { defineMiddleware } from "astro:middleware";
-import { serverAdminService } from "./lib/server-appwrite";
+import { serverAdminService } from "./lib/server-appwrite.js";
 
 export const onRequest = defineMiddleware(async (context, next) => {
     const { url, redirect } = context;
     const pathname = url.pathname;
 
-    // Skip middleware for API routes or static assets if needed
-    if (pathname.startsWith('/_image') || pathname.includes('.')) {
+    // 1. Immediate bypass for static/internal assets
+    if (pathname.startsWith('/_image') || pathname.startsWith('/@') || (pathname.includes('.') && !pathname.endsWith('.html'))) {
         return next();
     }
 
-    // 1. Fetch Global Settings
     try {
-        const settings = await serverAdminService.getSettings();
-        const isMaintenance = settings?.maintenance_mode;
+        // 2. Fetch system state with timeout/fail-safe
+        const settings = await serverAdminService.getSettings().catch(err => {
+            console.error("[MIDDLEWARE] Failed to fetch settings:", err.message);
+            return null;
+        });
 
-        console.log(`[Middleware] Path: ${pathname}, Maintenance: ${isMaintenance}`);
+        const isMaintenance = settings?.maintenance_mode === true;
 
-        // 2. Logic: If Maintenance is ON
+        // 3. Routing Logic
         if (isMaintenance) {
-            // Allow Admin & Maintenance page itself
+            // Divert public traffic unless it's Admin or the Maintenance page
             if (!pathname.startsWith('/admin') && pathname !== '/maintenance') {
-                return redirect('/maintenance');
+                console.log(`[INFRA-LOCK] Active. Redirecting ${pathname} to /maintenance`);
+                const response = redirect('/maintenance', 302);
+                response.headers.set('Cache-Control', 'no-store, max-age=0');
+                return response;
             }
-        } else {
-            // Logic: If Maintenance is OFF and user is on /maintenance page, send them home
-            if (pathname === '/maintenance') {
-                return redirect('/');
-            }
+        } else if (pathname === '/maintenance') {
+            // System is online: Release from maintenance page
+            return redirect('/', 302);
         }
     } catch (e) {
-        console.error("Middleware Error:", e);
+        // DEFENSIVE: Never crash the entire site due to a middleware error
+        console.error("[CRITICAL] Middleware exception:", e);
     }
 
     return next();

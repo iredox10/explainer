@@ -18,5 +18,6 @@ export const COLLECTIONS = {
     AUTHORS: 'authors',
     CATEGORIES: 'categories',
     PROFILES: 'profiles',
-    CONFIGS: 'configs'
+    CONFIGS: 'configs',
+    SUBSCRIBERS: 'subscribers'
 };

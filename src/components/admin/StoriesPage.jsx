@@ -9,6 +9,7 @@ export default function StoriesPage() {
   const [stories, setStories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all'); // all, draft, pending, published
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const u = getCurrentUser();
@@ -47,11 +48,15 @@ export default function StoriesPage() {
   };
 
   const filteredStories = stories.filter(story => {
-    if (activeTab === 'all') return true;
-    if (activeTab === 'draft') return story.workflow_status === 'draft';
-    if (activeTab === 'pending') return story.workflow_status === 'pending_review';
-    if (activeTab === 'published') return story.workflow_status === 'published';
-    return true;
+    const matchesTab = activeTab === 'all' ? true :
+      activeTab === 'draft' ? story.workflow_status === 'draft' :
+        activeTab === 'pending' ? story.workflow_status === 'pending_review' :
+          activeTab === 'published' ? story.workflow_status === 'published' : true;
+
+    const matchesSearch = (story.headline || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (story.author || '').toLowerCase().includes(searchQuery.toLowerCase());
+
+    return matchesTab && matchesSearch;
   });
 
   if (!user) return null;
@@ -80,18 +85,31 @@ export default function StoriesPage() {
           </button>
         </header>
 
-        {/* Workflow Tabs (Step 3) */}
-        <div className="flex items-center gap-2 mb-8 bg-white p-2 rounded-2xl border border-gray-100 w-fit shadow-sm">
-          {['all', 'draft', 'pending', 'published'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-black text-[#FAFF00]' : 'text-gray-400 hover:bg-gray-50 hover:text-black'
-                }`}
-            >
-              {tab === 'pending' ? 'Review Queue' : tab}
-            </button>
-          ))}
+        {/* Workflow Tabs & Search (Step 3) */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+          <div className="flex items-center gap-2 bg-white p-2 rounded-2xl border border-gray-100 w-fit shadow-sm">
+            {['all', 'draft', 'pending', 'published'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-black text-[#FAFF00]' : 'text-gray-400 hover:bg-gray-50 hover:text-black'
+                  }`}
+              >
+                {tab === 'pending' ? 'Review Queue' : tab}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative group min-w-[300px]">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-black transition-colors" />
+            <input
+              type="text"
+              placeholder="Filter by headline or author..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white border border-gray-100 rounded-2xl py-3 pl-12 pr-4 text-xs font-bold uppercase tracking-tight focus:outline-none focus:border-black focus:ring-4 focus:ring-black/5 transition-all"
+            />
+          </div>
         </div>
 
         {isLoading ? (
@@ -108,17 +126,17 @@ export default function StoriesPage() {
                       <div className="w-full h-full flex items-center justify-center text-gray-200"><FileText className="w-8 h-8 opacity-20" /></div>
                     )}
                     <div className={`absolute inset-0 border-2 rounded-2xl z-10 ${story.workflow_status === 'published' ? 'border-green-500/20' :
-                        story.workflow_status === 'pending_review' ? 'border-blue-500/20' : 'border-gray-200/20'
+                      story.workflow_status === 'pending_review' ? 'border-blue-500/20' : 'border-gray-200/20'
                       }`} />
                   </div>
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-4 mb-2">
                       <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border flex items-center gap-2 ${story.workflow_status === 'published' ? 'bg-green-50 text-green-700 border-green-100' :
-                          story.workflow_status === 'pending_review' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-gray-50 text-gray-500 border-gray-100'
+                        story.workflow_status === 'pending_review' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-gray-50 text-gray-500 border-gray-100'
                         }`}>
                         <div className={`w-1.5 h-1.5 rounded-full ${story.workflow_status === 'published' ? 'bg-green-600' :
-                            story.workflow_status === 'pending_review' ? 'bg-blue-600' : 'bg-gray-400'
+                          story.workflow_status === 'pending_review' ? 'bg-blue-600' : 'bg-gray-400'
                           }`} />
                         {story.workflow_status}
                       </span>

@@ -260,3 +260,18 @@ export const logService = {
         }
     }
 };
+
+export const newsletterService = {
+    async subscribe(email) {
+        try {
+            return await databases.createDocument(DB_ID, 'subscribers', ID.unique(), {
+                email,
+                subscribedAt: new Date().toISOString(),
+                status: 'active'
+            });
+        } catch (error) {
+            console.error('Newsletter subscription error:', error);
+            throw error;
+        }
+    }
+};

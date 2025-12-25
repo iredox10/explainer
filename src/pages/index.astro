@@ -4,6 +4,7 @@ import HeroFeature from "../components/ui/HeroFeature.astro";
 import StreamCard from "../components/ui/StreamCard.astro";
 import VideoSection from "../components/ui/VideoSection.astro";
 import Footer from "../components/Footer.astro";
+import NewsletterForm from "../components/ui/NewsletterForm.jsx";
 import { serverStoryService } from "../lib/server-appwrite.js";
 import { VOX_HOME_DATA } from "../data/mock";
 
@@ -124,17 +125,9 @@ const trending = [
                             stories into clear, actionable insights.
                         </p>
                     </div>
-                    <form class="flex flex-col sm:flex-row gap-3">
-                        <input
-                            type="email"
-                            placeholder="you@work.com"
-                            class="flex-1 bg-white border-2 border-black/10 px-6 py-4 font-bold text-black focus:outline-none focus:border-black"
-                        />
-                        <button
-                            class="bg-black text-white px-10 py-4 font-black uppercase tracking-widest text-sm hover:scale-105 transition-transform"
-                            >Sign Me Up</button
-                        >
-                    </form>
+                    <div class="flex-1">
+                        <NewsletterForm client:only="react" />
+                    </div>
                 </div>
             </div>
         </section>
