@@ -1,0 +1,36 @@
+---
+import { serverStoryService } from "../../../lib/server-appwrite.js";
+import ScrollyTemplate from "../../../components/templates/ScrollyTemplate.astro";
+import StandardTemplate from "../../../components/templates/StandardTemplate.astro";
+import "../../../styles/global.css";
+
+const { id } = Astro.params;
+
+// Use server-side service to fetch story by ID (works without user session)
+const story = await serverStoryService.getStoryById(id);
+
+if (!story) {
+    console.error(`Preview Error: Story with ID ${id} not found.`);
+    return Astro.redirect("/404");
+}
+---
+
+<div class="relative">
+    <div
+        class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] pointer-events-none"
+    >
+        <div
+            class="bg-black/80 backdrop-blur-md text-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.3em] border border-white/10 shadow-2xl"
+        >
+            Preview Mode • Restricted Access
+        </div>
+    </div>
+
+    {
+        story.layout === "scrolly" ? (
+            <ScrollyTemplate story={story} />
+        ) : (
+            <StandardTemplate story={story} />
+        )
+    }
+</div>

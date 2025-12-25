@@ -1,4 +1,4 @@
-import { databases, storage, DB_ID, COLLECTIONS, MEDIA_BUCKET_ID } from './appwrite';
+import { databases, storage, teams, DB_ID, COLLECTIONS, MEDIA_BUCKET_ID } from './appwrite';
 import { Query, ID } from 'appwrite';
 
 export const storyService = {
@@ -13,7 +13,6 @@ export const storyService = {
         }
     },
 
-    // Get all stories (filtered by role in component)
     async getAllStories() {
         try {
             const response = await databases.listDocuments(DB_ID, COLLECTIONS.STORIES, [
@@ -26,7 +25,6 @@ export const storyService = {
         }
     },
 
-    // Get published stories for frontend
     async getPublishedStories() {
         try {
             const response = await databases.listDocuments(DB_ID, COLLECTIONS.STORIES, [
@@ -49,7 +47,6 @@ export const storyService = {
             return response.documents[0] || null;
         } catch (error) {
             console.error('Appwrite error fetching story by slug:', error);
-            // Fallback to mock logic if needed or return null
             return null;
         }
     },
@@ -65,16 +62,23 @@ export const storyService = {
 
     async saveStory(id, data) {
         try {
+            // Sanitize data: remove empty strings for URL/Email fields as they cause validation errors
+            const sanitizedData = { ...data };
+            if (!sanitizedData.heroImage) delete sanitizedData.heroImage;
+            if (!sanitizedData.videoUrl) delete sanitizedData.videoUrl;
+
+            const slug = sanitizedData.slug || (sanitizedData.headline ? sanitizedData.headline.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') : ID.unique());
+
+            const finalData = {
+                ...sanitizedData,
+                slug,
+                publishedAt: sanitizedData.status === 'Published' && !sanitizedData.publishedAt ? new Date().toISOString() : sanitizedData.publishedAt
+            };
+
             if (id === 'new-story' || !id) {
-                return await databases.createDocument(DB_ID, COLLECTIONS.STORIES, ID.unique(), {
-                    ...data,
-                    publishedAt: data.status === 'Published' ? new Date().toISOString() : null
-                });
+                return await databases.createDocument(DB_ID, COLLECTIONS.STORIES, ID.unique(), finalData);
             } else {
-                return await databases.updateDocument(DB_ID, COLLECTIONS.STORIES, id, {
-                    ...data,
-                    publishedAt: data.status === 'Published' && !data.publishedAt ? new Date().toISOString() : data.publishedAt
-                });
+                return await databases.updateDocument(DB_ID, COLLECTIONS.STORIES, id, finalData);
             }
         } catch (error) {
             console.error('Appwrite error saving story:', error);
@@ -105,10 +109,14 @@ export const categoryService = {
     },
     async saveCategory(id, data) {
         try {
+            const finalData = {
+                ...data,
+                slug: data.slug || data.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '')
+            };
             if (!id) {
-                return await databases.createDocument(DB_ID, COLLECTIONS.CATEGORIES, ID.unique(), data);
+                return await databases.createDocument(DB_ID, COLLECTIONS.CATEGORIES, ID.unique(), finalData);
             }
-            return await databases.updateDocument(DB_ID, COLLECTIONS.CATEGORIES, id, data);
+            return await databases.updateDocument(DB_ID, COLLECTIONS.CATEGORIES, id, finalData);
         } catch (error) {
             console.error('Appwrite error saving category:', error);
             throw error;
@@ -137,10 +145,17 @@ export const authorService = {
     },
     async saveAuthor(id, data) {
         try {
+            const sanitizedData = { ...data };
+            if (!sanitizedData.imageUrl) delete sanitizedData.imageUrl;
+
+            const finalData = {
+                ...sanitizedData,
+                slug: sanitizedData.slug || sanitizedData.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '')
+            };
             if (!id) {
-                return await databases.createDocument(DB_ID, COLLECTIONS.AUTHORS, ID.unique(), data);
+                return await databases.createDocument(DB_ID, COLLECTIONS.AUTHORS, ID.unique(), finalData);
             }
-            return await databases.updateDocument(DB_ID, COLLECTIONS.AUTHORS, id, data);
+            return await databases.updateDocument(DB_ID, COLLECTIONS.AUTHORS, id, finalData);
         } catch (error) {
             console.error('Appwrite error saving author:', error);
             throw error;
@@ -153,6 +168,95 @@ export const authorService = {
         } catch (error) {
             console.error('Appwrite error deleting author:', error);
             return false;
+        }
+    }
+};
+
+export const teamService = {
+    async getTeamMembers() {
+        try {
+            const teamId = import.meta.env.PUBLIC_APPWRITE_TEAM_ID;
+            const response = await teams.listMemberships(teamId);
+            return response.memberships;
+        } catch (error) {
+            console.error('Appwrite error fetching team members:', error);
+            return [];
+        }
+    },
+    async inviteMember(email, name, role) {
+        try {
+            const teamId = import.meta.env.PUBLIC_APPWRITE_TEAM_ID;
+            return await teams.createMembership({
+                teamId,
+                roles: [role.toLowerCase()],
+                url: `${window.location.origin}/admin/login`,
+                email,
+                name
+            });
+        } catch (error) {
+            console.error('Appwrite error inviting member:', error);
+            throw error;
+        }
+    },
+    async removeMember(membershipId) {
+        try {
+            const teamId = import.meta.env.PUBLIC_APPWRITE_TEAM_ID;
+            await teams.deleteMembership(teamId, membershipId);
+            return true;
+        } catch (error) {
+            console.error('Appwrite error removing member:', error);
+            return false;
+        }
+    }
+};
+
+export const adminService = {
+    async getProfiles() {
+        try {
+            const response = await databases.listDocuments(DB_ID, COLLECTIONS.PROFILES);
+            return response.documents;
+        } catch (error) {
+            console.error('Error fetching profiles:', error);
+            return [];
+        }
+    },
+    async updateProfileStatus(id, status) {
+        try {
+            return await databases.updateDocument(DB_ID, COLLECTIONS.PROFILES, id, { status });
+        } catch (error) {
+            console.error('Error updating profile status:', error);
+            throw error;
+        }
+    },
+    async getSettings() {
+        try {
+            const response = await databases.listDocuments(DB_ID, COLLECTIONS.CONFIGS, [Query.limit(1)]);
+            return response.documents[0] || null;
+        } catch (error) {
+            console.error('Error fetching config:', error);
+            return null;
+        }
+    },
+    async updateSettings(id, data) {
+        try {
+            if (!id) return await databases.createDocument(DB_ID, COLLECTIONS.CONFIGS, ID.unique(), data);
+            return await databases.updateDocument(DB_ID, COLLECTIONS.CONFIGS, id, data);
+        } catch (error) {
+            console.error('Error updating config:', error);
+            throw error;
+        }
+    }
+};
+
+export const logService = {
+    async getSystemLogs() {
+        try {
+            const { account } = await import('./appwrite');
+            const response = await account.listLogs();
+            return response.logs;
+        } catch (error) {
+            console.error('Error fetching system logs:', error);
+            return [];
         }
     }
 };

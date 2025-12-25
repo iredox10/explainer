@@ -2,53 +2,101 @@
 import MainLayout from "../../layouts/MainLayout.astro";
 import StreamCard from "../../components/ui/StreamCard.astro";
 import Footer from "../../components/Footer.astro";
-import { storyService } from "../../lib/services";
+import { serverStoryService } from "../../lib/server-appwrite.js";
 import { VOX_HOME_DATA } from "../../data/mock";
 
-export function getStaticPaths() {
-  return [
-    { params: { slug: 'politics' }, props: { title: 'Politics', description: 'Power, policy, and the people who shape it.', color: 'bg-blue-200', accent: 'text-blue-600' } },
-    { params: { slug: 'technology' }, props: { title: 'Technology', description: 'The future is already here.', color: 'bg-yellow-200', accent: 'text-yellow-600' } },
-    { params: { slug: 'culture' }, props: { title: 'Culture', description: 'How we live, what we consume, and who we are.', color: 'bg-pink-200', accent: 'text-pink-600' } },
-    { params: { slug: 'science' }, props: { title: 'Science', description: 'Discoveries that change our understanding of the universe.', color: 'bg-green-200', accent: 'text-green-600' } },
-  ];
+const { slug } = Astro.params;
+
+const categoryMap: Record<
+  string,
+  { title: string; description: string; color: string; accent: string }
+> = {
+  politics: {
+    title: "Politics",
+    description: "Power, policy, and the people who shape it.",
+    color: "bg-blue-200",
+    accent: "text-blue-600",
+  },
+  technology: {
+    title: "Technology",
+    description: "The future is already here.",
+    color: "bg-yellow-200",
+    accent: "text-yellow-600",
+  },
+  culture: {
+    title: "Culture",
+    description: "How we live, what we consume, and who we are.",
+    color: "bg-pink-200",
+    accent: "text-pink-600",
+  },
+  science: {
+    title: "Science",
+    description: "Discoveries that change our understanding of the universe.",
+    color: "bg-green-200",
+    accent: "text-green-600",
+  },
+};
+
+const categoryData = slug ? categoryMap[slug] : null;
+
+if (!categoryData) {
+  return Astro.redirect("/404");
 }
 
-const { title, description, color, accent } = Astro.props;
+const { title, description, color, accent } = categoryData;
 
 // Fetch live stories for this category
-const allPublished = await storyService.getPublishedStories();
-const categoryStories = allPublished.filter(s => s.category.toLowerCase() === title.toLowerCase());
-
-// Fallback to mock if no live stories
-const displayStories = categoryStories.length > 0 ? categoryStories : (
-    title === 'Politics' ? VOX_HOME_DATA.politics :
-    title === 'Technology' ? VOX_HOME_DATA.latest :
-    title === 'Culture' ? VOX_HOME_DATA.culture :
-    VOX_HOME_DATA.futurePerfect
+const allPublished = await serverStoryService.getPublishedStories();
+const categoryStories = allPublished.filter(
+  (s) => s.category.toLowerCase() === title.toLowerCase(),
 );
 
+// Fallback to mock if no live stories
+const displayStories =
+  categoryStories.length > 0
+    ? categoryStories
+    : title === "Politics"
+      ? VOX_HOME_DATA.politics
+      : title === "Technology"
+        ? VOX_HOME_DATA.latest
+        : title === "Culture"
+          ? VOX_HOME_DATA.culture
+          : VOX_HOME_DATA.futurePerfect;
 ---
 
 <MainLayout title={`${title} - Explainer`}>
   <main class="min-h-screen bg-[#fdfdfd]">
     <div class="relative pt-20 pb-12 px-6 overflow-hidden">
-        <div class={`absolute top-0 left-0 w-full h-[60%] ${color} opacity-30 -skew-y-2 transform origin-top-left scale-110`}></div>
-        <div class="relative max-w-7xl mx-auto">
-            <span class={`font-black uppercase tracking-[0.2em] text-xs ${accent} mb-4 block`}>Section</span>
-            <h1 class="font-serif-display font-black text-6xl md:text-8xl mb-6 text-black">{title}</h1>
-            <p class="text-xl md:text-2xl font-serif text-gray-600 max-w-2xl leading-relaxed border-l-4 border-black pl-6">{description}</p>
-        </div>
+      <div
+        class={`absolute top-0 left-0 w-full h-[60%] ${color} opacity-30 -skew-y-2 transform origin-top-left scale-110`}
+      >
+      </div>
+      <div class="relative max-w-7xl mx-auto">
+        <span
+          class={`font-black uppercase tracking-[0.2em] text-xs ${accent} mb-4 block`}
+          >Section</span
+        >
+        <h1
+          class="font-serif-display font-black text-6xl md:text-8xl mb-6 text-black"
+        >
+          {title}
+        </h1>
+        <p
+          class="text-xl md:text-2xl font-serif text-gray-600 max-w-2xl leading-relaxed border-l-4 border-black pl-6"
+        >
+          {description}
+        </p>
+      </div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
-        <div class="lg:col-span-9 lg:col-start-4">
-            <div class="space-y-12">
-                {displayStories.map(story => (
-                    <StreamCard article={story} />
-                ))}
-            </div>
+    <div
+      class="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-12 gap-12"
+    >
+      <div class="lg:col-span-9 lg:col-start-4">
+        <div class="space-y-12">
+          {displayStories.map((story) => <StreamCard article={story} />)}
         </div>
+      </div>
     </div>
   </main>
   <Footer />

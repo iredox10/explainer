@@ -1,0 +1,22 @@
+---
+import GuestSubmissionPortal from "../components/admin/GuestSubmissionPortal";
+import "../styles/global.css";
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width" />
+        <title>Submit Dispatch | VOX NEWSROOM</title>
+        <style>
+            body {
+                background-color: black !important;
+                margin: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <GuestSubmissionPortal client:only="react" />
+    </body>
+</html>

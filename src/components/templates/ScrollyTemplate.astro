@@ -7,24 +7,90 @@ import ScrollyIsland from "../../components/ScrollyIsland.jsx";
 import ProgressBar from "../../components/ui/ProgressBar.jsx";
 
 const { story } = Astro.props;
+
+// Helper to parse JSON safely
+const parseJSON = (data: any, fallback = []) => {
+  if (!data) return fallback;
+  if (typeof data !== "string") return data;
+  try {
+    return JSON.parse(data);
+  } catch (e) {
+    console.error("JSON Parse Error", e);
+    return fallback;
+  }
+};
+
+const blocks = parseJSON(story.content);
+const steps = parseJSON(story.scrollySections);
 ---
 
 <MainLayout title={story.headline} showNav={false}>
   <ProgressBar client:load />
   <VoxNav />
-  <HeroLoop headline={story.headline} subhead={story.subhead} videoUrl={story.videoUrl} />
+  <HeroLoop
+    headline={story.headline}
+    subhead={story.subhead}
+    videoUrl={story.videoUrl}
+  />
 
-  <section class="mx-auto max-w-3xl px-6 py-24 text-2xl font-serif leading-relaxed text-gray-900">
-    <p class="mb-8">
-      Lagos is no longer just a city; it is a phenomenon. From the
-      bustling markets of Yaba to the glass towers of Victoria Island, a
-      new energy is pulsing through the streets.
-    </p>
-    <p>
-      It is a story of resilience, innovation, and sheer willpower. And at
-      the center of it all is a simple truth: <Highlighter client:visible>Nigeria is ready to lead.</Highlighter>
-    </p>
+  <section
+    class="mx-auto max-w-3xl px-6 py-24 text-2xl font-serif leading-relaxed text-gray-900"
+  >
+    {
+      blocks.map((block) => {
+        if (block.type === "p") {
+          return <p class="mb-8">{block.text}</p>;
+        }
+        if (block.type === "heading") {
+          return (
+            <h2 class="font-sans font-black text-3xl md:text-4xl text-black mt-16 mb-8 tracking-tight leading-none italic border-l-4 border-[#FAFF00] pl-6">
+              {block.text}
+            </h2>
+          );
+        }
+        if (block.type === "quote") {
+          return (
+            <blockquote class="my-12 border-l-4 border-gray-100 pl-8 font-serif text-3xl italic text-gray-500">
+              "{block.text}"
+              {block.author && (
+                <cite class="block text-xs font-black uppercase tracking-widest text-gray-400 mt-4 not-italic">
+                  — {block.author}
+                </cite>
+              )}
+            </blockquote>
+          );
+        }
+        if (block.type === "image") {
+          return (
+            <figure class="my-12">
+              <img
+                src={block.url}
+                class="w-full h-auto rounded-3xl shadow-xl"
+              />
+              {block.caption && (
+                <figcaption class="mt-4 text-xs font-bold text-gray-400 text-center uppercase tracking-widest">
+                  {block.caption}
+                </figcaption>
+              )}
+            </figure>
+          );
+        }
+        if (block.type === "callout") {
+          return (
+            <div class="bg-gray-50 p-8 rounded-3xl border border-gray-100 my-12">
+              <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-[#FAFF00] mb-3">
+                {block.title || "Context"}
+              </h4>
+              <p class="text-xl font-bold text-black leading-tight">
+                {block.text}
+              </p>
+            </div>
+          );
+        }
+        return null;
+      })
+    }
   </section>
 
-  <ScrollyIsland client:only="react" steps={story.scrollySections} />
+  <ScrollyIsland client:only="react" steps={steps} />
 </MainLayout>

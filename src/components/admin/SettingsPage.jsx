@@ -1,63 +1,150 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Bell, Shield, Users, CheckCircle } from 'lucide-react';
+import { Save, Globe, Shield, CheckCircle, AlertTriangle, Loader2, Zap } from 'lucide-react';
 import AdminSidebar from './AdminSidebar';
 import { getCurrentUser, ROLES } from '../../lib/authStore';
+import { adminService } from '../../lib/services';
 
 export default function SettingsPage() {
   const [user, setUser] = useState(null);
-  const [saved, setSaved] = useState(false);
+  const [settings, setSettings] = useState({
+    site_name: 'VOX.AFRICA',
+    maintenance_mode: false,
+    breaking_news_active: false
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedStatus, setSavedStatus] = useState(false);
 
   useEffect(() => {
     const u = getCurrentUser();
     if (!u) {
       window.location.href = '/admin/login';
     } else if (u.role !== ROLES.ADMIN) {
-      window.location.href = '/admin'; // Settings is Super Admin only
+      window.location.href = '/admin';
     } else {
       setUser(u);
+      loadSettings();
     }
   }, []);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const loadSettings = async () => {
+    setIsLoading(true);
+    try {
+      const data = await adminService.getSettings();
+      if (data) setSettings(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...dataToSave } = settings;
+      const result = await adminService.updateSettings($id, dataToSave);
+      setSettings(result);
+      setSavedStatus(true);
+      setTimeout(() => setSavedStatus(false), 3000);
+    } catch (e) {
+      alert("Failed to save: " + e.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const toggle = (field) => {
+    setSettings(prev => ({ ...prev, [field]: !prev[field] }));
   };
 
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex font-sans text-gray-900">
+    <div className="min-h-screen bg-transparent flex font-sans text-gray-900">
       <AdminSidebar activePage="settings" />
 
-      <main className="ml-64 flex-1 p-8">
-        <header className="flex justify-between items-center mb-8">
+      <main className="ml-64 flex-1 p-8 bg-gray-50/50">
+        <header className="flex justify-between items-end mb-12">
           <div>
-            <h1 className="text-2xl font-black text-gray-900">Settings</h1>
-            <p className="text-gray-500 text-sm mt-1">Configure your site preferences</p>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-black p-2 rounded-lg">
+                <Shield className="w-5 h-5 text-[#FAFF00]" />
+              </div>
+              <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">Global Control</h1>
+            </div>
+            <p className="text-gray-500 text-sm font-medium">Mission-critical site configurations and emergency overrides.</p>
           </div>
-          <button onClick={handleSave} className={`px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-all shadow-sm ${saved ? 'bg-green-100 text-green-700' : 'bg-[#008751] hover:bg-[#006b3f] text-white'}`}>
-            {saved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-            {saved ? 'Saved Successfully' : 'Save Changes'}
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className={`px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3 transition-all shadow-xl ${savedStatus ? 'bg-green-500 text-white' : 'bg-black text-white hover:bg-[#008751]'
+              }`}
+          >
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : savedStatus ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+            {savedStatus ? 'System Synchronized' : 'Update Core Config'}
           </button>
         </header>
 
-        <div className="max-w-4xl space-y-8">
-          <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2"><Globe className="w-4 h-4 text-gray-500" /><h3 className="font-bold text-sm text-gray-700 uppercase tracking-wider">General Information</h3></div>
-            <div className="p-6 space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div><label className="block text-xs font-bold text-gray-500 mb-1.5">Site Title</label><input type="text" defaultValue="VOX.AFRICA" className="w-full px-3 py-2 bg-white border rounded-lg text-sm focus:outline-none focus:border-[#008751]" /></div>
-                <div><label className="block text-xs font-bold text-gray-500 mb-1.5">Tagline</label><input type="text" defaultValue="Visual Journalism for the Future" className="w-full px-3 py-2 bg-white border rounded-lg text-sm focus:outline-none focus:border-[#008751]" /></div>
+        <div className="max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Site Identity */}
+          <section className="bg-white rounded-3xl border border-gray-100 shadow-2xl p-8 space-y-8">
+            <div className="flex items-center gap-3 border-b border-gray-50 pb-6">
+              <Globe className="w-5 h-5 text-gray-400" />
+              <h3 className="font-black text-sm uppercase tracking-widest text-gray-900">Infrastructure</h3>
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Editorial Identity (Site Name)</label>
+                <input
+                  type="text"
+                  value={settings.site_name}
+                  onChange={e => setSettings({ ...settings, site_name: e.target.value })}
+                  className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent focus:border-[#FAFF00] rounded-2xl text-sm font-bold outline-none transition-all"
+                />
               </div>
-              <div><label className="block text-xs font-bold text-gray-500 mb-1.5">Description</label><textarea className="w-full px-3 py-2 bg-white border rounded-lg text-sm focus:outline-none h-20">We explain the news through visual storytelling.</textarea></div>
             </div>
           </section>
-          
-          <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2"><Shield className="w-4 h-4 text-gray-500" /><h3 className="font-bold text-sm text-gray-700 uppercase tracking-wider">Branding</h3></div>
-            <div className="p-6 grid grid-cols-3 gap-6">
-              <div><label className="block text-xs font-bold text-gray-500 mb-1.5">Primary Color</label><div className="flex items-center gap-2"><input type="color" defaultValue="#008751" className="w-8 h-8 rounded border-0 cursor-pointer" /><span className="text-sm font-mono text-gray-600">#008751</span></div></div>
-              <div><label className="block text-xs font-bold text-gray-500 mb-1.5">Accent Color</label><div className="flex items-center gap-2"><input type="color" defaultValue="#FAFF00" className="w-8 h-8 rounded border-0 cursor-pointer" /><span className="text-sm font-mono text-gray-600">#FAFF00</span></div></div>
+
+          {/* Emergency Protocols */}
+          <section className="bg-white rounded-3xl border border-gray-100 shadow-2xl p-8 space-y-8">
+            <div className="flex items-center gap-3 border-b border-gray-50 pb-6">
+              <AlertTriangle className="w-5 h-5 text-red-500" />
+              <h3 className="font-black text-sm uppercase tracking-widest text-gray-900">Kill Switches & Overrides</h3>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex items-center justify-between p-4 bg-red-50/50 rounded-2xl border border-red-100/50">
+                <div>
+                  <h4 className="text-sm font-black text-red-900 uppercase tracking-tight">Maintenance Mode</h4>
+                  <p className="text-[10px] text-red-600/70 font-bold uppercase tracking-wider">Redirect all traffic to holding page</p>
+                </div>
+                <button
+                  onClick={() => toggle('maintenance_mode')}
+                  className={`w-12 h-6 rounded-full transition-all relative ${settings.maintenance_mode ? 'bg-red-500' : 'bg-gray-200'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${settings.maintenance_mode ? 'left-7' : 'left-1'}`}></div>
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-yellow-50/30 rounded-2xl border border-yellow-100/50">
+                <div className="flex items-start gap-3">
+                  <div className="mt-1">
+                    <Zap className={`w-4 h-4 ${settings.breaking_news_active ? 'text-yellow-600 fill-yellow-600' : 'text-gray-300'}`} />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-gray-900 uppercase tracking-tight">Breaking News Banner</h4>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Activate sitewide emergency alert</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => toggle('breaking_news_active')}
+                  className={`w-12 h-6 rounded-full transition-all relative ${settings.breaking_news_active ? 'bg-yellow-500' : 'bg-gray-200'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${settings.breaking_news_active ? 'left-7' : 'left-1'}`}></div>
+                </button>
+              </div>
             </div>
           </section>
         </div>

@@ -13,7 +13,7 @@ const databases = new Databases(client);
 const storage = new Storage(client);
 
 const DB_NAME = 'vox_cms';
-const DB_ID = 'vox_cms'; 
+const DB_ID = 'vox_cms';
 const BUCKET_ID = 'media';
 const COLLECTIONS = {
     STORIES: 'stories',
@@ -80,15 +80,19 @@ async function setupStoriesCollection(dbId, permissions) {
         await databases.createStringAttribute(dbId, colId, 'subhead', 1000, false);
         await databases.createStringAttribute(dbId, colId, 'category', 100, true);
         await databases.createStringAttribute(dbId, colId, 'author', 100, true);
-        await databases.createStringAttribute(dbId, colId, 'status', 50, false, 'Draft'); 
+        await databases.createStringAttribute(dbId, colId, 'status', 50, false, 'Draft');
         await databases.createUrlAttribute(dbId, colId, 'heroImage', false);
         await databases.createEnumAttribute(dbId, colId, 'layout', ['standard', 'scrolly'], false, 'standard');
-        await databases.createStringAttribute(dbId, colId, 'content', 100000, false); 
+        await databases.createStringAttribute(dbId, colId, 'content', 100000, false);
         await databases.createStringAttribute(dbId, colId, 'scrollySections', 100000, false);
+        await databases.createStringAttribute(dbId, colId, 'workflow_status', 50, false, 'draft');
+        await databases.createStringAttribute(dbId, colId, 'videoUrl', 1000, false);
         await databases.createDatetimeAttribute(dbId, colId, 'publishedAt', false);
         await databases.createStringAttribute(dbId, colId, 'slug', 100, true);
         await databases.createBooleanAttribute(dbId, colId, 'isFeatured', false, false);
-        
+        await databases.createStringAttribute(dbId, colId, 'author_id', 50, false);
+        await databases.createStringAttribute(dbId, colId, 'locked_by', 50, false);
+
         console.log(`✅ Attributes for '${colId}' created.`);
     } catch (e) {
         if (e.code === 409) {
@@ -111,7 +115,8 @@ async function setupAuthorsCollection(dbId, permissions) {
         await databases.createEmailAttribute(dbId, colId, 'email', true);
         await databases.createStringAttribute(dbId, colId, 'bio', 1000, false);
         await databases.createStringAttribute(dbId, colId, 'slug', 100, true);
-        
+        await databases.createUrlAttribute(dbId, colId, 'imageUrl', false);
+
         console.log(`✅ Attributes for '${colId}' created.`);
     } catch (e) {
         if (e.code === 409) {
@@ -132,7 +137,7 @@ async function setupCategoriesCollection(dbId, permissions) {
         await databases.createStringAttribute(dbId, colId, 'name', 100, true);
         await databases.createStringAttribute(dbId, colId, 'slug', 100, true);
         await databases.createStringAttribute(dbId, colId, 'color', 20, false, '#000000');
-        
+
         console.log(`✅ Attributes for '${colId}' created.`);
     } catch (e) {
         if (e.code === 409) {

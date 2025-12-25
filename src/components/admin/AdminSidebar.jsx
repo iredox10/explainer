@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, FileText, Settings, PenTool, Tags, Shield, LogOut, Loader2 } from 'lucide-react';
+import { Layout, FileText, Settings, PenTool, Tags, Shield, LogOut, Loader2, Zap, UserPlus, Inbox, BookOpen } from 'lucide-react';
 import { fetchSyncUser, ROLES, logout } from '../../lib/authStore';
 
 export default function AdminSidebar({ activePage }) {
@@ -8,122 +8,152 @@ export default function AdminSidebar({ activePage }) {
 
   useEffect(() => {
     async function sync() {
-        const u = await fetchSyncUser();
-        if (!u) {
-            window.location.href = '/admin/login';
-        } else {
-            setUser(u);
-            setLoading(false);
-        }
+      const u = await fetchSyncUser();
+      if (!u) {
+        window.location.href = '/admin/login';
+      } else {
+        setUser(u);
+        setLoading(false);
+      }
     }
     sync();
   }, []);
 
   if (loading || !user) {
-      return (
-          <aside className="w-64 bg-[#1a1a1a] flex items-center justify-center fixed h-full z-50">
-              <Loader2 className="animate-spin text-gray-600" />
-          </aside>
-      );
+    return (
+      <aside className="w-64 bg-black flex items-center justify-center fixed h-full z-50">
+        <Loader2 className="animate-spin text-[#FAFF00]" />
+      </aside>
+    );
   }
 
-  const isGodTier = user.role === ROLES.ADMIN;
-  const isGatekeeper = user.role === ROLES.EDITOR || isGodTier;
+  const isSuper = user.role === ROLES.ADMIN;
+  const isEditor = user.role === ROLES.EDITOR || isSuper;
 
   return (
-    <aside className="w-64 bg-[#1a1a1a] text-white flex flex-col fixed h-full z-50 transition-all duration-300">
-      <div className="h-16 flex items-center px-6 border-b border-gray-800">
-        <a href="/admin" className="font-black text-xl tracking-tight hover:text-gray-200 transition-colors">
-          VOX<span className="text-[#008751]">.</span>CMS
+    <aside className="w-64 bg-black text-white flex flex-col fixed h-full z-50 transition-all duration-300 border-r border-white/5 shadow-2xl">
+      {/* Brand */}
+      <div className="h-20 flex items-center px-8 border-b border-white/5">
+        <a href="/admin" className="font-black text-2xl tracking-tighter hover:text-[#FAFF00] transition-colors flex items-center gap-2">
+          VOX<span className="text-[#FAFF00] font-serif italic text-3xl -ml-1">.</span>OS
         </a>
       </div>
-      
-      <div className="px-6 py-6 border-b border-gray-800">
-         <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Signed in as</p>
-         <div className="font-bold text-white truncate">{user.name}</div>
-         <div className="text-[10px] font-black uppercase tracking-widest text-[#FAFF00] mt-1">
+
+      {/* Identity Card */}
+      <div className="px-8 py-8">
+        <div className="bg-white/5 p-4 rounded-2xl border border-white/5 relative group overflow-hidden">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-[#FAFF00]/10 rounded-full -mr-8 -mt-8 blur-2xl group-hover:bg-[#FAFF00]/20 transition-all duration-500"></div>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">Connected</p>
+          <div className="font-bold text-sm text-white truncate mb-1">{user.name}</div>
+          <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded bg-[#FAFF00] text-black text-[9px] font-black uppercase tracking-widest leading-none">
             {user.role}
-         </div>
+          </div>
+        </div>
       </div>
-      
-      <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
-        <a 
-          href="/admin" 
-          className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-bold transition-colors ${
-            activePage === 'dashboard' ? 'bg-[#008751] text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'
-          }`}
-        >
-          <Layout className="w-4 h-4" />
-          Dashboard
-        </a>
-        <a 
-          href="/admin/stories" 
-          className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-            activePage === 'stories' ? 'bg-[#008751] text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'
-          }`}
-        >
-          <FileText className="w-4 h-4" />
-          Stories
-        </a>
-        
-        {isGatekeeper && (
-            <a 
-            href="/admin/categories" 
-            className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                activePage === 'categories' ? 'bg-[#008751] text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'
-            }`}
-            >
-            <Tags className="w-4 h-4" />
-            Categories
-            </a>
-        )}
 
-        <a 
-          href="/admin/authors" 
-          className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-            activePage === 'authors' ? 'bg-[#008751] text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'
-          }`}
-        >
-          <PenTool className="w-4 h-4" />
-          Authors
-        </a>
+      {/* Navigation Groups (Step 4.A) */}
+      <nav className="flex-1 px-4 space-y-8 overflow-y-auto custom-scrollbar pt-2">
+        {/* Editorial Group */}
+        <section className="space-y-1">
+          <p className="px-4 text-[9px] font-black uppercase tracking-[0.3em] text-gray-600 mb-3">Newsroom Core</p>
+          <SidebarLink
+            href="/admin"
+            active={activePage === 'dashboard'}
+            icon={<Layout className="w-4 h-4" />}
+            label="Command Center"
+          />
+          <SidebarLink
+            href="/admin/stories"
+            active={activePage === 'stories'}
+            icon={<FileText className="w-4 h-4" />}
+            label="Article Desk"
+          />
 
-        {isGodTier && (
-            <>
-                <div className="pt-4 pb-2">
-                    <p className="px-3 text-xs font-bold uppercase tracking-wider text-gray-600">System</p>
-                </div>
-                <a 
-                href="/admin/admins" 
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activePage === 'admins' ? 'bg-[#008751] text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                }`}
-                >
-                <Shield className="w-4 h-4" />
-                Admins & Roles
-                </a>
-                <a 
-                href="/admin/settings" 
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activePage === 'settings' ? 'bg-[#008751] text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                }`}
-                >
-                <Settings className="w-4 h-4" />
-                Settings
-                </a>
-            </>
+          {isEditor && (
+            <SidebarLink
+              href="/admin/categories"
+              active={activePage === 'categories'}
+              icon={<Tags className="w-4 h-4" />}
+              label="Verticals"
+            />
+          )}
+
+          <SidebarLink
+            href="/admin/authors"
+            active={activePage === 'authors'}
+            icon={<PenTool className="w-4 h-4" />}
+            label="Directory"
+          />
+          <SidebarLink
+            href="/admin/guide"
+            active={activePage === 'guide'}
+            icon={<BookOpen className="w-4 h-4" />}
+            label="Writing Guide"
+          />
+        </section>
+
+        {/* Assignments / Tasks - Future Proofing Workflow */}
+        <section className="space-y-1">
+          <p className="px-4 text-[9px] font-black uppercase tracking-[0.3em] text-gray-600 mb-3">Tasks</p>
+          <SidebarLink
+            href="/admin/submissions"
+            active={activePage === 'submissions'}
+            icon={<Inbox className="w-4 h-4" />}
+            label="Guest Queue"
+          />
+        </section>
+
+        {/* System Group (Superadmin Only) */}
+        {isSuper && (
+          <section className="space-y-1">
+            <p className="px-4 text-[9px] font-black uppercase tracking-[0.3em] text-[#FAFF00]/40 mb-3">Enterprise Control</p>
+            <SidebarLink
+              href="/admin/admins"
+              active={activePage === 'admins'}
+              icon={<UserPlus className="w-4 h-4" />}
+              label="Team & Access"
+            />
+            <SidebarLink
+              href="/admin/settings"
+              active={activePage === 'settings'}
+              icon={<Zap className="w-4 h-4" />}
+              label="Global Protocols"
+            />
+            <SidebarLink
+              href="/admin/logs"
+              active={activePage === 'logs'}
+              icon={<Shield className="w-4 h-4" />}
+              label="System Logs"
+            />
+          </section>
         )}
       </nav>
 
-      <div className="p-4 border-t border-gray-800">
-        <button 
-            onClick={logout}
-            className="flex w-full items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-gray-400 hover:text-white hover:bg-red-900/20 hover:text-red-400 transition-colors"
+      {/* Terminal Footer */}
+      <div className="p-6 border-t border-white/5 bg-white/2">
+        <button
+          onClick={logout}
+          className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest text-red-400 hover:bg-red-500/10 hover:shadow-[0_0_20px_rgba(239,68,68,0.1)] transition-all group"
         >
-            <LogOut className="w-4 h-4" />
-            Sign Out
+          <LogOut className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          De-authenticate
         </button>
       </div>
     </aside>
+  );
+}
+
+function SidebarLink({ href, active, icon, label }) {
+  return (
+    <a
+      href={href}
+      className={`flex items-center gap-4 px-4 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 group ${active
+        ? 'bg-[#FAFF00] text-black shadow-[0_10px_20px_rgba(250,255,0,0.15)]'
+        : 'text-gray-400 hover:text-white hover:bg-white/5'
+        }`}
+    >
+      <span className={`${active ? 'text-black' : 'text-gray-500 group-hover:text-[#FAFF00] transition-colors'}`}>{icon}</span>
+      {label}
+    </a>
   );
 }
