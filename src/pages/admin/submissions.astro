@@ -1,8 +1,16 @@
 ---
-import MainLayout from "../../layouts/MainLayout.astro";
-import SubmissionsPage from "../../components/admin/SubmissionsPage";
+import SubmissionsPage from "../../components/admin/SubmissionsPage.jsx";
+import "../../styles/global.css";
 ---
 
-<MainLayout title="Guest Queue | VOX OS">
-    <SubmissionsPage client:load />
-</MainLayout>
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width" />
+        <title>Guest Queue - Vox CMS</title>
+    </head>
+    <body class="bg-gray-50/50">
+        <SubmissionsPage client:only="react" />
+    </body>
+</html>

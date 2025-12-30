@@ -94,10 +94,58 @@ export const storyService = {
             console.error('Appwrite error deleting story:', error);
             return false;
         }
+    },
+
+    async searchAllStories(queryText) {
+        try {
+            const response = await databases.listDocuments(DB_ID, COLLECTIONS.STORIES, [
+                Query.search('headline', queryText),
+                Query.limit(10)
+            ]);
+            return response.documents;
+        } catch (error) {
+            console.error('Appwrite error searching all stories:', error);
+            return [];
+        }
+    },
+    async searchStories(queryText) {
+        try {
+            const response = await databases.listDocuments(DB_ID, COLLECTIONS.STORIES, [
+                Query.search('headline', queryText),
+                Query.equal('status', 'Published'),
+                Query.limit(5)
+            ]);
+            return response.documents;
+        } catch (error) {
+            console.error('Appwrite error searching stories:', error);
+            return [];
+        }
+    },
+
+    calculateReadTime(content) {
+        try {
+            const blocks = typeof content === 'string' ? JSON.parse(content) : content;
+            const text = blocks.map(b => b.text || '').join(' ');
+            const wordsPerMinute = 225;
+            const words = text.trim().split(/\s+/).length;
+            const minutes = Math.ceil(words / wordsPerMinute);
+            return minutes || 1;
+        } catch (e) {
+            return 1;
+        }
     }
 };
 
 export const categoryService = {
+    async getCategoriesCount() {
+        try {
+            const response = await databases.listDocuments(DB_ID, COLLECTIONS.CATEGORIES, [Query.limit(1)]);
+            return response.total;
+        } catch (error) {
+            console.error('Error fetching category count:', error);
+            return 0;
+        }
+    },
     async getCategories() {
         try {
             const response = await databases.listDocuments(DB_ID, COLLECTIONS.CATEGORIES);
@@ -134,6 +182,15 @@ export const categoryService = {
 };
 
 export const authorService = {
+    async getAuthorsCount() {
+        try {
+            const response = await databases.listDocuments(DB_ID, COLLECTIONS.AUTHORS, [Query.limit(1)]);
+            return response.total;
+        } catch (error) {
+            console.error('Error fetching author count:', error);
+            return 0;
+        }
+    },
     async getAuthors() {
         try {
             const response = await databases.listDocuments(DB_ID, COLLECTIONS.AUTHORS);
@@ -262,6 +319,15 @@ export const logService = {
 };
 
 export const newsletterService = {
+    async getSubscribersCount() {
+        try {
+            const response = await databases.listDocuments(DB_ID, 'subscribers', [Query.limit(1)]);
+            return response.total;
+        } catch (error) {
+            console.error('Error fetching subscriber count:', error);
+            return 0;
+        }
+    },
     async subscribe(email) {
         try {
             return await databases.createDocument(DB_ID, 'subscribers', ID.unique(), {

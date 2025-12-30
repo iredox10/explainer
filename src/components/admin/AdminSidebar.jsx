@@ -92,6 +92,17 @@ export default function AdminSidebar({ activePage }) {
           />
         </section>
 
+        {/* Audience Group */}
+        <section className="space-y-1">
+          <p className="px-4 text-[9px] font-black uppercase tracking-[0.3em] text-gray-600 mb-3">Audience</p>
+          <SidebarLink
+            href="/admin/newsletters"
+            active={activePage === 'newsletters'}
+            icon={<Zap className="w-4 h-4" />}
+            label="Newsletters"
+          />
+        </section>
+
         {/* Assignments / Tasks - Future Proofing Workflow */}
         <section className="space-y-1">
           <p className="px-4 text-[9px] font-black uppercase tracking-[0.3em] text-gray-600 mb-3">Tasks</p>

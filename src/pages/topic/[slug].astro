@@ -2,11 +2,18 @@
 import MainLayout from "../../layouts/MainLayout.astro";
 import StreamCard from "../../components/ui/StreamCard.astro";
 import Footer from "../../components/Footer.astro";
-import { serverStoryService } from "../../lib/server-appwrite.js";
+import {
+  serverStoryService,
+  serverCategoryService,
+} from "../../lib/server-appwrite.js";
 import { VOX_HOME_DATA } from "../../data/mock";
 
 const { slug } = Astro.params;
 
+// Fetch Live Category Data
+const categoryRecord = await serverCategoryService.getCategoryBySlug(slug);
+
+// Logic mapping if Appwrite is empty or for fallback styling
 const categoryMap: Record<
   string,
   { title: string; description: string; color: string; accent: string }
@@ -37,13 +44,22 @@ const categoryMap: Record<
   },
 };
 
-const categoryData = slug ? categoryMap[slug] : null;
+const fallbackData = slug ? categoryMap[slug] : null;
 
-if (!categoryData) {
+// Use Appwrite data if available, else fallback to map
+const title = categoryRecord?.name || fallbackData?.title;
+const description =
+  categoryRecord?.description ||
+  fallbackData?.description ||
+  "In-depth investigative journalism and visual storytelling.";
+const color =
+  categoryRecord?.colorClass || fallbackData?.color || "bg-gray-200";
+const accent =
+  categoryRecord?.accentClass || fallbackData?.accent || "text-black";
+
+if (!title) {
   return Astro.redirect("/404");
 }
-
-const { title, description, color, accent } = categoryData;
 
 // Fetch live stories for this category
 const allPublished = await serverStoryService.getPublishedStories();
@@ -77,7 +93,7 @@ const displayStories =
           >Section</span
         >
         <h1
-          class="font-serif-display font-black text-6xl md:text-8xl mb-6 text-black"
+          class="font-serif-display font-black text-6xl md:text-8xl mb-6 text-black tracking-tighter uppercase italic"
         >
           {title}
         </h1>

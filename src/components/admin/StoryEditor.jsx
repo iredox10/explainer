@@ -53,7 +53,8 @@ export default function StoryEditor({ storyId }) {
                 scrollySections: JSON.stringify([
                     { type: 'map', center: [20, 0], zoom: 1, highlight: '', label: 'The African Continent', text: 'The story begins here.' }
                 ]),
-                heroImage: ""
+                heroImage: "",
+                version_log: JSON.stringify([{ action: "Dispatch Created", user: currentUser.name, timestamp: new Date().toISOString() }])
             });
         } else {
             const data = await storyService.getStoryById(storyId);
@@ -126,7 +127,17 @@ export default function StoryEditor({ storyId }) {
                 layout: story.layout,
                 videoUrl: story.videoUrl,
                 content: typeof story.content === 'string' ? story.content : JSON.stringify(story.content || []),
-                scrollySections: typeof story.scrollySections === 'string' ? story.scrollySections : JSON.stringify(story.scrollySections || [])
+                scrollySections: typeof story.scrollySections === 'string' ? story.scrollySections : JSON.stringify(story.scrollySections || []),
+                version_log: (() => {
+                    const currentLogs = JSON.parse(story.version_log || '[]');
+                    const newLog = { action: `Status changed to ${newStatus}`, user: user.name, timestamp: new Date().toISOString() };
+                    // Avoid duplicate identical logs if saving without status change
+                    const lastLog = currentLogs[currentLogs.length - 1];
+                    if (lastLog && lastLog.action === newLog.action && (Date.now() - new Date(lastLog.timestamp).getTime() < 60000)) {
+                        return JSON.stringify(currentLogs);
+                    }
+                    return JSON.stringify([...currentLogs, newLog].slice(-10));
+                })()
             };
             const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...dataToSave } = payload;
 
@@ -215,13 +226,20 @@ export default function StoryEditor({ storyId }) {
                         {isEditor && (
                             <div className="flex items-center gap-2">
                                 {story.workflow_status === 'pending_review' && (
-                                    <button onClick={() => performSave('draft')} className="bg-red-50 text-red-600 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-3 border border-red-100 hover:bg-red-100 transition-all">
-                                        <AlertCircle className="w-4 h-4" /> Kick Back
+                                    <>
+                                        <button onClick={() => performSave('draft')} className="bg-red-50 text-red-600 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-3 border border-red-100 hover:bg-red-100 transition-all">
+                                            <AlertCircle className="w-4 h-4" /> Kick Back
+                                        </button>
+                                        <button onClick={() => performSave('approved')} className="bg-blue-600 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-3 hover:bg-blue-700 transition-all shadow-xl">
+                                            <CheckSquare className="w-4 h-4" /> Approve for Final
+                                        </button>
+                                    </>
+                                )}
+                                {(story.workflow_status === 'approved' || story.workflow_status === 'published') && (
+                                    <button onClick={() => performSave('published')} className="bg-[#FAFF00] text-black px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-3 hover:bg-black hover:text-white transition-all shadow-[0_10px_20px_rgba(250,255,0,0.3)]">
+                                        <CheckSquare className="w-4 h-4" /> {story.workflow_status === 'published' ? 'Update Live' : 'Go Live'}
                                     </button>
                                 )}
-                                <button onClick={() => performSave('published')} className="bg-[#FAFF00] text-black px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-3 hover:bg-black hover:text-white transition-all shadow-[0_10px_20px_rgba(250,255,0,0.3)]">
-                                    <CheckSquare className="w-4 h-4" /> {story.workflow_status === 'published' ? 'Update Live' : 'Go Live'}
-                                </button>
                             </div>
                         )}
 
@@ -753,18 +771,18 @@ export default function StoryEditor({ storyId }) {
                                 <History className="w-4 h-4 text-gray-300" />
                             </div>
                             <div className="space-y-3">
-                                {[
-                                    { action: 'Created', user: story.author, time: 'Initial Version' },
-                                    { action: 'Status Change', user: 'System', time: story.workflow_status }
-                                ].map((log, i) => (
+                                {JSON.parse(story.version_log || '[]').reverse().map((log, i) => (
                                     <div key={i} className="flex items-center justify-between p-4 bg-white border border-gray-50 rounded-2xl group cursor-pointer hover:border-black transition-all">
                                         <div>
-                                            <p className="text-xs font-black uppercase tracking-tight text-gray-900">{log.action}</p>
-                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{log.user}</p>
+                                            <p className="text-[10px] font-black uppercase tracking-tight text-gray-900">{log.action}</p>
+                                            <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">{log.user} • {new Date(log.timestamp).toLocaleTimeString()}</p>
                                         </div>
                                         <ChevronRight className="w-4 h-4 text-gray-100 group-hover:text-black transition-colors" />
                                     </div>
                                 ))}
+                                {(!story.version_log || story.version_log === '[]') && (
+                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-center py-4 italic">No history logged yet.</p>
+                                )}
                             </div>
                         </section>
 

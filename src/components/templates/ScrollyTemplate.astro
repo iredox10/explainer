@@ -6,6 +6,9 @@ import Highlighter from "../../components/Highlighter.jsx";
 import ScrollyIsland from "../../components/ScrollyIsland.jsx";
 import ProgressBar from "../../components/ui/ProgressBar.jsx";
 
+import ShareButtons from "../../components/ui/ShareButtons.jsx";
+import PersistentAudioPlayer from "../../components/ui/PersistentAudioPlayer.jsx";
+
 const { story } = Astro.props;
 
 // Helper to parse JSON safely
@@ -22,6 +25,14 @@ const parseJSON = (data: any, fallback = []) => {
 
 const blocks = parseJSON(story.content);
 const steps = parseJSON(story.scrollySections);
+const fullText = blocks
+  .filter((b: any) => b.type === "p" || b.type === "heading")
+  .map((b: any) => b.text)
+  .join(". ");
+
+import { serverStoryService } from "../../lib/server-appwrite.js";
+const readTime = serverStoryService.calculateReadTime(blocks);
+const displayReadTime = `${readTime} min read`;
 ---
 
 <MainLayout title={story.headline} showNav={false}>
@@ -33,64 +44,78 @@ const steps = parseJSON(story.scrollySections);
     videoUrl={story.videoUrl}
   />
 
-  <section
-    class="mx-auto max-w-3xl px-6 py-24 text-2xl font-serif leading-relaxed text-gray-900"
-  >
-    {
-      blocks.map((block) => {
-        if (block.type === "p") {
-          return <p class="mb-8">{block.text}</p>;
-        }
-        if (block.type === "heading") {
-          return (
-            <h2 class="font-sans font-black text-3xl md:text-4xl text-black mt-16 mb-8 tracking-tight leading-none italic border-l-4 border-[#FAFF00] pl-6">
-              {block.text}
-            </h2>
-          );
-        }
-        if (block.type === "quote") {
-          return (
-            <blockquote class="my-12 border-l-4 border-gray-100 pl-8 font-serif text-3xl italic text-gray-500">
-              "{block.text}"
-              {block.author && (
-                <cite class="block text-xs font-black uppercase tracking-widest text-gray-400 mt-4 not-italic">
-                  — {block.author}
-                </cite>
-              )}
-            </blockquote>
-          );
-        }
-        if (block.type === "image") {
-          return (
-            <figure class="my-12">
-              <img
-                src={block.url}
-                class="w-full h-auto rounded-3xl shadow-xl"
-              />
-              {block.caption && (
-                <figcaption class="mt-4 text-xs font-bold text-gray-400 text-center uppercase tracking-widest">
-                  {block.caption}
-                </figcaption>
-              )}
-            </figure>
-          );
-        }
-        if (block.type === "callout") {
-          return (
-            <div class="bg-gray-50 p-8 rounded-3xl border border-gray-100 my-12">
-              <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-[#FAFF00] mb-3">
-                {block.title || "Context"}
-              </h4>
-              <p class="text-xl font-bold text-black leading-tight">
+  <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12">
+    {/* Left Sidebar: Social Sticky */}
+    <aside class="hidden lg:block lg:col-span-2">
+      <div class="sticky top-32 flex flex-col gap-6 items-start py-24">
+        <span
+          class="text-[10px] font-black uppercase tracking-widest text-gray-400"
+          >Share</span
+        >
+        <ShareButtons client:load title={story.headline} />
+      </div>
+    </aside>
+
+    <section
+      class="lg:col-span-8 lg:col-start-3 py-24 text-2xl font-serif leading-relaxed text-gray-900"
+    >
+      {
+        blocks.map((block) => {
+          if (block.type === "p") {
+            return <p class="mb-8">{block.text}</p>;
+          }
+          if (block.type === "heading") {
+            return (
+              <h2 class="font-sans font-black text-3xl md:text-4xl text-black mt-16 mb-8 tracking-tight leading-none italic border-l-4 border-[#FAFF00] pl-6">
                 {block.text}
-              </p>
-            </div>
-          );
-        }
-        return null;
-      })
-    }
-  </section>
+              </h2>
+            );
+          }
+          if (block.type === "quote") {
+            return (
+              <blockquote class="my-12 border-l-4 border-gray-100 pl-8 font-serif text-3xl italic text-gray-500">
+                "{block.text}"
+                {block.author && (
+                  <cite class="block text-xs font-black uppercase tracking-widest text-gray-400 mt-4 not-italic">
+                    — {block.author}
+                  </cite>
+                )}
+              </blockquote>
+            );
+          }
+          if (block.type === "image") {
+            return (
+              <figure class="my-12">
+                <img
+                  src={block.url}
+                  class="w-full h-auto rounded-3xl shadow-xl"
+                />
+                {block.caption && (
+                  <figcaption class="mt-4 text-xs font-bold text-gray-400 text-center uppercase tracking-widest">
+                    {block.caption}
+                  </figcaption>
+                )}
+              </figure>
+            );
+          }
+          if (block.type === "callout") {
+            return (
+              <div class="bg-gray-50 p-8 rounded-3xl border border-gray-100 my-12">
+                <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-[#FAFF00] mb-3">
+                  {block.title || "Context"}
+                </h4>
+                <p class="text-xl font-bold text-black leading-tight">
+                  {block.text}
+                </p>
+              </div>
+            );
+          }
+          return null;
+        })
+      }
+    </section>
+  </div>
 
   <ScrollyIsland client:only="react" steps={steps} />
+  <PersistentAudioPlayer client:load text={fullText} title={story.headline} />
 </MainLayout>

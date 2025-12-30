@@ -1,63 +1,91 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, FileText, Hash, ArrowRight, X } from 'lucide-react';
-
-// Mock Data for search
-const SECTIONS = [
-  { id: 's1', title: 'Politics', type: 'section', url: '/topic/politics' },
-  { id: 's2', title: 'Technology', type: 'section', url: '/topic/technology' },
-  { id: 's3', title: 'Culture', type: 'section', url: '/topic/culture' },
-  { id: 's4', title: 'Science', type: 'section', url: '/topic/science' },
-  { id: 's5', title: 'Video', type: 'section', url: '/#video' },
-];
-
-const ARTICLES = [
-  { id: 'a1', title: 'The hidden fiber optic cables connecting Lagos', type: 'article', url: '/article/fiber-optic-lagos' },
-  { id: 'a2', title: 'The Giant Wakes: Nigeria\'s Economy', type: 'article', url: '/article/giant-wakes' },
-  { id: 'a3', title: 'Why your rent is so high', type: 'article', url: '#' },
-  { id: 'a4', title: 'How AI is rewriting the internet', type: 'article', url: '#' },
-];
+import { Search, FileText, Hash, ArrowRight, Loader2, Plus, Users, Settings as SettingsIcon, LogOut } from 'lucide-react';
+import { storyService, categoryService } from '../../lib/services';
 
 export default function CommandMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [sections, setSections] = useState([]);
+  const [articles, setArticles] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
   const inputRef = useRef(null);
 
-  // Filter Items
-  const filteredSections = SECTIONS.filter(item => item.title.toLowerCase().includes(query.toLowerCase()));
-  const filteredArticles = ARTICLES.filter(item => item.title.toLowerCase().includes(query.toLowerCase()));
-  
-  const allItems = [...filteredSections, ...filteredArticles];
+  useEffect(() => {
+    setIsAdmin(window.location.pathname.startsWith('/admin'));
+  }, []);
 
-  // Handle Open/Close with Keyboard
+  // Initial fetch for sections
+  useEffect(() => {
+    async function fetchInitialData() {
+      const cats = await categoryService.getCategories();
+      setSections(cats.map(c => ({
+        id: c.$id,
+        title: c.name,
+        type: 'section',
+        url: isAdmin ? `/admin/categories` : `/topic/${c.slug || c.name.toLowerCase()}`
+      })));
+    }
+    fetchInitialData();
+  }, [isAdmin]);
+
+  // Live search for articles
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (query.length > 2) {
+        setIsLoading(true);
+        const results = isAdmin 
+          ? await storyService.searchAllStories(query)
+          : await storyService.searchStories(query);
+          
+        setArticles(results.map(r => ({
+          id: r.$id,
+          title: r.headline,
+          type: 'article',
+          url: isAdmin ? `/admin/edit/${r.$id}` : `/article/${r.slug}`
+        })));
+        setIsLoading(false);
+      } else if (query.length === 0) {
+        setArticles([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [query, isAdmin]);
+
+  const adminShortcuts = isAdmin ? [
+    { id: 'new-story', title: 'Create New Dispatch', url: '/admin/edit/new-story', icon: Plus },
+    { id: 'manage-authors', title: 'Author Directory', url: '/admin/authors', icon: Users },
+    { id: 'system-settings', title: 'Global Protocols', url: '/admin/settings', icon: SettingsIcon },
+  ] : [];
+
+  const filteredShortcuts = adminShortcuts.filter(s => s.title.toLowerCase().includes(query.toLowerCase()));
+  const filteredSections = sections.filter(item => item.title.toLowerCase().includes(query.toLowerCase()));
+  const allItems = [...filteredShortcuts, ...filteredSections, ...articles];
+
+  // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setIsOpen((prev) => !prev);
       }
-      if (e.key === 'Escape') {
-        setIsOpen(false);
-      }
+      if (e.key === 'Escape') setIsOpen(false);
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Reset selection when query changes or opened
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [query, isOpen]);
+  useEffect(() => { setSelectedIndex(0); }, [query, isOpen]);
 
-  // Focus input on open
   useEffect(() => {
     if (isOpen && inputRef.current) {
       setTimeout(() => inputRef.current.focus(), 10);
     }
   }, [isOpen]);
 
-  // Handle Navigation
   const handleNavigation = (e) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -79,7 +107,6 @@ export default function CommandMenu() {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -88,7 +115,6 @@ export default function CommandMenu() {
             className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[200]"
           />
 
-          {/* Modal */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -96,47 +122,60 @@ export default function CommandMenu() {
             transition={{ duration: 0.2 }}
             className="fixed top-[20%] left-1/2 -translate-x-1/2 w-full max-w-2xl bg-white shadow-2xl rounded-xl overflow-hidden z-[201] border border-gray-200 font-sans"
           >
-            {/* Search Input */}
             <div className="flex items-center border-b border-gray-100 px-4 py-4">
               <Search className="w-5 h-5 text-gray-400 mr-3" />
               <input
                 ref={inputRef}
                 type="text"
-                placeholder="Search articles, topics, or sections..."
+                placeholder={isAdmin ? "Execute admin command..." : "Search articles, topics, or sections..."}
                 className="flex-1 text-lg outline-none placeholder:text-gray-400 bg-transparent text-black"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleNavigation}
               />
-              <div className="flex items-center gap-2">
-                 <span className="text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded border border-gray-200">ESC</span>
-              </div>
+              {isLoading && <Loader2 className="w-4 h-4 animate-spin text-[#FAFF00]" />}
             </div>
 
-            {/* Results List */}
             <div className="max-h-[60vh] overflow-y-auto py-2">
-              
               {allItems.length === 0 ? (
-                <div className="px-6 py-12 text-center text-gray-500">
-                  <p>No results found for "{query}"</p>
+                <div className="px-6 py-12 text-center text-gray-400">
+                  <p className="text-[10px] uppercase font-black tracking-widest italic">No surveillance matches found</p>
                 </div>
               ) : (
                 <>
-                  {/* Sections Group */}
-                  {filteredSections.length > 0 && (
+                  {filteredShortcuts.length > 0 && (
                     <div className="mb-2">
-                      <div className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
-                        Sections
-                      </div>
-                      {filteredSections.map((item, index) => {
+                      <div className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400">Quick Actions</div>
+                      {filteredShortcuts.map((item, index) => {
                         const isSelected = index === selectedIndex;
+                        const Icon = item.icon;
                         return (
                           <div
                             key={item.id}
-                            onClick={() => {
-                                window.location.href = item.url;
-                                setIsOpen(false);
-                            }}
+                            onClick={() => { window.location.href = item.url; setIsOpen(false); }}
+                            className={`px-4 py-3 flex items-center justify-between cursor-pointer transition-colors ${isSelected ? 'bg-[#FAFF00] text-black' : 'hover:bg-gray-50 text-gray-700'}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Icon className={`w-4 h-4 ${isSelected ? 'text-black' : 'text-[#FAFF00]'}`} />
+                              <span className="font-bold">{item.title}</span>
+                            </div>
+                            {isSelected && <ArrowRight className="w-4 h-4" />}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {filteredSections.length > 0 && (
+                    <div className="mb-2">
+                      <div className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400">{isAdmin ? 'Vertical Management' : 'Verticals'}</div>
+                      {filteredSections.map((item, index) => {
+                        const globalIndex = index + filteredShortcuts.length;
+                        const isSelected = globalIndex === selectedIndex;
+                        return (
+                          <div
+                            key={item.id}
+                            onClick={() => { window.location.href = item.url; setIsOpen(false); }}
                             className={`px-4 py-3 flex items-center justify-between cursor-pointer transition-colors ${isSelected ? 'bg-[#FAFF00] text-black' : 'hover:bg-gray-50 text-gray-700'}`}
                           >
                             <div className="flex items-center gap-3">
@@ -150,22 +189,16 @@ export default function CommandMenu() {
                     </div>
                   )}
 
-                  {/* Articles Group */}
-                  {filteredArticles.length > 0 && (
+                  {articles.length > 0 && (
                     <div>
-                      <div className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 border-t border-gray-100 mt-2 pt-4">
-                        Articles
-                      </div>
-                      {filteredArticles.map((item, index) => {
-                        const globalIndex = index + filteredSections.length;
+                      <div className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 border-t border-gray-100 mt-2 pt-4">{isAdmin ? 'Drafts & Published' : 'Published Dispatches'}</div>
+                      {articles.map((item, index) => {
+                        const globalIndex = index + filteredShortcuts.length + filteredSections.length;
                         const isSelected = globalIndex === selectedIndex;
                         return (
                           <div
                             key={item.id}
-                            onClick={() => {
-                                window.location.href = item.url;
-                                setIsOpen(false);
-                            }}
+                            onClick={() => { window.location.href = item.url; setIsOpen(false); }}
                             className={`px-4 py-3 flex items-center justify-between cursor-pointer transition-colors ${isSelected ? 'bg-[#FAFF00] text-black' : 'hover:bg-gray-50 text-gray-700'}`}
                           >
                             <div className="flex items-center gap-3">
@@ -182,13 +215,68 @@ export default function CommandMenu() {
               )}
             </div>
 
-            {/* Footer */}
-            <div className="bg-gray-50 px-4 py-2 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 font-mono">
-               <div className="flex items-center gap-4">
-                 <span><strong className="font-bold">↑↓</strong> to navigate</span>
-                 <span><strong className="font-bold">↵</strong> to select</span>
-               </div>
-               <span>Explainer Search</span>
+
+            <div className="max-h-[60vh] overflow-y-auto py-2">
+              {allItems.length === 0 ? (
+                <div className="px-6 py-12 text-center text-gray-400">
+                  <p className="text-[10px] uppercase font-black tracking-widest italic">No surveillance matches found</p>
+                </div>
+              ) : (
+                <>
+                  {filteredSections.length > 0 && (
+                    <div className="mb-2">
+                      <div className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400">Verticals</div>
+                      {filteredSections.map((item, index) => {
+                        const isSelected = index === selectedIndex;
+                        return (
+                          <div
+                            key={item.id}
+                            onClick={() => { window.location.href = item.url; setIsOpen(false); }}
+                            className={`px-4 py-3 flex items-center justify-between cursor-pointer transition-colors ${isSelected ? 'bg-[#FAFF00] text-black' : 'hover:bg-gray-50 text-gray-700'}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Hash className={`w-4 h-4 ${isSelected ? 'text-black' : 'text-gray-400'}`} />
+                              <span className="font-bold">{item.title}</span>
+                            </div>
+                            {isSelected && <ArrowRight className="w-4 h-4" />}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {articles.length > 0 && (
+                    <div>
+                      <div className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 border-t border-gray-100 mt-2 pt-4">Published Dispatches</div>
+                      {articles.map((item, index) => {
+                        const globalIndex = index + filteredSections.length;
+                        const isSelected = globalIndex === selectedIndex;
+                        return (
+                          <div
+                            key={item.id}
+                            onClick={() => { window.location.href = item.url; setIsOpen(false); }}
+                            className={`px-4 py-3 flex items-center justify-between cursor-pointer transition-colors ${isSelected ? 'bg-[#FAFF00] text-black' : 'hover:bg-gray-50 text-gray-700'}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <FileText className={`w-4 h-4 ${isSelected ? 'text-black' : 'text-gray-400'}`} />
+                              <span className="font-medium">{item.title}</span>
+                            </div>
+                            {isSelected && <ArrowRight className="w-4 h-4" />}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="bg-gray-50 px-4 py-2 border-t border-gray-100 flex items-center justify-between text-[10px] text-gray-400 font-mono font-bold uppercase tracking-widest">
+              <div className="flex items-center gap-4">
+                <span>↑↓ Navigate</span>
+                <span>↵ Select</span>
+              </div>
+              <span>Explainer Live Intelligence</span>
             </div>
           </motion.div>
         </>

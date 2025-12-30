@@ -1,19 +1,27 @@
 ---
+import { serverStoryService } from "../../lib/server-appwrite.js";
+
 interface Props {
   article: {
     title?: string;
     headline?: string;
     category: string;
+    author?: string;
     imageUrl?: string;
     heroImage?: string;
     readTime?: string;
     slug?: string;
+    content?: any;
   };
 }
 
 const { article } = Astro.props;
 const displayTitle = article.headline || article.title;
 const displayImage = article.imageUrl || article.heroImage;
+const readTime = article.content
+  ? serverStoryService.calculateReadTime(article.content)
+  : 5;
+const displayReadTime = `${readTime} min read`;
 ---
 
 <article
@@ -28,7 +36,7 @@ const displayImage = article.imageUrl || article.heroImage;
         {article.category}
       </span>
       <span class="text-xs text-gray-400 uppercase tracking-wider font-bold"
-        >{article.readTime || "5 min read"}</span
+        >{article.readTime || displayReadTime}</span
       >
     </div>
 

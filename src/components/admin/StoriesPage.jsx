@@ -51,7 +51,8 @@ export default function StoriesPage() {
     const matchesTab = activeTab === 'all' ? true :
       activeTab === 'draft' ? story.workflow_status === 'draft' :
         activeTab === 'pending' ? story.workflow_status === 'pending_review' :
-          activeTab === 'published' ? story.workflow_status === 'published' : true;
+          activeTab === 'approved' ? story.workflow_status === 'approved' :
+            activeTab === 'published' ? story.workflow_status === 'published' : true;
 
     const matchesSearch = (story.headline || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (story.author || '').toLowerCase().includes(searchQuery.toLowerCase());
@@ -88,14 +89,14 @@ export default function StoriesPage() {
         {/* Workflow Tabs & Search (Step 3) */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
           <div className="flex items-center gap-2 bg-white p-2 rounded-2xl border border-gray-100 w-fit shadow-sm">
-            {['all', 'draft', 'pending', 'published'].map((tab) => (
+            {['all', 'draft', 'pending', 'approved', 'published'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-black text-[#FAFF00]' : 'text-gray-400 hover:bg-gray-50 hover:text-black'
                   }`}
               >
-                {tab === 'pending' ? 'Review Queue' : tab}
+                {tab === 'pending' ? 'Review' : tab === 'approved' ? 'Approved' : tab}
               </button>
             ))}
           </div>
@@ -133,10 +134,12 @@ export default function StoriesPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-4 mb-2">
                       <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border flex items-center gap-2 ${story.workflow_status === 'published' ? 'bg-green-50 text-green-700 border-green-100' :
-                        story.workflow_status === 'pending_review' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-gray-50 text-gray-500 border-gray-100'
+                        story.workflow_status === 'approved' ? 'bg-blue-600 text-white border-blue-400' :
+                          story.workflow_status === 'pending_review' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-gray-50 text-gray-500 border-gray-100'
                         }`}>
                         <div className={`w-1.5 h-1.5 rounded-full ${story.workflow_status === 'published' ? 'bg-green-600' :
-                          story.workflow_status === 'pending_review' ? 'bg-blue-600' : 'bg-gray-400'
+                          story.workflow_status === 'approved' ? 'bg-white' :
+                            story.workflow_status === 'pending_review' ? 'bg-blue-600' : 'bg-gray-400'
                           }`} />
                         {story.workflow_status}
                       </span>

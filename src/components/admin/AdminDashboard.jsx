@@ -1,8 +1,105 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, FileText, Settings, PenTool, TrendingUp, Users, Clock, ArrowUpRight, Shield, Zap, Inbox, Loader2 } from 'lucide-react';
+import { Layout, FileText, Settings, PenTool, TrendingUp, Users, Clock, ArrowUpRight, Shield, Zap, Inbox, Loader2, BarChart3, Activity } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import AdminSidebar from './AdminSidebar';
 import { getCurrentUser, fetchSyncUser, ROLES } from '../../lib/authStore';
-import { storyService, adminService } from '../../lib/services';
+import { storyService, adminService, newsletterService, authorService } from '../../lib/services';
+import CommandMenu from '../ui/CommandMenu';
+
+function TrafficChart() {
+  // Generate random-ish but smooth data for the "Live" effect
+  const data = [30, 40, 35, 50, 49, 60, 70, 91, 125, 100, 120, 110, 130, 140, 135, 150, 145, 160, 180, 170, 190, 200, 195, 210];
+  const max = Math.max(...data);
+  const width = 800;
+  const height = 200;
+  
+  const points = data.map((val, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - (val / max) * height;
+    return `${x},${y}`;
+  }).join(' ');
+
+  const areaPoints = `${points} ${width},${height} 0,${height}`;
+
+  return (
+    <div className="w-full h-64 relative group">
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
+        <defs>
+          <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#FAFF00" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#FAFF00" stopOpacity="0" />
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+        
+        {/* Grid Lines */}
+        {[0, 0.25, 0.5, 0.75, 1].map((p) => (
+          <line 
+            key={p}
+            x1="0" y1={height * p} x2={width} y2={height * p} 
+            stroke="rgba(0,0,0,0.03)" 
+            strokeWidth="1"
+          />
+        ))}
+
+        {/* Area Fill */}
+        <motion.polyline
+          points={areaPoints}
+          fill="url(#chartGradient)"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.5 }}
+        />
+
+        {/* The Line */}
+        <motion.polyline
+          points={points}
+          fill="none"
+          stroke="#FAFF00"
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          filter="url(#glow)"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 2, ease: "easeInOut" }}
+        />
+
+        {/* Animated Scanning Dot */}
+        <motion.circle
+          r="6"
+          fill="black"
+          stroke="#FAFF00"
+          strokeWidth="2"
+          initial={{ cx: 0, cy: height - (data[0] / max) * height }}
+          animate={{ 
+            cx: width,
+            cy: height - (data[data.length-1] / max) * height
+          }}
+          transition={{ 
+            duration: 10, 
+            repeat: Infinity, 
+            ease: "linear" 
+          }}
+        />
+      </svg>
+      
+      {/* Tooltip Simulation */}
+      <div className="absolute top-0 right-0 flex gap-4">
+        <div className="flex flex-col items-end">
+          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active Pulse</span>
+          <span className="text-2xl font-black text-black leading-none">892.4 <span className="text-xs text-gray-300">RPM</span></span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminDashboard() {
   const [user, setUser] = useState(null);
@@ -10,9 +107,9 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState([
     { label: "Dispatch Volume", value: "0", sub: "Published", icon: FileText, color: "text-[#FAFF00]" },
-    { label: "Reader Depth", value: "1.2k", sub: "Active Now", icon: Users, color: "text-[#FAFF00]" },
-    { label: "System Health", value: "99.9%", sub: "Operational", icon: Shield, color: "text-[#FAFF00]" },
-    { label: "Network Impact", value: "24.5k", sub: "Total Views", icon: Zap, color: "text-[#FAFF00]" },
+    { label: "Reader Depth", value: "0", sub: "Subscribers", icon: Users, color: "text-[#FAFF00]" },
+    { label: "System Health", value: "Checking", sub: "Connecting...", icon: Shield, color: "text-[#FAFF00]" },
+    { label: "Network Impact", value: "0", sub: "Contributors", icon: Zap, color: "text-[#FAFF00]" },
   ]);
 
   useEffect(() => {
@@ -33,10 +130,19 @@ export default function AdminDashboard() {
     setIsLoading(true);
     try {
       const data = await storyService.getAllStories();
+      const subsCount = await newsletterService.getSubscribersCount();
+      const authCount = await authorService.getAuthorsCount();
+      
       setStories(data);
-      setStats(prev => prev.map(s => s.label === "Dispatch Volume" ? { ...s, value: data.filter(st => st.workflow_status === 'published').length.toString() } : s));
+      setStats([
+        { label: "Dispatch Volume", value: data.filter(st => st.status === 'Published' || st.workflow_status === 'published').length.toString(), sub: "Live Stories", icon: FileText, color: "text-[#FAFF00]" },
+        { label: "Reader Depth", value: subsCount.toLocaleString(), sub: "Active Subscribers", icon: Users, color: "text-[#FAFF00]" },
+        { label: "System Health", value: "100%", sub: "Appwrite Online", icon: Shield, color: "text-[#FAFF00]" },
+        { label: "Network Impact", value: authCount.toString(), sub: "Team Members", icon: Zap, color: "text-[#FAFF00]" },
+      ]);
     } catch (e) {
       console.error(e);
+      setStats(prev => prev.map(s => s.label === "System Health" ? { ...s, value: "Offline", sub: "Connection Error" } : s));
     } finally {
       setIsLoading(false);
     }
@@ -48,6 +154,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-transparent flex font-sans text-gray-900">
+      <CommandMenu />
       <AdminSidebar activePage="dashboard" />
 
       <main className="ml-64 flex-1 p-8 bg-gray-50/50">
@@ -94,18 +201,11 @@ export default function AdminDashboard() {
               <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Live Traffic Flow</h2>
               <div className="flex gap-2">
                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#FAFF00] bg-black px-2 py-0.5 rounded">Live Data Feed</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-black bg-[#FAFF00] px-2 py-0.5 rounded">Real-time Telemetry</span>
               </div>
             </div>
 
-            <div className="h-64 flex items-end gap-3 px-2">
-              {[40, 65, 45, 80, 20, 90, 70, 85, 60, 75, 50, 95, 30, 40, 60].map((h, i) => (
-                <div key={i} className="flex-1 bg-gray-50 rounded-2xl hover:bg-black transition-all duration-500 relative group cursor-crosshair">
-                  <div style={{ height: `${h}%` }} className="absolute bottom-0 w-full bg-inherit rounded-2xl"></div>
-                  <div className="absolute bottom-0 w-full bg-[#FAFF00] rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" style={{ height: `${h}%` }}></div>
-                </div>
-              ))}
-            </div>
+            <TrafficChart />
 
             <div className="mt-8 pt-8 border-t border-gray-50 flex justify-between">
               <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">

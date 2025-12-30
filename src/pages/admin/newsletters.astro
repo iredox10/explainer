@@ -1,0 +1,32 @@
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+import AdminSidebar from "../../components/admin/AdminSidebar.jsx";
+import NewslettersPage from "../../components/admin/NewslettersPage.jsx";
+---
+
+<MainLayout title="Newsletter Intelligence - Admin" showNav={false}>
+    <div class="flex min-h-screen bg-[#050505]">
+        <AdminSidebar client:load activePage="newsletters" />
+        <main class="flex-1 lg:ml-64 relative overflow-hidden">
+            {/* Abstract Background Elements */}
+            <div
+                class="absolute top-0 right-0 w-[500px] h-[500px] bg-[#FAFF00]/5 rounded-full blur-[120px] -mr-64 -mt-64"
+            >
+            </div>
+            <div
+                class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] -ml-64 -mb-64"
+            >
+            </div>
+
+            <div class="relative z-10 p-8">
+                <NewslettersPage client:load />
+            </div>
+        </main>
+    </div>
+</MainLayout>
+
+<style is:global>
+    body {
+        background: #050505;
+    }
+</style>

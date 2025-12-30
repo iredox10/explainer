@@ -3,239 +3,310 @@ import MainLayout from "../../layouts/MainLayout.astro";
 import VoxNav from "../../components/ui/VoxNav.astro";
 import ProgressBar from "../../components/ui/ProgressBar.jsx";
 import BeforeAfter from "../../components/ui/BeforeAfter.jsx";
-import { Share2, Bookmark, MessageCircle, Facebook, Twitter, Linkedin, Mail, Clock, Calendar } from 'lucide-react';
-
+import ShareButtons from "../../components/ui/ShareButtons.jsx";
+import PersistentAudioPlayer from "../../components/ui/PersistentAudioPlayer.jsx";
+import { Bookmark, Clock, Calendar } from "lucide-react";
 const { story } = Astro.props;
 const ARTICLE_DATA = story;
 
 // Helper to parse content safely
 const getBlocks = (content) => {
-    if (!content) return [];
-    if (Array.isArray(content)) return content;
-    if (typeof content === 'string') {
-        try {
-            return JSON.parse(content);
-        } catch (e) {
-            return [];
-        }
+  if (!content) return [];
+  if (Array.isArray(content)) return content;
+  if (typeof content === "string") {
+    try {
+      return JSON.parse(content);
+    } catch (e) {
+      return [];
     }
-    return [];
+  }
+  return [];
 };
 
 const blocks = getBlocks(ARTICLE_DATA.content);
+const fullText = blocks
+  .filter((b) => b.type === "p" || b.type === "heading")
+  .map((b) => b.text)
+  .join(". ");
+
+import { serverStoryService } from "../../lib/server-appwrite.js";
+const readTime = serverStoryService.calculateReadTime(blocks);
+const displayReadTime = `${readTime} min read`;
 ---
 
 <MainLayout title={ARTICLE_DATA.headline} showNav={false}>
-  <div class="bg-[#fff] text-[#121212] font-sans antialiased min-h-screen selection:bg-yellow-300 selection:text-black">
+  <div
+    class="bg-[#fff] text-[#121212] font-sans antialiased min-h-screen selection:bg-yellow-300 selection:text-black"
+  >
     <ProgressBar client:load />
     <VoxNav />
 
     <main>
       {/* --- HERO SECTION --- */}
-      <div class="relative w-full pt-12 pb-16 md:pt-20 md:pb-24 px-6 bg-[#f8f9fa] border-b border-gray-200">
-          <div class="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-end">
-              
-              {/* Header Text */}
-              <div class="lg:col-span-7 lg:pr-12">
-                  <div class="flex items-center gap-3 mb-8">
-                      <span class="bg-black text-white px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-yellow-400 hover:text-black transition-colors cursor-pointer">
-                          {ARTICLE_DATA.category}
-                      </span>
-                  </div>
+      <div
+        class="relative w-full pt-12 pb-16 md:pt-20 md:pb-24 px-6 bg-[#f8f9fa] border-b border-gray-200"
+      >
+        <div
+          class="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-end"
+        >
+          {/* Header Text */}
+          <div class="lg:col-span-7 lg:pr-12">
+            <div class="flex items-center gap-3 mb-8">
+              <span
+                class="bg-black text-white px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-yellow-400 hover:text-black transition-colors cursor-pointer"
+              >
+                {ARTICLE_DATA.category}
+              </span>
+            </div>
 
-                  <h1 class="font-serif-display text-5xl md:text-7xl lg:text-[5.5rem] font-black tracking-tighter leading-[0.95] mb-8 text-black text-balance">
-                      {ARTICLE_DATA.headline}
-                  </h1>
+            <h1
+              class="font-serif-display text-5xl md:text-7xl lg:text-[5.5rem] font-black tracking-tighter leading-[0.95] mb-8 text-black text-balance"
+            >
+              {ARTICLE_DATA.headline}
+            </h1>
 
-                  <p class="text-xl md:text-2xl text-gray-600 font-serif leading-relaxed text-balance mb-8 border-l-4 border-yellow-400 pl-6">
-                      {ARTICLE_DATA.subhead}
-                  </p>
+            <p
+              class="text-xl md:text-2xl text-gray-600 font-serif leading-relaxed text-balance mb-8 border-l-4 border-yellow-400 pl-6"
+            >
+              {ARTICLE_DATA.subhead}
+            </p>
 
-                  {/* Author Meta */}
-                  <div class="flex flex-wrap items-center gap-6 text-sm font-bold tracking-wide border-t border-gray-200 pt-6">
-                      <div class="flex items-center gap-3">
-                          <div class="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
-                              <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${ARTICLE_DATA.author}`} class="w-full h-full object-cover" />
-                          </div>
-                          <div>
-                              <div class="uppercase text-black text-xs tracking-widest">{ARTICLE_DATA.author}</div>
-                              <div class="text-gray-500 text-[10px] uppercase tracking-widest font-normal">{ARTICLE_DATA.role || "Staff Writer"}</div>
-                          </div>
-                      </div>
-                      
-                      <div class="h-8 w-px bg-gray-300 hidden sm:block"></div>
-
-                      <div class="flex items-center gap-2 text-gray-500 text-xs uppercase tracking-widest">
-                          <Calendar className="w-4 h-4" />
-                          {ARTICLE_DATA.date || "Nov 29, 2025"}
-                      </div>
-                      
-                      <div class="flex items-center gap-2 text-gray-500 text-xs uppercase tracking-widest">
-                          <Clock className="w-4 h-4" />
-                          {ARTICLE_DATA.readTime || "5 min read"}
-                      </div>
-                  </div>
-              </div>
-
-              {/* Hero Image (Parallax feel) */}
-              <div class="lg:col-span-5 relative h-full min-h-[400px] md:min-h-[600px] w-full overflow-hidden rounded-sm group shadow-2xl">
-                  <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors z-10"></div>
-                  <img 
-                      src={ARTICLE_DATA.heroImage} 
-                      class="absolute inset-0 w-full h-full object-cover transform scale-105 group-hover:scale-100 transition-transform duration-[1.5s] ease-out" 
-                      alt="Hero" 
+            {/* Author Meta */}
+            <div
+              class="flex flex-wrap items-center gap-6 text-sm font-bold tracking-wide border-t border-gray-200 pt-6"
+            >
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
+                  <img
+                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${ARTICLE_DATA.author}`}
+                    class="w-full h-full object-cover"
                   />
-                  <div class="absolute bottom-4 left-4 z-20 bg-white/90 backdrop-blur px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-gray-600">
-                      Editorial Photography
+                </div>
+                <div>
+                  <div class="uppercase text-black text-xs tracking-widest">
+                    {ARTICLE_DATA.author}
                   </div>
+                  <div
+                    class="text-gray-500 text-[10px] uppercase tracking-widest font-normal"
+                  >
+                    {ARTICLE_DATA.role || "Staff Writer"}
+                  </div>
+                </div>
               </div>
+
+              <div class="h-8 w-px bg-gray-300 hidden sm:block"></div>
+
+              <div
+                class="flex items-center gap-2 text-gray-500 text-xs uppercase tracking-widest"
+              >
+                <Calendar className="w-4 h-4" />
+                {ARTICLE_DATA.date || "Nov 29, 2025"}
+              </div>
+
+              <div
+                class="flex items-center gap-2 text-gray-500 text-xs uppercase tracking-widest"
+              >
+                <Clock className="w-4 h-4" />
+                {ARTICLE_DATA.readTime || displayReadTime}
+              </div>
+            </div>
           </div>
+
+          {/* Hero Image (Parallax feel) */}
+          <div
+            class="lg:col-span-5 relative h-full min-h-[400px] md:min-h-[600px] w-full overflow-hidden rounded-sm group shadow-2xl"
+          >
+            <div
+              class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors z-10"
+            >
+            </div>
+            <img
+              src={ARTICLE_DATA.heroImage}
+              class="absolute inset-0 w-full h-full object-cover transform scale-105 group-hover:scale-100 transition-transform duration-[1.5s] ease-out"
+              alt="Hero"
+            />
+            <div
+              class="absolute bottom-4 left-4 z-20 bg-white/90 backdrop-blur px-3 py-1 text-[10px] font-mono uppercase tracking-widest text-gray-600"
+            >
+              Editorial Photography
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* --- CONTENT BODY --- */}
-      <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 py-16 lg:py-24">
-        
+      <div
+        class="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 py-16 lg:py-24"
+      >
         {/* Left Sidebar: Social Sticky */}
         <aside class="hidden lg:block lg:col-span-2">
-           <div class="sticky top-32 flex flex-col gap-6 items-start">
-             <span class="text-[10px] font-black uppercase tracking-widest text-gray-400">Share</span>
-             <div class="flex flex-col gap-3">
-                <button class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-white hover:bg-black hover:border-black transition-all duration-200 shadow-sm hover:shadow-md">
-                   <Twitter className="w-4 h-4" />
-                </button>
-                <button class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#1877F2] hover:border-[#1877F2] transition-all duration-200 shadow-sm hover:shadow-md">
-                   <Facebook className="w-4 h-4" />
-                </button>
-                <button class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#0A66C2] hover:border-[#0A66C2] transition-all duration-200 shadow-sm hover:shadow-md">
-                   <Linkedin className="w-4 h-4" />
-                </button>
-                <button class="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#008751] hover:border-[#008751] transition-all duration-200 shadow-sm hover:shadow-md">
-                   <Mail className="w-4 h-4" />
-                </button>
-             </div>
-             
-             <div class="w-8 h-px bg-gray-200 my-4"></div>
+          <div class="sticky top-32 flex flex-col gap-6 items-start">
+            <span
+              class="text-[10px] font-black uppercase tracking-widest text-gray-400"
+              >Share</span
+            >
+            <div class="flex flex-col gap-3">
+              <ShareButtons client:load title={ARTICLE_DATA.headline} />
+            </div>
 
-             <button class="group flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
-                <Bookmark className="w-4 h-4 group-hover:fill-black" />
-                Save
-             </button>
-           </div>
+            <div class="w-8 h-px bg-gray-200 my-4"></div>
+
+            <button
+              class="group flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors"
+            >
+              <Bookmark className="w-4 h-4 group-hover:fill-black" />
+              Save
+            </button>
+          </div>
         </aside>
 
         {/* Main Article Text */}
         <article class="lg:col-span-7">
-          <div class="font-serif text-[1.15rem] md:text-[1.3rem] leading-[1.8] text-gray-900">
-            {blocks.map((block, index) => {
-              
-              if (block.type === 'heading') {
-                return (
-                  <h2 class="font-sans font-black text-3xl md:text-4xl text-black mt-16 mb-8 tracking-tight leading-none border-b-4 border-yellow-300 inline-block pb-1">
-                    {block.text}
-                  </h2>
-                );
-              }
-
-              if (block.type === 'p') {
-                 // First paragraph drop cap
-                const isFirst = index === 0;
-                return (
-                  <p class={`mb-8 ${isFirst ? "first-letter:float-left first-letter:text-[6rem] first-letter:font-black first-letter:font-serif-display first-letter:text-black first-letter:leading-[0.75] first-letter:mr-4 first-letter:mt-2" : ""}`}>
-                    {block.text}
-                  </p>
-                );
-              }
-
-              if (block.type === 'quote') {
-                return (
-                  <div class="my-16 relative">
-                    <div class="absolute -left-4 md:-left-12 top-0 text-8xl text-gray-100 font-serif-display font-black -z-10 select-none">“</div>
-                    <blockquote class="text-3xl md:text-4xl font-serif-display font-bold italic text-black leading-[1.15] mb-6">
+          <div
+            class="font-serif text-[1.15rem] md:text-[1.3rem] leading-[1.8] text-gray-900"
+          >
+            {
+              blocks.map((block, index) => {
+                if (block.type === "heading") {
+                  return (
+                    <h2 class="font-sans font-black text-3xl md:text-4xl text-black mt-16 mb-8 tracking-tight leading-none border-b-4 border-yellow-300 inline-block pb-1">
                       {block.text}
-                    </blockquote>
-                    {block.author && (
-                      <div class="flex items-center gap-3">
-                         <div class="h-px w-12 bg-black"></div>
-                         <cite class="text-xs font-sans font-black uppercase tracking-[0.2em] text-gray-500 not-italic">
-                           {block.author}
-                         </cite>
+                    </h2>
+                  );
+                }
+
+                if (block.type === "p") {
+                  // First paragraph drop cap
+                  const isFirst = index === 0;
+                  return (
+                    <p
+                      class={`mb-8 ${isFirst ? "first-letter:float-left first-letter:text-[6rem] first-letter:font-black first-letter:font-serif-display first-letter:text-black first-letter:leading-[0.75] first-letter:mr-4 first-letter:mt-2" : ""}`}
+                    >
+                      {block.text}
+                    </p>
+                  );
+                }
+
+                if (block.type === "quote") {
+                  return (
+                    <div class="my-16 relative">
+                      <div class="absolute -left-4 md:-left-12 top-0 text-8xl text-gray-100 font-serif-display font-black -z-10 select-none">
+                        “
                       </div>
-                    )}
-                  </div>
-                );
-              }
-
-              if (block.type === 'callout') {
-                return (
-                  <div class="bg-gray-50 p-8 md:p-10 my-12 border-t-4 border-black relative shadow-sm">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
-                        <h4 class="font-sans font-black uppercase tracking-widest text-xs text-gray-400">
-                           {block.title}
-                        </h4>
+                      <blockquote class="text-3xl md:text-4xl font-serif-display font-bold italic text-black leading-[1.15] mb-6">
+                        {block.text}
+                      </blockquote>
+                      {block.author && (
+                        <div class="flex items-center gap-3">
+                          <div class="h-px w-12 bg-black" />
+                          <cite class="text-xs font-sans font-black uppercase tracking-[0.2em] text-gray-500 not-italic">
+                            {block.author}
+                          </cite>
+                        </div>
+                      )}
                     </div>
-                    <p class="font-sans font-bold text-xl md:text-2xl leading-tight text-black">{block.text}</p>
-                  </div>
-                );
-              }
+                  );
+                }
 
-              if (block.type === 'image') {
-                return (
-                  <figure class="my-16 -mx-6 md:-mx-12 lg:-mx-24 group">
-                    <div class="overflow-hidden">
-                        <img 
-                          src={block.url} 
-                          alt={block.caption || "Article image"} 
+                if (block.type === "callout") {
+                  return (
+                    <div class="bg-gray-50 p-8 md:p-10 my-12 border-t-4 border-black relative shadow-sm">
+                      <div class="flex items-center gap-3 mb-4">
+                        <div class="w-3 h-3 bg-yellow-400 rounded-full animate-pulse" />
+                        <h4 class="font-sans font-black uppercase tracking-widest text-xs text-gray-400">
+                          {block.title}
+                        </h4>
+                      </div>
+                      <p class="font-sans font-bold text-xl md:text-2xl leading-tight text-black">
+                        {block.text}
+                      </p>
+                    </div>
+                  );
+                }
+
+                if (block.type === "image") {
+                  return (
+                    <figure class="my-16 -mx-6 md:-mx-12 lg:-mx-24 group">
+                      <div class="overflow-hidden">
+                        <img
+                          src={block.url}
+                          alt={block.caption || "Article image"}
                           class="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-[1.02]"
                         />
-                    </div>
-                    {block.caption && (
-                      <figcaption class="mt-3 px-6 md:px-0 text-xs text-gray-500 font-mono font-medium text-center uppercase tracking-wider flex items-center justify-center gap-2">
-                        <span class="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>
-                        {block.caption}
-                      </figcaption>
-                    )}
-                  </figure>
-                );
-              }
+                      </div>
+                      {block.caption && (
+                        <figcaption class="mt-3 px-6 md:px-0 text-xs text-gray-500 font-mono font-medium text-center uppercase tracking-wider flex items-center justify-center gap-2">
+                          <span class="w-1.5 h-1.5 bg-yellow-400 rounded-full" />
+                          {block.caption}
+                        </figcaption>
+                      )}
+                    </figure>
+                  );
+                }
 
-              if (block.type === 'beforeAfter') {
-                return (
-                  <BeforeAfter 
-                    client:visible
-                    leftImage={block.leftImage}
-                    rightImage={block.rightImage}
-                    leftLabel={block.leftLabel}
-                    rightLabel={block.rightLabel}
-                    caption={block.caption}
-                  />
-                );
-              }
-            })}
+                if (block.type === "beforeAfter") {
+                  return (
+                    <BeforeAfter
+                      client:visible
+                      leftImage={block.leftImage}
+                      rightImage={block.rightImage}
+                      leftLabel={block.leftLabel}
+                      rightLabel={block.rightLabel}
+                      caption={block.caption}
+                    />
+                  );
+                }
+              })
+            }
 
             {/* Newsletter / Footer for Article */}
             <div class="mt-20 pt-10 border-t border-black">
-                <p class="font-sans font-bold text-xs uppercase tracking-widest text-gray-400 mb-2">Written By</p>
-                <div class="flex items-center gap-4 mb-10">
-                    <div class="w-16 h-16 rounded-full bg-gray-200 overflow-hidden">
-                        <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${ARTICLE_DATA.author}`} class="w-full h-full object-cover" />
-                    </div>
-                    <div>
-                        <h3 class="font-serif-display font-bold text-xl text-black">{ARTICLE_DATA.author}</h3>
-                        <p class="text-sm text-gray-500">{ARTICLE_DATA.role || "Staff Writer"}</p>
-                    </div>
+              <p
+                class="font-sans font-bold text-xs uppercase tracking-widest text-gray-400 mb-2"
+              >
+                Written By
+              </p>
+              <div class="flex items-center gap-4 mb-10">
+                <div class="w-16 h-16 rounded-full bg-gray-200 overflow-hidden">
+                  <img
+                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${ARTICLE_DATA.author}`}
+                    class="w-full h-full object-cover"
+                  />
                 </div>
+                <div>
+                  <h3 class="font-serif-display font-bold text-xl text-black">
+                    {ARTICLE_DATA.author}
+                  </h3>
+                  <p class="text-sm text-gray-500">
+                    {ARTICLE_DATA.role || "Staff Writer"}
+                  </p>
+                </div>
+              </div>
 
-                <div class="bg-[#FAFF00] p-10 text-center relative overflow-hidden">
-                   <div class="absolute -top-10 -left-10 w-32 h-32 bg-white/20 rounded-full blur-3xl"></div>
-                   <div class="relative z-10">
-                      <h3 class="font-black font-serif-display text-3xl mb-2">Support Independent Journalism</h3>
-                      <p class="text-black/70 mb-6 max-w-md mx-auto font-sans text-sm">Our work is powered by readers like you. Become a member today to unlock deep dives and exclusive reports.</p>
-                      <button class="bg-black text-white px-8 py-3 font-bold uppercase tracking-widest text-xs hover:scale-105 transition-transform shadow-lg">
-                         Become a Member
-                      </button>
-                   </div>
+              <div
+                class="bg-[#FAFF00] p-10 text-center relative overflow-hidden"
+              >
+                <div
+                  class="absolute -top-10 -left-10 w-32 h-32 bg-white/20 rounded-full blur-3xl"
+                >
                 </div>
+                <div class="relative z-10">
+                  <h3 class="font-black font-serif-display text-3xl mb-2">
+                    Support Independent Journalism
+                  </h3>
+                  <p
+                    class="text-black/70 mb-6 max-w-md mx-auto font-sans text-sm"
+                  >
+                    Our work is powered by readers like you. Become a member
+                    today to unlock deep dives and exclusive reports.
+                  </p>
+                  <button
+                    class="bg-black text-white px-8 py-3 font-bold uppercase tracking-widest text-xs hover:scale-105 transition-transform shadow-lg"
+                  >
+                    Become a Member
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </article>
@@ -244,29 +315,45 @@ const blocks = getBlocks(ARTICLE_DATA.content);
         <aside class="hidden lg:block lg:col-span-3 lg:pl-8">
           <div class="sticky top-32">
             <div class="border-l border-gray-200 pl-8">
-                <h4 class="font-sans font-black uppercase text-[10px] tracking-[0.2em] text-gray-400 mb-8">Up Next</h4>
-                
-                <div class="space-y-10">
-                    {ARTICLE_DATA.related && ARTICLE_DATA.related.map((article) => (
-                        <div class="group cursor-pointer flex flex-col gap-4">
-                            <div class="w-full aspect-[3/2] bg-gray-100 overflow-hidden relative rounded-sm">
-                                <img src={article.image} class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
-                                <div class="absolute inset-0 ring-4 ring-inset ring-[#FAFF00] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                            </div>
-                            <div>
-                                <h5 class="font-serif-display font-bold text-xl leading-tight group-hover:text-gray-600 transition-colors mb-2">
-                                    {article.title}
-                                </h5>
-                                <span class="text-[10px] font-bold uppercase tracking-widest text-yellow-600 group-hover:underline">Read Story →</span>
-                            </div>
+              <h4
+                class="font-sans font-black uppercase text-[10px] tracking-[0.2em] text-gray-400 mb-8"
+              >
+                Up Next
+              </h4>
+
+              <div class="space-y-10">
+                {
+                  ARTICLE_DATA.related &&
+                    ARTICLE_DATA.related.map((article) => (
+                      <div class="group cursor-pointer flex flex-col gap-4">
+                        <div class="w-full aspect-[3/2] bg-gray-100 overflow-hidden relative rounded-sm">
+                          <img
+                            src={article.image}
+                            class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                          />
+                          <div class="absolute inset-0 ring-4 ring-inset ring-[#FAFF00] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         </div>
-                    ))}
-                </div>
+                        <div>
+                          <h5 class="font-serif-display font-bold text-xl leading-tight group-hover:text-gray-600 transition-colors mb-2">
+                            {article.title}
+                          </h5>
+                          <span class="text-[10px] font-bold uppercase tracking-widest text-yellow-600 group-hover:underline">
+                            Read Story →
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                }
+              </div>
             </div>
           </div>
         </aside>
-
       </div>
     </main>
   </div>
+  <PersistentAudioPlayer
+    client:load
+    text={fullText}
+    title={ARTICLE_DATA.headline}
+  />
 </MainLayout>
