@@ -42,7 +42,12 @@ export default function StoryEditor({ storyId }) {
     const fetchCategories = async () => {
         try {
             const cats = await categoryService.getCategories();
-            setCategories(cats);
+            const u = getCurrentUser();
+            if (u && u.role === ROLES.EDITOR && u.categories?.length > 0) {
+                setCategories(cats.filter(c => u.categories.includes(c.name)));
+            } else {
+                setCategories(cats);
+            }
         } catch (e) {
             console.error("Failed to fetch categories", e);
         }
@@ -51,10 +56,14 @@ export default function StoryEditor({ storyId }) {
     const loadStory = async (currentUser) => {
         setIsLoading(true);
         if (storyId === 'new-story') {
+            const initialCategory = (currentUser.role === ROLES.EDITOR && currentUser.categories?.length > 0) 
+                ? currentUser.categories[0] 
+                : "Technology";
+
             setStory({
                 headline: "Untitled Story",
                 subhead: "",
-                category: "Technology",
+                category: initialCategory,
                 author: currentUser.name,
                 author_id: currentUser.id,
                 workflow_status: "draft",

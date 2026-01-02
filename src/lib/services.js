@@ -240,12 +240,23 @@ export const teamService = {
             return [];
         }
     },
-    async inviteMember(email, name, role) {
+    async inviteMember(email, name, role, categories = []) {
         try {
             const teamId = import.meta.env.PUBLIC_APPWRITE_TEAM_ID;
+            
+            // Construct roles array: [base_role, s_slug1, s_slug2, ...]
+            const roles = [role.toLowerCase()];
+            if (role === 'editor' && categories.length > 0) {
+                // Use s_ prefix and ensure valid chars (replace anything not allowed with underscore)
+                categories.forEach(slug => {
+                    const safeSlug = slug.replace(/[^a-zA-Z0-9._-]/g, '_');
+                    roles.push(`s_${safeSlug}`.slice(0, 36));
+                });
+            }
+
             return await teams.createMembership({
                 teamId,
-                roles: [role.toLowerCase()],
+                roles,
                 url: `${window.location.origin}/admin/login`,
                 email,
                 name

@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Shield, Trash2, Mail, X, Loader2, UserX, UserCheck, Settings } from 'lucide-react';
+import { Plus, Shield, Trash2, Mail, X, Loader2, UserX, UserCheck, Settings, CheckSquare, Square } from 'lucide-react';
 import AdminSidebar from './AdminSidebar';
 import { getCurrentUser, ROLES } from '../../lib/authStore';
-import { teamService, adminService } from '../../lib/services';
+import { teamService, adminService, categoryService } from '../../lib/services';
 
 export default function AdminsPage() {
   const [user, setUser] = useState(null);
   const [profiles, setProfiles] = useState([]);
   const [invitations, setInvitations] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newUser, setNewUser] = useState({ name: "", email: "", role: "staff_writer" });
+  const [newUser, setNewUser] = useState({ name: "", email: "", role: "staff_writer", assignedCategories: [] });
 
   useEffect(() => {
     const u = getCurrentUser();
@@ -27,12 +28,14 @@ export default function AdminsPage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [profileData, membershipData] = await Promise.all([
+      const [profileData, membershipData, categoryData] = await Promise.all([
         adminService.getProfiles(),
-        teamService.getTeamMembers()
+        teamService.getTeamMembers(),
+        categoryService.getCategories()
       ]);
 
       setProfiles(profileData);
+      setCategories(categoryData);
 
       // Filter: Show members who are in the team but haven't created a profile yet
       const activeEmails = new Set(profileData.map(p => p.email.toLowerCase()));
@@ -75,16 +78,27 @@ export default function AdminsPage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await teamService.inviteMember(newUser.email, newUser.name, newUser.role);
+      await teamService.inviteMember(newUser.email, newUser.name, newUser.role, newUser.assignedCategories);
       alert("Invitation sent successfully!");
       setIsModalOpen(false);
-      setNewUser({ name: "", email: "", role: "staff_writer" });
+      setNewUser({ name: "", email: "", role: "staff_writer", assignedCategories: [] });
       loadData(); // Refresh to show the new invite
     } catch (error) {
       alert("Invite failed: " + error.message);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const toggleCategory = (categorySlug) => {
+    setNewUser(prev => {
+      const exists = prev.assignedCategories.includes(categorySlug);
+      if (exists) {
+        return { ...prev, assignedCategories: prev.assignedCategories.filter(c => c !== categorySlug) };
+      } else {
+        return { ...prev, assignedCategories: [...prev.assignedCategories, categorySlug] };
+      }
+    });
   };
 
   if (!user) return null;
@@ -309,8 +323,42 @@ export default function AdminsPage() {
                   </select>
                 </div>
 
+                {newUser.role === 'editor' && (
+                  <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Assigned Verticals</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {categories.map(cat => (
+                        <button
+                          key={cat.$id}
+                          type="button"
+                          onClick={() => toggleCategory(cat.slug)}
+                          className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
+                            newUser.assignedCategories.includes(cat.slug)
+                              ? 'border-[#FAFF00] bg-[#FAFF00]/5 text-black'
+                              : 'border-gray-50 bg-gray-50 text-gray-400 hover:border-gray-200'
+                          }`}
+                        >
+                          {newUser.assignedCategories.includes(cat.slug) ? (
+                            <CheckSquare className="w-4 h-4 text-[#008751]" />
+                          ) : (
+                            <Square className="w-4 h-4" />
+                          )}
+                          <span className="text-[10px] font-black uppercase tracking-tight">{cat.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {newUser.assignedCategories.length === 0 && (
+                      <p className="text-[9px] text-red-400 font-bold italic ml-1">At least one vertical required for editors.</p>
+                    )}
+                  </div>
+                )}
+
                 <div className="pt-4 flex gap-4">
-                  <button type="submit" disabled={isLoading} className="flex-1 bg-[#FAFF00] hover:bg-black hover:text-white text-black py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xl flex items-center justify-center gap-3">
+                  <button 
+                    type="submit" 
+                    disabled={isLoading || (newUser.role === 'editor' && newUser.assignedCategories.length === 0)} 
+                    className="flex-1 bg-[#FAFF00] hover:bg-black hover:text-white text-black py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xl flex items-center justify-center gap-3 disabled:opacity-50"
+                  >
                     {isLoading ? <Loader2 className="animate-spin w-4 h-4" /> : <Mail className="w-5 h-5" />}
                     Send Invitation
                   </button>

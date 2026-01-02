@@ -1,5 +1,5 @@
 // Server-side Appwrite client using API key for authenticated operations
-import { Client, Databases, Query, Users, Teams } from 'node-appwrite';
+import { Client, Databases, Query, Users, Teams, ID } from 'node-appwrite';
 
 // DEFENSIVE: Retrieve environment variables with fallbacks
 const ENDPOINT = import.meta.env.PUBLIC_APPWRITE_ENDPOINT || process.env.PUBLIC_APPWRITE_ENDPOINT;
@@ -35,17 +35,69 @@ try {
 
 export const serverAuthService = {
     async onboardInvitedUser(userId, teamId, membershipId, secret, password) {
-        if (!serverTeams || !serverUsers) throw new Error('Appwrite services not initialized');
+        if (!serverTeams || !serverUsers || !serverDatabases) throw new Error('Appwrite services not initialized');
         
         try {
             // 1. Accept the membership
             await serverTeams.updateMembershipStatus(teamId, membershipId, userId, secret);
             
-            // 2. Update the password
+            // 2. Fetch membership to get assigned roles (sections)
+            const membership = await serverTeams.getMembership(teamId, membershipId);
+            const assignedCategorySlugs = membership.roles
+                .filter(r => r.startsWith('s_'))
+                .map(r => r.replace('s_', ''));
+
+            const baseRole = membership.roles.find(r => !r.startsWith('s_')) || 'staff_writer';
+
+            // Resolve slugs to names for internal filtering
+            let assignedCategoryNames = [];
+            if (assignedCategorySlugs.length > 0) {
+                try {
+                    const catRes = await serverDatabases.listDocuments(DB_ID, COLLECTIONS.CATEGORIES, [
+                        Query.equal('slug', assignedCategorySlugs)
+                    ]);
+                    assignedCategoryNames = catRes.documents.map(c => c.name);
+                } catch (catErr) {
+                    console.warn('Failed to resolve category names during onboarding:', catErr.message);
+                    // Fallback to capitalized slugs if lookup fails
+                    assignedCategoryNames = assignedCategorySlugs.map(s => s.charAt(0).toUpperCase() + s.slice(1));
+                }
+            }
+
+            // 3. Update the password
             await serverUsers.updatePassword(userId, password);
             
-            // 3. Get user details to return (especially email for login)
+            // 4. Update user preferences with assigned category names
+            await serverUsers.updatePrefs(userId, {
+                categories: assignedCategoryNames
+            });
+
+            // 5. Get user details
             const user = await serverUsers.get(userId);
+
+            // 6. Create or update profile document
+            try {
+                const profileRes = await serverDatabases.listDocuments(DB_ID, COLLECTIONS.PROFILES, [
+                    Query.equal('userId', userId)
+                ]);
+
+                const profileData = {
+                    userId: userId,
+                    email: user.email,
+                    name: user.name || user.email.split('@')[0],
+                    role: baseRole === 'admin' ? 'superadmin' : baseRole,
+                    status: 'active',
+                    categories: assignedCategoryNames
+                };
+
+                if (profileRes.total > 0) {
+                    await serverDatabases.updateDocument(DB_ID, COLLECTIONS.PROFILES, profileRes.documents[0].$id, profileData);
+                } else {
+                    await serverDatabases.createDocument(DB_ID, COLLECTIONS.PROFILES, ID.unique(), profileData);
+                }
+            } catch (profileErr) {
+                console.warn('Profile sync during onboarding failed:', profileErr.message);
+            }
             
             return {
                 success: true,

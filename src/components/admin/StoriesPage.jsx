@@ -25,12 +25,25 @@ export default function StoriesPage() {
     setIsLoading(true);
     try {
       const data = await storyService.getAllStories();
+      
       // Step 4.A: Role-based filtering
-      if (currentUser.role === ROLES.WRITER) {
-        // Writers only see their own drafts or work in progress
+      if (currentUser.role === ROLES.ADMIN) {
+        // Admins see everything
+        setStories(data);
+      } else if (currentUser.role === ROLES.EDITOR) {
+        // Section Editors only see their assigned categories
+        const assigned = currentUser.categories || [];
+        if (assigned.length > 0) {
+          setStories(data.filter(s => assigned.includes(s.category)));
+        } else {
+          // If no categories assigned, fallback to none or everything? 
+          // Safety: show none if specifically assigned to 'editor' but no sections
+          setStories([]);
+        }
+      } else if (currentUser.role === ROLES.WRITER) {
+        // Writers only see their own work
         setStories(data.filter(s => s.author_id === currentUser.id));
       } else {
-        // Editors and Admins see everything
         setStories(data);
       }
     } catch (e) {
