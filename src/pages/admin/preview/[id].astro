@@ -4,16 +4,11 @@ import ScrollyTemplate from "../../../components/templates/ScrollyTemplate.astro
 import StandardTemplate from "../../../components/templates/StandardTemplate.astro";
 import "../../../styles/global.css";
 
+export const prerender = false;
+
 const { id } = Astro.params;
-
-// Use server-side service to fetch story by ID (works without user session)
-const story = await serverStoryService.getStoryById(id);
-
-if (!story) {
-    console.error(`Preview Error: Story with ID ${id} not found.`);
-    return Astro.redirect("/404");
-}
 ---
+
 
 <div class="relative">
     <div

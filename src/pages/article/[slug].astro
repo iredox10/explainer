@@ -4,6 +4,8 @@ import ScrollyTemplate from "../../components/templates/ScrollyTemplate.astro";
 import StandardTemplate from "../../components/templates/StandardTemplate.astro";
 import { VOX_HOME_DATA } from "../../data/mock";
 
+export const prerender = false;
+
 const { slug } = Astro.params;
 let story = await serverStoryService.getStoryBySlug(slug);
 

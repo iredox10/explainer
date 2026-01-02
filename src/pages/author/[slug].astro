@@ -7,6 +7,8 @@ import { AUTHORS } from "../../data/mock";
 import { storyService } from "../../lib/services";
 import { Mail, Twitter, Globe, Linkedin } from 'lucide-react';
 
+export const prerender = false;
+
 const { slug } = Astro.params;
 
 // Find author from mock data or service
