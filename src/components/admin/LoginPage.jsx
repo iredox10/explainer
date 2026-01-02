@@ -3,7 +3,7 @@ import { Shield, Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
 import { fetchSyncUser, loginWithEmail, acceptInvite, requestPasswordReset, completePasswordReset } from '../../lib/authStore';
 
 export default function LoginPage() {
-  const [view, setView] = useState('login'); // 'login', 'forgot', 'reset'
+  const [view, setView] = useState('login'); // 'login', 'forgot', 'reset', 'onboard'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -13,7 +13,7 @@ export default function LoginPage() {
   const [successMsg, setSuccessMsg] = useState(null);
 
   // URL Params for Invite / Reset
-  const [params, setParams] = useState({ userId: '', secret: '', teamId: '' });
+  const [params, setParams] = useState({ userId: '', secret: '', teamId: '', membershipId: '' });
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
@@ -22,10 +22,11 @@ export default function LoginPage() {
     const teamId = p.get('teamId');
     const membershipId = p.get('membershipId');
 
-    setParams({ userId, secret, teamId });
+    setParams({ userId, secret, teamId, membershipId });
 
     if (membershipId && userId && secret && teamId) {
-      handleAcceptance(teamId, membershipId, userId, secret);
+      // New flow: Show password set screen instead of auto-accepting with no password
+      setView('onboard');
       return;
     }
 
@@ -89,6 +90,43 @@ export default function LoginPage() {
       setView('login');
     } catch (err) {
       setError(err.message || "Failed to reset password. Link may have expired.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOnboard = async (e) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/auth/onboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: params.userId,
+          teamId: params.teamId,
+          membershipId: params.membershipId,
+          secret: params.secret,
+          password
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Onboarding failed");
+
+      // Successful onboarding! Now log them in.
+      setSuccessMsg("Account activated! Authenticating...");
+      const user = await loginWithEmail(data.email, password);
+      if (user) {
+        window.location.href = '/admin';
+      }
+    } catch (err) {
+      setError(err.message || "Failed to complete onboarding.");
     } finally {
       setIsLoading(false);
     }
@@ -171,7 +209,7 @@ export default function LoginPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@vox.africa"
+                    placeholder="name@explainer.africa"
                     className="block w-full pl-11 pr-4 py-4 bg-gray-50 border-2 border-transparent focus:border-[#FAFF00] focus:bg-white rounded-xl text-sm font-medium transition-all duration-200 outline-none"
                   />
                 </div>
@@ -270,6 +308,46 @@ export default function LoginPage() {
                 className="w-full py-4 rounded-xl text-sm font-black uppercase tracking-widest text-black bg-[#FAFF00] hover:bg-black hover:text-white transition-all shadow-xl"
               >
                 {isLoading ? <Loader2 className="animate-spin h-5 w-5 mx-auto" /> : "Update Security Credentials"}
+              </button>
+            </form>
+          )}
+
+          {view === 'onboard' && (
+            <form onSubmit={handleOnboard} className="space-y-6">
+              <div className="mb-4">
+                <h3 className="text-lg font-black uppercase tracking-tighter text-black">Welcome to the Newsroom</h3>
+                <p className="text-xs text-gray-400 leading-relaxed mt-1">Initialize your secure access by creating a password for your account.</p>
+              </div>
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Secure Password</label>
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="block w-full px-4 py-4 bg-gray-50 border-2 border-transparent focus:border-[#FAFF00] focus:bg-white rounded-xl text-sm font-medium outline-none transition-all"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Verify Password</label>
+                  <input
+                    type="password"
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="block w-full px-4 py-4 bg-gray-50 border-2 border-transparent focus:border-[#FAFF00] focus:bg-white rounded-xl text-sm font-medium outline-none transition-all"
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-4 rounded-xl text-sm font-black uppercase tracking-widest text-black bg-[#FAFF00] hover:bg-black hover:text-white transition-all shadow-xl flex items-center justify-center gap-3"
+              >
+                {isLoading ? <Loader2 className="animate-spin h-5 w-5" /> : <>Join Newsroom <ArrowRight className="w-4 h-4" /></>}
               </button>
             </form>
           )}

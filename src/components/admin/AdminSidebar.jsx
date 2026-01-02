@@ -35,7 +35,7 @@ export default function AdminSidebar({ activePage }) {
       {/* Brand */}
       <div className="h-20 flex items-center px-8 border-b border-white/5">
         <a href="/admin" className="font-black text-2xl tracking-tighter hover:text-[#FAFF00] transition-colors flex items-center gap-2">
-          VOX<span className="text-[#FAFF00] font-serif italic text-3xl -ml-1">.</span>OS
+          EXPLAINER<span className="text-[#FAFF00] font-serif italic text-3xl -ml-1">.</span>OS
         </a>
       </div>
 

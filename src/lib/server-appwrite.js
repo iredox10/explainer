@@ -1,15 +1,17 @@
 // Server-side Appwrite client using API key for authenticated operations
-import { Client, Databases, Query } from 'node-appwrite';
+import { Client, Databases, Query, Users, Teams } from 'node-appwrite';
 
 // DEFENSIVE: Retrieve environment variables with fallbacks
 const ENDPOINT = import.meta.env.PUBLIC_APPWRITE_ENDPOINT || process.env.PUBLIC_APPWRITE_ENDPOINT;
 const PROJECT_ID = import.meta.env.PUBLIC_APPWRITE_PROJECT_ID || process.env.PUBLIC_APPWRITE_PROJECT_ID;
 const API_KEY = import.meta.env.APPWRITE_API_KEY || process.env.APPWRITE_API_KEY;
-const DB_ID = import.meta.env.PUBLIC_APPWRITE_DATABASE_ID || process.env.PUBLIC_APPWRITE_DATABASE_ID || 'vox_cms';
+const DB_ID = import.meta.env.PUBLIC_APPWRITE_DATABASE_ID || process.env.PUBLIC_APPWRITE_DATABASE_ID || 'explainer_cms';
 
 // Module-level client initialization
 let client;
 let serverDatabases;
+let serverUsers;
+let serverTeams;
 
 try {
     if (ENDPOINT && PROJECT_ID && API_KEY) {
@@ -18,6 +20,8 @@ try {
             .setProject(PROJECT_ID)
             .setKey(API_KEY);
         serverDatabases = new Databases(client);
+        serverUsers = new Users(client);
+        serverTeams = new Teams(client);
     } else {
         const missing = [];
         if (!ENDPOINT) missing.push('ENDPOINT');
@@ -29,13 +33,31 @@ try {
     console.error('[SERVER-APPWRITE] Fatal initialization error:', e.message);
 }
 
-export const COLLECTIONS = {
-    STORIES: 'stories',
-    AUTHORS: 'authors',
-    CATEGORIES: 'categories',
-    PROFILES: 'profiles',
-    CONFIGS: 'configs'
+export const serverAuthService = {
+    async onboardInvitedUser(userId, teamId, membershipId, secret, password) {
+        if (!serverTeams || !serverUsers) throw new Error('Appwrite services not initialized');
+        
+        try {
+            // 1. Accept the membership
+            await serverTeams.updateMembershipStatus(teamId, membershipId, userId, secret);
+            
+            // 2. Update the password
+            await serverUsers.updatePassword(userId, password);
+            
+            // 3. Get user details to return (especially email for login)
+            const user = await serverUsers.get(userId);
+            
+            return {
+                success: true,
+                email: user.email
+            };
+        } catch (error) {
+            console.error('Onboarding error:', error);
+            throw error;
+        }
+    }
 };
+
 
 export const serverStoryService = {
     async getStoryById(id) {

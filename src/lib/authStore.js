@@ -22,7 +22,7 @@ export const fetchSyncUser = async () => {
 
         if (!editorialTeam) {
             console.warn("User is not a member of the editorial team.");
-            localStorage.removeItem('vox_admin_user');
+            localStorage.removeItem('explainer_admin_user');
             try { await account.deleteSession('current'); } catch (e) { }
             return null;
         }
@@ -52,7 +52,7 @@ export const fetchSyncUser = async () => {
         // 3. ENFORCE KILL SWITCH (Step 5: Ghost Admin Protection)
         if (profile && profile.status === 'suspended') {
             console.error("CRITICAL: User is suspended.");
-            localStorage.removeItem('vox_admin_user');
+            localStorage.removeItem('explainer_admin_user');
             try { await account.deleteSession('current'); } catch (e) { }
             window.location.href = '/admin/login?error=suspended';
             return null;
@@ -93,7 +93,7 @@ export const fetchSyncUser = async () => {
                     email: user.email,
                     role: internalRole.replace('_', ' ').toUpperCase(),
                     slug: authorName.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
-                    bio: `Editorial team member at VOX.`
+                    bio: `Editorial team member at EXPLAINER.`
                 });
                 console.log("Author record auto-created for", user.email);
             }
@@ -110,10 +110,10 @@ export const fetchSyncUser = async () => {
             categories: user.prefs?.categories || []
         };
 
-        localStorage.setItem('vox_admin_user', JSON.stringify(sessionUser));
+        localStorage.setItem('explainer_admin_user', JSON.stringify(sessionUser));
         return sessionUser;
     } catch (e) {
-        localStorage.removeItem('vox_admin_user');
+        localStorage.removeItem('explainer_admin_user');
         return null;
     }
 };
@@ -167,7 +167,7 @@ export const completePasswordReset = async (userId, secret, password) => {
 
 export const getCurrentUser = () => {
     if (typeof window === 'undefined') return null;
-    const saved = localStorage.getItem('vox_admin_user');
+    const saved = localStorage.getItem('explainer_admin_user');
     return saved ? JSON.parse(saved) : null;
 };
 
@@ -176,6 +176,6 @@ export const logout = async () => {
     try {
         await account.deleteSession('current');
     } catch (e) { }
-    localStorage.removeItem('vox_admin_user');
+    localStorage.removeItem('explainer_admin_user');
     window.location.href = '/admin/login';
 };

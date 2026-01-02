@@ -66,7 +66,7 @@ export default function GuestSubmissionPortal() {
                 <div className="space-y-4">
                     <h1 className="text-4xl font-black text-white uppercase tracking-tighter">Dispatch Received</h1>
                     <p className="text-gray-400 font-medium leading-relaxed">
-                        Your contribution has been beamed to the VOX newsroom. Our editors will review your work and contact you via email if we proceed to publication.
+                        Your contribution has been beamed to the EXPLAINER newsroom. Our editors will review your work and contact you via email if we proceed to publication.
                     </p>
                 </div>
                 <a href="/" className="inline-block px-10 py-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all">
@@ -260,7 +260,7 @@ export default function GuestSubmissionPortal() {
                     <Globe className="w-4 h-4" />
                     <span className="text-[9px] font-black uppercase tracking-[0.2em]">Sovereign Communication Protocol 4.0</span>
                 </div>
-                <span className="text-[9px] font-black uppercase tracking-[0.2em]">VOX NEWSROOM 2025</span>
+                <span className="text-[9px] font-black uppercase tracking-[0.2em]">EXPLAINER NEWSROOM 2025</span>
             </footer>
         </div>
     );

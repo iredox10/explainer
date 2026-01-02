@@ -290,7 +290,7 @@ export default function AdminsPage() {
                   <input
                     type="email"
                     className="w-full px-4 py-4 bg-gray-50 border-2 border-transparent focus:border-[#008751] focus:bg-white rounded-2xl text-sm font-bold outline-none transition-all"
-                    placeholder="staff@vox.africa"
+                    placeholder="staff@explainer.africa"
                     value={newUser.email}
                     onChange={e => setNewUser({ ...newUser, email: e.target.value })}
                     required

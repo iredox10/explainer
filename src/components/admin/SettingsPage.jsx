@@ -7,7 +7,7 @@ import { adminService } from '../../lib/services';
 export default function SettingsPage() {
   const [user, setUser] = useState(null);
   const [settings, setSettings] = useState({
-    site_name: 'VOX.AFRICA',
+    site_name: 'EXPLAINER.AFRICA',
     maintenance_mode: false,
     breaking_news_active: false
   });
