@@ -7,16 +7,14 @@ import { AUTHORS } from "../../data/mock";
 import { storyService } from "../../lib/services";
 import { Mail, Twitter, Globe, Linkedin } from 'lucide-react';
 
-export const prerender = true;
+const { slug } = Astro.params;
 
-export async function getStaticPaths() {
-  return AUTHORS.map(author => ({
-    params: { slug: author.slug },
-    props: { author },
-  }));
+// Find author from mock data or service
+const author = AUTHORS.find(a => a.slug === slug);
+
+if (!author) {
+    return Astro.redirect('/404');
 }
-
-const { author } = Astro.props;
 
 // Fetch all published stories and filter by this author
 const publishedStories = await storyService.getPublishedStories();
