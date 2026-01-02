@@ -29,6 +29,7 @@ const { title, showNav = true } = Astro.props;
         <CommandMenu client:load />
         {showNav && <VoxNav />}
         <slot />
-        <PersistentAudioPlayer client:load />
+        {/* @ts-ignore */}
+        <PersistentAudioPlayer client:load text="" title="" />
     </body>
 </html>

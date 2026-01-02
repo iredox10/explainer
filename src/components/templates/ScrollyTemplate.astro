@@ -60,7 +60,7 @@ const displayReadTime = `${readTime} min read`;
       class="lg:col-span-8 lg:col-start-3 py-24 text-2xl font-serif leading-relaxed text-gray-900"
     >
       {
-        blocks.map((block) => {
+        blocks.map((block: any) => {
           if (block.type === "p") {
             return <p class="mb-8">{block.text}</p>;
           }

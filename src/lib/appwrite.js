@@ -1,10 +1,17 @@
 import { Client, Databases, Account, Storage, Teams } from 'appwrite';
 
+const ENDPOINT = import.meta.env.PUBLIC_APPWRITE_ENDPOINT;
+const PROJECT_ID = import.meta.env.PUBLIC_APPWRITE_PROJECT_ID;
+
 export const client = new Client();
 
-client
-    .setEndpoint(import.meta.env.PUBLIC_APPWRITE_ENDPOINT)
-    .setProject(import.meta.env.PUBLIC_APPWRITE_PROJECT_ID);
+if (ENDPOINT && PROJECT_ID) {
+    client
+        .setEndpoint(ENDPOINT)
+        .setProject(PROJECT_ID);
+} else {
+    console.warn('[APPWRITE] Missing configuration. Client not initialized.');
+}
 
 export const databases = new Databases(client);
 export const account = new Account(client);

@@ -243,18 +243,27 @@ function AnimatedChart({ type = 'line', data = [10, 20, 30], labels = [], colors
     );
 }
 
-export default function ScrollyIsland({ steps }) {
+export default function ScrollyIsland({ steps, forcedStep = null }) {
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
     const onStepEnter = ({ data }) => {
         setCurrentStepIndex(data);
     };
 
+    useEffect(() => {
+        if (forcedStep !== null && forcedStep !== undefined && steps[forcedStep]) {
+            const el = document.getElementById(`scrolly-step-${forcedStep}`);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    }, [forcedStep]);
+
     if (!steps || steps.length === 0) {
         return (
             <div className="h-screen flex items-center justify-center bg-gray-50 border-y border-gray-100">
                 <div className="text-center p-12">
-                    <p class="text-xs font-black uppercase tracking-[0.3em] text-gray-300 mb-4">Discovery Engine Offline</p>
+                    <p className="text-xs font-black uppercase tracking-[0.3em] text-gray-300 mb-4">Discovery Engine Offline</p>
                     <h3 className="text-2xl font-serif italic text-gray-400">No scrollytelling steps defined for this story.</h3>
                 </div>
             </div>
@@ -321,7 +330,7 @@ export default function ScrollyIsland({ steps }) {
                 <Scrollama onStepEnter={onStepEnter} offset={0.6}>
                     {steps.map((step, index) => (
                         <Step data={index} key={index}>
-                            <div className={`flex items-center justify-center pointer-events-none px-6 ${step.type === 'text' ? 'min-h-screen py-32' : 'h-screen'}`}>
+                            <div id={`scrolly-step-${index}`} className={`flex items-center justify-center pointer-events-none px-6 ${step.type === 'text' ? 'min-h-screen py-32' : 'h-screen'}`}>
                                 <motion.div
                                     initial={{ opacity: 0, y: 50 }}
                                     whileInView={{ opacity: 1, y: 0 }}

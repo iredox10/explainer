@@ -17,7 +17,7 @@ interface CleanArticle {
     author?: string;
     imageUrl?: string;
     heroImage?: string;
-    category: string;
+    category?: string;
     slug?: string;
     readTime?: string;
     isFeatured?: boolean;
@@ -55,7 +55,7 @@ const politicsStories = (publishedStories || [])
 const displayPolitics =
     politicsStories.length > 0
         ? politicsStories
-        : (VOX_HOME_DATA.politics as CleanArticle[]);
+        : (VOX_HOME_DATA.politics as unknown as CleanArticle[]);
 
 const cultureStories = (publishedStories || [])
     .filter((s) => s.category === "Culture")
@@ -63,7 +63,7 @@ const cultureStories = (publishedStories || [])
 const displayCulture =
     cultureStories.length > 0
         ? cultureStories
-        : (VOX_HOME_DATA.culture as CleanArticle[]);
+        : (VOX_HOME_DATA.culture as unknown as CleanArticle[]);
 
 const trending = [
     "The case for abolishing the penny",

@@ -10,7 +10,7 @@ const { story } = Astro.props;
 const ARTICLE_DATA = story;
 
 // Helper to parse content safely
-const getBlocks = (content) => {
+const getBlocks = (content: any) => {
   if (!content) return [];
   if (Array.isArray(content)) return content;
   if (typeof content === "string") {
@@ -25,8 +25,8 @@ const getBlocks = (content) => {
 
 const blocks = getBlocks(ARTICLE_DATA.content);
 const fullText = blocks
-  .filter((b) => b.type === "p" || b.type === "heading")
-  .map((b) => b.text)
+  .filter((b: any) => b.type === "p" || b.type === "heading")
+  .map((b: any) => b.text)
   .join(". ");
 
 import { serverStoryService } from "../../lib/server-appwrite.js";
@@ -166,7 +166,7 @@ const displayReadTime = `${readTime} min read`;
             class="font-serif text-[1.15rem] md:text-[1.3rem] leading-[1.8] text-gray-900"
           >
             {
-              blocks.map((block, index) => {
+              blocks.map((block: any, index: number) => {
                 if (block.type === "heading") {
                   return (
                     <h2 class="font-sans font-black text-3xl md:text-4xl text-black mt-16 mb-8 tracking-tight leading-none border-b-4 border-yellow-300 inline-block pb-1">
@@ -324,7 +324,7 @@ const displayReadTime = `${readTime} min read`;
               <div class="space-y-10">
                 {
                   ARTICLE_DATA.related &&
-                    ARTICLE_DATA.related.map((article) => (
+                    ARTICLE_DATA.related.map((article: any) => (
                       <div class="group cursor-pointer flex flex-col gap-4">
                         <div class="w-full aspect-[3/2] bg-gray-100 overflow-hidden relative rounded-sm">
                           <img

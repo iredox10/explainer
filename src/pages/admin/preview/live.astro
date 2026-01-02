@@ -1,0 +1,26 @@
+---
+import LivePreviewer from '../../../components/admin/LivePreviewer.jsx';
+import '../../../styles/global.css';
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width" />
+        <title>Ghost Preview - Live Sync</title>
+        <style>
+            /* Hide scrollbars for a cleaner iframe look */
+            body::-webkit-scrollbar {
+                display: none;
+            }
+            body {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+        </style>
+    </head>
+    <body class="bg-gray-50">
+        <LivePreviewer client:only="react" />
+    </body>
+</html>

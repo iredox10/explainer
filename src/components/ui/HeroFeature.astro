@@ -8,6 +8,7 @@ interface Props {
     heroImage?: string;
     category: string;
     slug: string;
+    readTime?: string;
   };
 }
 
@@ -69,7 +70,7 @@ const displayReadTime = `${readTime} min read`;
       >
         <span class="uppercase text-black">{article.author}</span>
         <span>/</span>
-        <span>{article.readTime || displayReadTime}</span>
+        <span>{(article as any).readTime || displayReadTime}</span>
       </div>
 
       <!-- CTA Button -->

@@ -11,17 +11,17 @@ All commands should be run using `bun` (preferred) or `npm`.
 | Command | Action |
 | :--- | :--- |
 | `bun dev` | Starts local development server at `localhost:4321` |
-| `bun run build` | Builds the production site to `./dist/` |
+| `bun run build` | Builds the production site to `./dist/` (Checks types & SSR) |
 | `bun run preview` | Previews the production build locally |
 | `bun astro check` | Runs type-checking and diagnostics on Astro files |
-| `bun scripts/<script>.js` | Runs maintenance/setup scripts (e.g., `setup-appwrite.js`) |
+| `bun scripts/<script>.js` | Runs maintenance scripts (see Scripts section below) |
 
-### Testing & Linting
-Currently, there are no dedicated test or lint scripts in `package.json`.
-- **Linting**: Adhere to existing patterns. Use `bun astro check` for Astro-specific validation.
-- **Testing**: No test framework (Vitest/Jest) is integrated. Prioritize manual verification of UI and data flows.
-- **Validation Scripts**: Use scripts in `scripts/` (e.g., `check-stories.js`) to verify data integrity in Appwrite.
-- **Verification**: After significant changes, run `bun run build` to ensure SSR and type-checking pass.
+### Testing & Verification
+There is currently **no automated test framework** (Vitest/Jest) integrated.
+- **Manual Verification**: Test UI interactions and data flows manually in the browser.
+- **Build Check**: Always run `bun run build` before committing significant changes to ensure SSR and type-checking pass.
+- **Data Integrity**: Use maintenance scripts in `scripts/` (e.g., `check-stories.js`) to verify Appwrite collection health.
+- **Astro Diagnostics**: Use `bun astro check` to catch prop-type mismatches in Astro components.
 
 ---
 
@@ -29,13 +29,13 @@ Currently, there are no dedicated test or lint scripts in `package.json`.
 
 - `src/pages/`: Astro routes. Follows file-based routing.
 - `src/components/`:
-    - `admin/`: React-based dashboard for content management and story editing.
+    - `admin/`: React-based dashboard for content management.
     - `ui/`: Reusable, atomic components (Astro and React).
     - `templates/`: Layout-specific story templates (**Standard** vs **Scrolly**).
 - `src/lib/`: Core logic and services.
-    - `appwrite.js`: Client-side Appwrite configuration.
+    - `appwrite.js`: Client-side Appwrite SDK configuration.
     - `server-appwrite.js`: Server-side Appwrite (Node SDK) for SSR.
-    - `services.js`: Centralized data fetching layer (use this instead of direct SDK calls).
+    - `services.js`: Centralized data fetching layer (preferred over direct SDK calls).
 - `src/layouts/`: Global page layouts (e.g., `MainLayout.astro`).
 - `scripts/`: Initialization, migration, and maintenance scripts.
 - `public/`: Static assets, including fonts and branding icons.
@@ -44,36 +44,36 @@ Currently, there are no dedicated test or lint scripts in `package.json`.
 
 ## 🎨 Code Style & Conventions
 
-### 1. General Formatting
-- **Indentation**: **4 spaces**. (Crucial for consistency across Astro, JS, and JSX files).
+### 1. Formatting
+- **Indentation**: **4 spaces**. Strict adherence is required for consistency across Astro, JS, and JSX files.
 - **Quotes**: Single quotes (`'`) for JS/JSX strings; double quotes (`"`) for HTML/Astro attributes.
 - **Semicolons**: Always include semicolons.
-- **Trailing Commas**: Use in multi-line objects and arrays.
+- **Trailing Commas**: Required in multi-line objects and arrays.
 
 ### 2. Naming Conventions
 - **Components**: `PascalCase` (e.g., `StoryEditor.jsx`, `MainLayout.astro`).
 - **Logic/Services**: `camelCase` (e.g., `appwrite.js`, `authStore.js`).
-- **Variables/Functions**: `camelCase`.
+- **Service Instances**: `camelCase` (e.g., `storyService`, `serverStoryService`).
 - **Constants**: `SCREAMING_SNAKE_CASE` (e.g., `DB_ID`, `COLLECTIONS`).
-- **CSS**: Tailwind utility classes are the primary styling mechanism.
+- **Styles**: Tailwind utility classes are the primary styling mechanism.
 
 ### 3. Imports
-- Use **relative paths** (e.g., `../../lib/services`).
-- Grouping Order:
-    1. React/Astro core.
-    2. External Libraries (Framer Motion, Lucide).
-    3. Internal Services/Store (`@lib`, `@components`).
+- **Relative Paths Only**: No path aliases are configured. Use `../../lib/services`, not `@lib/services`.
+- **Grouping Order**:
+    1. React/Astro core imports.
+    2. External Libraries (Framer Motion, Lucide, etc.).
+    3. Internal Services/Store (from `src/lib`).
     4. Local components/assets.
 
 ### 4. TypeScript & Types
-- Even in `.jsx` files, prioritize defensive typing and clear prop structures.
-- In `.astro` files, define interfaces for data structures in the frontmatter.
-- Use optional chaining (`?.`) and nullish coalescing (`??`) extensively.
+- **Astro**: Define `interface` for props and data structures in the frontmatter.
+- **React**: Even in `.jsx`, use descriptive prop names and defensive null checks.
+- **Defensive Coding**: Use optional chaining (`?.`) and nullish coalescing (`??`) extensively.
 
 ### 5. Error Handling
-- Wrap all async operations in `try/catch` blocks.
-- Log errors with context: `console.error("[CONTEXT] Description:", error)`.
-- **Fail-Safe UI**: Ensure components handle empty states or `null` data gracefully (e.g., `data || []`).
+- Wrap all async operations (Appwrite calls, file I/O) in `try/catch` blocks.
+- Log errors with context: `console.error("[SERVICE_NAME] Description:", error)`.
+- **Graceful Degeneracy**: Ensure UI handles empty/null data: `const list = data || [];`.
 
 ---
 
@@ -81,16 +81,16 @@ Currently, there are no dedicated test or lint scripts in `package.json`.
 
 ### Appwrite Services
 - **SSR vs CSR**: Use `lib/server-appwrite.js` for server-side logic (Astro frontmatter, Middleware) and `lib/services.js` for client-side React components.
-- **Sanitization**: Appwrite often fails on empty strings for URL/Email fields. Always sanitize data before saving:
+- **Data Sanitization**: Appwrite rejects empty strings for certain field types. Sanitize before saving:
   ```javascript
-  if (!data.urlField) delete data.urlField;
+  const cleanData = { ...data };
+  if (!cleanData.url) delete cleanData.url;
   ```
 
 ### Scrollytelling Engine
-- **Stack**: `react-scrollama` for triggers + `framer-motion` for physics-based animations.
-- **Sticky Visuals**: Complex visuals (Maps/Charts) are often "Sticky Islands" that react to the `currentStepIndex` from Scrollama.
-- **Maps**: Uses `react-simple-maps` with D3-geo projections. Coordinates are `[Longitude, Latitude]`.
-- **Physics**: Map transitions use **Framer Motion Springs** (`damping: 20`, `stiffness: 100`) to create a cinematic "gliding" effect. Avoid abrupt CSS transitions for geographic pans/zooms.
+- **Stack**: `react-scrollama` for triggers + `framer-motion` for animations.
+- **Sticky Visuals**: Complex interactive elements (Maps/Charts) should be implemented as "Sticky Islands" responding to `currentStepIndex`.
+- **Map Transitions**: Use **Framer Motion Springs** (`damping: 20`, `stiffness: 100`) for geographic pans. Avoid jumpy CSS transitions.
 
 ### Astro + React (Islands)
 - Use `client:load` for persistent UI (navigation, audio).
@@ -99,51 +99,54 @@ Currently, there are no dedicated test or lint scripts in `package.json`.
 
 ---
 
-## 🎨 Visual Identity & UI
+## 🛠️ Maintenance Scripts
 
-- **Brand Color**: **Vox Yellow** (`#FAFF00`). Use it for highlights, buttons, and call-to-actions.
-- **Typography**: Heavily features Serif headings (`font-serif-display`) and clean Sans body text.
-- **Animations**: Prefer **Framer Motion Springs** for a cinematic, weighted feel. Avoid abrupt transitions.
-- **Icons**: Use **Lucide React** for all iconography.
-- **Tailwind Patterns**:
-    - Focus states: `group-focus-within:text-black`.
-    - Hover states: `hover:bg-gray-50`.
-    - Gradients: `bg-gradient-to-r from-yellow-300 to-yellow-300`.
+The `scripts/` directory contains critical maintenance and setup utilities:
+- `setup-appwrite.js`: Initializes collections and attributes in Appwrite.
+- `seed-articles.js`: Populates the database with initial mock content.
+- `check-stories.js`: Validates the integrity of story documents and their JSON content.
+- `fix-schema.js`: Migrates documents to new schema versions.
+- `create-admin.js`: Utility for creating new administrative users.
+
+Always run these scripts using `bun scripts/<name>.js` and ensure `.env` is properly configured.
 
 ---
 
 ## 📄 Story Data & Schema
 
 When working with story documents in Appwrite, adhere to this structure:
-
-- **Metadata**:
-    - `headline`: String (Required)
-    - `subhead`: String
-    - `slug`: String (URL-safe, auto-generated if missing)
-    - `category`: String (e.g., "Politics", "Technology")
-    - `status`: "Draft" or "Published"
-    - `layout`: "standard" or "scrolly"
-    - `heroImage`: URL (Appwrite Storage)
-    - `videoUrl`: URL (Direct MP4 link for Hero loops)
-
-- **Content Blocks**:
-    Stories are stored as a JSON array of blocks:
+- **Metadata**: `headline`, `subhead`, `slug`, `category`, `status` ("Draft"|"Published"), `layout` ("standard"|"scrolly").
+- **Content Blocks**: Stored as a JSON array of objects with `type`:
     - `p`: Standard paragraph.
     - `heading`: Section divider.
-    - `quote`: Blockquote with optional attribution.
-    - `callout`: Highlighted info box.
-    - `scrolly`: (Only for Scrolly layout) Contains "Steps" for triggers.
+    - `quote`: Blockquote with optional `author` attribution.
+    - `image`: Visual asset with `url` and optional `caption`.
+    - `callout`: Highlighted info box with `title` and `text`.
+    - `beforeAfter`: Image comparison with `leftImage`, `rightImage`, and labels.
+- **Scrolly Sections**: JSON array containing visual triggers:
+    - `type`: "map", "chart", or "text".
     - `center`: `[Lon, Lat]` for map steps.
     - `zoom`: `1-20` for map steps.
+    - `highlight`: Geographic ID for map highlights.
+    - `text`: Narrative content displayed during this step.
+
+---
+
+## 🎨 Visual Identity
+
+- **Brand Color**: **Vox Yellow** (`#FAFF00`).
+- **Typography**: Serif headings (`font-serif-display`) + Sans body text.
+- **Icons**: Always use **Lucide React**.
+- **Tailwind**: Use `group` and `peer` classes for complex hover/focus states.
+- **Animations**: Prefer `framer-motion` for transitions. Use `animate-in` for entering elements.
 
 ---
 
 ## 🤖 Agent Safety & Proactivity
 
-- **Secrets**: NEVER commit `.env` files. Update `.env.example` if you introduce new environment variables.
-- **Modifications**: Preserve existing comment styles. Use comments to explain *why* complex logic exists, not *what* it does.
-- **Proactivity**: If you modify a service in `src/lib/services.js`, check its usage in `src/components/admin` and `src/pages` to ensure no breaking changes.
-- **Scripts**: Always check for required environment variables before running any script in `scripts/`.
+- **Secrets**: NEVER commit `.env`. Add new variables to `.env.example`.
+- **Scope**: If modifying a service in `src/lib/services.js`, check all consumers in `src/components/admin` and `src/pages`.
+- **Documentation**: Update `WRITING_EXPLAINERS.md` if changing the story JSON schema.
 
 ---
 

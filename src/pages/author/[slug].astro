@@ -7,6 +7,8 @@ import { AUTHORS } from "../../data/mock";
 import { storyService } from "../../lib/services";
 import { Mail, Twitter, Globe, Linkedin } from 'lucide-react';
 
+export const prerender = true;
+
 export async function getStaticPaths() {
   return AUTHORS.map(author => ({
     params: { slug: author.slug },
@@ -37,8 +39,8 @@ const authorStories = publishedStories.filter(s => s.author === author.name || s
             <p class="text-[#008751] font-bold uppercase tracking-widest text-xs mb-6">{author.role}</p>
             <p class="text-xl text-gray-600 font-serif leading-relaxed max-w-2xl mx-auto mb-8">{author.bio}</p>
             <div class="flex justify-center gap-4">
-                {author.email && <a href={`mailto:${author.email}`} class="p-2 text-gray-400 hover:text-black border border-transparent hover:border-gray-200 shadow-sm rounded-full"><Mail class="w-5 h-5" /></a>}
-                {author.social?.twitter && <a href="#" class="p-2 text-gray-400 hover:text-[#1DA1F2] border border-transparent hover:border-gray-200 shadow-sm rounded-full"><Twitter class="w-5 h-5" /></a>}
+                {author.email && <a href={`mailto:${author.email}`} class="p-2 text-gray-400 hover:text-black border border-transparent hover:border-gray-200 shadow-sm rounded-full"><Mail className="w-5 h-5" /></a>}
+                {author.social?.twitter && <a href="#" class="p-2 text-gray-400 hover:text-[#1DA1F2] border border-transparent hover:border-gray-200 shadow-sm rounded-full"><Twitter className="w-5 h-5" /></a>}
             </div>
         </div>
     </div>
@@ -52,7 +54,7 @@ const authorStories = publishedStories.filter(s => s.author === author.name || s
         <div class="space-y-12">
             {authorStories.length > 0 ? (
                 authorStories.map(story => (
-                    <StreamCard article={story} />
+                    <StreamCard article={story as any} />
                 ))
             ) : (
                 <div class="text-center py-20 bg-gray-50 rounded-lg border border-dashed border-gray-300">

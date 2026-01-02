@@ -19,7 +19,11 @@ try {
             .setKey(API_KEY);
         serverDatabases = new Databases(client);
     } else {
-        console.warn('[SERVER-APPWRITE] Incomplete configuration. Check your environment variables.');
+        const missing = [];
+        if (!ENDPOINT) missing.push('ENDPOINT');
+        if (!PROJECT_ID) missing.push('PROJECT_ID');
+        if (!API_KEY) missing.push('API_KEY');
+        console.warn(`[SERVER-APPWRITE] Incomplete configuration (${missing.join(', ')}). Check your environment variables.`);
     }
 } catch (e) {
     console.error('[SERVER-APPWRITE] Fatal initialization error:', e.message);
