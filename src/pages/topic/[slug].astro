@@ -64,8 +64,9 @@ if (!title) {
 // Fetch live stories for this category
 const allPublished = await serverStoryService.getPublishedStories();
 const categoryStories = allPublished.filter(
-  (s) => s.category.toLowerCase() === title.toLowerCase(),
+  (s: any) => s.category.toLowerCase() === title.toLowerCase(),
 );
+
 
 // Fallback to mock if no live stories
 const displayStories =
@@ -110,8 +111,9 @@ const displayStories =
     >
       <div class="lg:col-span-9 lg:col-start-4">
         <div class="space-y-12">
-          {displayStories.map((story) => <StreamCard article={story} />)}
+          {displayStories.map((story: any) => <StreamCard article={story} />)}
         </div>
+
       </div>
     </div>
   </main>
