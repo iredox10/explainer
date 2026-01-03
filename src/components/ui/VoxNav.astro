@@ -3,9 +3,20 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-20 items-center">
             <!-- Left Side: Logo & Links -->
-            <div class="flex items-center gap-12">
+            <div class="flex items-center gap-4 md:gap-12">
+                <button 
+                    id="mobile-menu-button"
+                    class="md:hidden p-2 text-black hover:bg-gray-100 rounded-lg transition-colors"
+                    aria-label="Toggle Menu"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path id="menu-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        <path id="close-icon" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+
                 <a href="/" class="flex-shrink-0 group">
-                    <span class="font-serif-display font-black tracking-tighter text-4xl text-black group-hover:text-gray-700 transition-colors">
+                    <span class="font-serif-display font-black tracking-tighter text-2xl md:text-4xl text-black group-hover:text-gray-700 transition-colors">
                         Explainer<span class="text-[#FAFF00]">.</span>
                     </span>
                 </a>
@@ -30,19 +41,65 @@
             </div>
 
             <!-- Right Side: Membership -->
-            <div class="flex items-center gap-6">
+            <div class="flex items-center gap-3 md:gap-6">
                 <button 
-                    class="text-black hover:text-gray-600 group flex items-center gap-2"
+                    class="text-black hover:text-gray-600 group flex items-center gap-2 p-2"
                     onclick="window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))"
                     aria-label="Search"
                 >
                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                    <span class="hidden md:block text-[10px] font-bold text-gray-400 border border-gray-200 rounded px-1.5 py-0.5 group-hover:border-gray-400 transition-colors">⌘K</span>
                 </button>
-                <a href="#" class="hidden sm:block bg-black text-white px-6 py-3 font-bold text-xs uppercase tracking-widest hover:bg-[#FAFF00] hover:text-black transition-all duration-300 transform hover:-translate-y-0.5">
+                <a href="#" class="bg-black text-white px-4 md:px-6 py-2.5 md:py-3 font-bold text-[10px] md:text-xs uppercase tracking-widest hover:bg-[#FAFF00] hover:text-black transition-all duration-300 transform hover:-translate-y-0.5">
                     Subscribe
                 </a>
             </div>
         </div>
     </div>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100 overflow-hidden transition-all duration-300 ease-in-out max-h-0">
+        <div class="px-4 py-6 space-y-4">
+            <a href="/topic/technology" class="block text-black font-black uppercase tracking-widest text-sm py-2 border-b border-gray-50">Technology</a>
+            <a href="/topic/politics" class="block text-black font-black uppercase tracking-widest text-sm py-2 border-b border-gray-50">Politics</a>
+            <a href="/topic/culture" class="block text-black font-black uppercase tracking-widest text-sm py-2 border-b border-gray-50">Culture</a>
+            <a href="/topic/science" class="block text-black font-black uppercase tracking-widest text-sm py-2 border-b border-gray-50">Science</a>
+            <div class="pt-4">
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Newsletter</p>
+                <div class="flex gap-2">
+                    <input type="email" placeholder="Email address" class="flex-1 bg-gray-50 border-none px-4 py-3 rounded-lg text-xs font-bold focus:ring-2 focus:ring-[#FAFF00] outline-none" />
+                    <button class="bg-black text-white px-4 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest">Join</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </nav>
+
+<script>
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const menuIcon = document.getElementById('menu-icon');
+    const closeIcon = document.getElementById('close-icon');
+
+    if (mobileMenuButton && mobileMenu && menuIcon && closeIcon) {
+        mobileMenuButton.addEventListener('click', () => {
+            const isOpen = !mobileMenu.classList.contains('hidden');
+            
+            if (isOpen) {
+                mobileMenu.style.maxHeight = '0px';
+                setTimeout(() => {
+                    mobileMenu.classList.add('hidden');
+                }, 300);
+                menuIcon.classList.remove('hidden');
+                closeIcon.classList.add('hidden');
+            } else {
+                mobileMenu.classList.remove('hidden');
+                // Force reflow
+                mobileMenu.offsetHeight;
+                mobileMenu.style.maxHeight = '500px';
+                menuIcon.classList.add('hidden');
+                closeIcon.classList.remove('hidden');
+            }
+        });
+    }
+</script>

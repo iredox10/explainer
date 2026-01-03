@@ -157,8 +157,8 @@ export default function AdminDashboard() {
       <CommandMenu />
       <AdminSidebar activePage="dashboard" />
 
-      <main className="ml-64 flex-1 p-8 bg-gray-50/50">
-        <header className="flex justify-between items-end mb-12">
+      <main className="lg:ml-64 flex-1 p-4 md:p-8 pt-24 lg:pt-8 bg-gray-50/50">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <div className="bg-black p-2 rounded-lg text-[#FAFF00]">
@@ -168,8 +168,8 @@ export default function AdminDashboard() {
             </div>
             <p className="text-gray-500 text-sm font-medium">Global newsroom oversight and intelligence metrics.</p>
           </div>
-          <div className="flex gap-4">
-            <button onClick={() => window.location.href = '/admin/edit/new-story'} className="bg-[#FAFF00] text-black px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black hover:text-white transition-all shadow-[0_10px_20px_rgba(250,255,0,0.1)]">
+          <div className="flex gap-4 w-full md:w-auto">
+            <button onClick={() => window.location.href = '/admin/edit/new-story'} className="flex-1 md:flex-none bg-[#FAFF00] text-black px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black hover:text-white transition-all shadow-[0_10px_20px_rgba(250,255,0,0.1)]">
               Initialize Dispatch
             </button>
           </div>
