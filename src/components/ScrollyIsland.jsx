@@ -88,12 +88,13 @@ function AnimatedMap({ center = [20, 0], zoom = 1, highlight, label }) {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="absolute bottom-10 right-10 bg-black/5 backdrop-blur-md border-l-4 border-[#FAFF00] px-8 py-6 shadow-2xl"
+                    className="absolute bottom-6 right-6 md:bottom-10 md:right-10 bg-white/10 backdrop-blur-md border-l-4 border-[#FAFF00] px-4 py-3 md:px-8 md:py-6 shadow-2xl"
                 >
-                    <span className="block text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-2">Operational Sector</span>
-                    <span className="block text-2xl font-bold text-black font-serif-display leading-none">{label}</span>
+                    <span className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mb-1 md:mb-2">Operational Sector</span>
+                    <span className="block text-lg md:text-2xl font-bold text-black font-serif-display leading-none">{label}</span>
                 </motion.div>
             </AnimatePresence>
+
         </div>
     );
 }
@@ -135,8 +136,8 @@ function AnimatedChart({ type = 'line', data = [10, 20, 30], labels = [], colors
 
     return (
         <div className="relative h-full w-full flex items-center justify-center bg-[#f8f9fa] p-4">
-            <div className="w-full max-w-[640px] max-h-[90vh] overflow-y-auto bg-white p-8 md:p-12 shadow-2xl border-t-4 border-[#FAFF00] custom-scrollbar">
-                <h3 className="mb-10 text-3xl font-bold text-black font-serif-display leading-tight">{label}</h3>
+            <div className="w-full max-w-[640px] max-h-[90vh] overflow-y-auto bg-white p-6 md:p-12 shadow-2xl border-t-4 border-[#FAFF00] custom-scrollbar">
+                <h3 className="mb-6 md:mb-10 text-xl md:text-3xl font-bold text-black font-serif-display leading-tight">{label}</h3>
 
                 <div className="aspect-video w-full flex items-center justify-center">
                     <svg viewBox={`-10 -10 ${chartWidth + 20} ${chartHeight + 20}`} className="w-full h-full overflow-visible">
@@ -223,16 +224,16 @@ function AnimatedChart({ type = 'line', data = [10, 20, 30], labels = [], colors
                     </svg>
                 </div>
 
-                <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-6 border-t border-gray-50 pt-8">
+                <div className="mt-6 md:mt-8 grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 border-t border-gray-50 pt-6 md:pt-8">
                     {data.map((v, i) => (
                         <div key={i} className="flex flex-col gap-1 border-l-2 pl-3" style={{ borderColor: getSegmentColor(i) }}>
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
                                 {labels[i] || `Category ${i + 1}`}
                             </span>
                             <div className="flex items-baseline gap-2">
-                                <span className="text-xl font-bold text-black">{v}</span>
+                                <span className="text-lg md:text-xl font-bold text-black">{v}</span>
                                 {type === 'pie' && total > 0 && (
-                                    <span className="text-[10px] font-medium text-gray-400">({Math.round((v / total) * 100)}%)</span>
+                                    <span className="text-[8px] md:text-[10px] font-medium text-gray-400">({Math.round((v / total) * 100)}%)</span>
                                 )}
                             </div>
                         </div>
@@ -337,14 +338,14 @@ export default function ScrollyIsland({ steps, forcedStep = null }) {
                                     viewport={{ margin: "-20% 0px -20% 0px" }}
                                     transition={{ duration: 0.8, ease: "circOut" }}
                                     className={`pointer-events-auto shadow-2xl transition-all duration-500 ${step.type === 'text'
-                                        ? 'max-w-3xl bg-white/50 backdrop-blur-sm p-12 md:p-20 border-y-4 border-[#FAFF00] shadow-none !bg-transparent'
-                                        : 'max-w-md bg-white p-8 border-l-4 border-[#FAFF00]'
+                                        ? 'w-full max-w-3xl bg-white/50 backdrop-blur-sm p-8 md:p-20 border-y-4 border-[#FAFF00] shadow-none !bg-transparent'
+                                        : 'w-full max-w-[calc(100vw-3rem)] md:max-w-md bg-white p-6 md:p-8 border-l-4 border-[#FAFF00]'
                                         }`}
                                 >
-                                    <span className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-3">
+                                    <span className="block text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 mb-3">
                                         {step.type === 'text' ? 'Narrative Context' : `Step ${index + 1}/${steps.length}`}
                                     </span>
-                                    <p className={`leading-relaxed text-gray-900 font-serif ${step.type === 'text' ? 'text-4xl font-bold tracking-tight' : 'text-xl font-medium'
+                                    <p className={`leading-relaxed text-gray-900 font-serif ${step.type === 'text' ? 'text-2xl md:text-4xl font-bold tracking-tight' : 'text-lg md:text-xl font-medium'
                                         }`}>
                                         {step.text}
                                     </p>

@@ -717,8 +717,8 @@ export default function StoryEditor({ storyId }) {
             </div>
 
             {showMeta && (
-                <aside className="fixed inset-y-0 right-0 z-50 w-full md:w-[400px] border-l border-gray-100 bg-white md:bg-gray-50/30 flex flex-col animate-in slide-in-from-right-full duration-300 shadow-2xl md:shadow-none">
-                    <div className="flex items-center justify-between p-6 border-b border-gray-100 md:hidden bg-gray-50">
+                <aside className="fixed inset-y-0 right-0 z-50 w-full md:w-[400px] border-l border-gray-100 bg-white md:bg-white flex flex-col animate-in slide-in-from-right-full duration-300 shadow-2xl">
+                    <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50">
                         <h3 className="font-black uppercase tracking-widest text-xs">Story Configuration</h3>
                         <button onClick={() => setShowMeta(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
                             <X className="w-5 h-5" />
