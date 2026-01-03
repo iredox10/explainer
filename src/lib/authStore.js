@@ -118,6 +118,31 @@ export const fetchSyncUser = async () => {
     }
 };
 
+// Periodic Security Pulse (Step 5: Active Ghost Admin Protection)
+if (typeof window !== 'undefined') {
+    setInterval(async () => {
+        const user = getCurrentUser();
+        if (user) {
+            try {
+                // Fetch JUST the profile status to be lightweight
+                const profileRes = await databases.listDocuments(DB_ID, 'profiles', [
+                    Query.equal('userId', user.id),
+                    Query.select(['status'])
+                ]);
+                const profile = profileRes.documents[0];
+                if (profile && profile.status === 'suspended') {
+                    console.error("Security Pulse: User suspended. Revoking access.");
+                    localStorage.removeItem('explainer_admin_user');
+                    try { await account.deleteSession('current'); } catch (e) { }
+                    window.location.href = '/admin/login?error=suspended';
+                }
+            } catch (e) {
+                // If network fails, don't kick them out immediately, just wait for next pulse
+            }
+        }
+    }, 60000 * 5); // Every 5 minutes
+}
+
 export const loginWithEmail = async (email, password) => {
     try {
         // Attempt to clear any existing "orphan" session before creating a new one

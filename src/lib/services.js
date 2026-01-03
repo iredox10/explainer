@@ -61,6 +61,12 @@ export const storyService = {
     },
 
     async saveStory(id, data) {
+        // DEFENSIVE: Check local suspension status
+        const currentUser = JSON.parse(localStorage.getItem('explainer_admin_user') || '{}');
+        if (currentUser.status === 'suspended') {
+            throw new Error("Access Revoked: Your account is suspended and cannot perform this action.");
+        }
+
         try {
             // Sanitize data: remove empty strings for URL/Email fields as they cause validation errors
             const sanitizedData = { ...data };
@@ -87,6 +93,12 @@ export const storyService = {
     },
 
     async deleteStory(id) {
+        // DEFENSIVE: Check local suspension status
+        const currentUser = JSON.parse(localStorage.getItem('explainer_admin_user') || '{}');
+        if (currentUser.status === 'suspended') {
+            throw new Error("Access Revoked: Your account is suspended and cannot perform this action.");
+        }
+
         try {
             await databases.deleteDocument(DB_ID, COLLECTIONS.STORIES, id);
             return true;

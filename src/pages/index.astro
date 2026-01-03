@@ -21,61 +21,84 @@ interface CleanArticle {
     slug?: string;
     readTime?: string;
     isFeatured?: boolean;
+    videoUrl?: string;
 }
 
 // Fetch Published Stories with absolute fail-safe
 let publishedStories: CleanArticle[] = [];
+let fetchError = false;
+
 try {
     const rawStories = await serverStoryService.getPublishedStories();
     publishedStories = (rawStories || []) as CleanArticle[];
-} catch (e) {
-    console.error("[HOME] Failed to fetch stories from Appwrite:", e);
+    
+    if (publishedStories.length === 0) {
+        console.warn(`[HOME] Appwrite (${import.meta.env.PUBLIC_APPWRITE_DATABASE_ID || 'vox_cms'}) returned 0 published stories. Check status field values.`);
+    } else {
+        console.log(`[HOME] successfully loaded ${publishedStories.length} stories from Appwrite.`);
+    }
+} catch (e: any) {
+    fetchError = true;
+    console.error("[HOME] Failed to fetch stories from Appwrite:", e.message);
 }
 
 // Logic to determine which stories go where
 // 1. Hero: Use the latest 'Featured' story, then 'Super Feature', or just the newest story
-const heroStory =
-    publishedStories.find((s) => s.isFeatured === true) ||
-    publishedStories.find((s) => s.category === "Super Feature") ||
-    publishedStories[0] ||
-    (VOX_HOME_DATA.hero as CleanArticle);
+const liveHero = publishedStories.find((s) => s.isFeatured === true) ||
+                 publishedStories.find((s) => s.category === "Super Feature") ||
+                 publishedStories[0];
+
+const heroStory = liveHero || (VOX_HOME_DATA.hero as CleanArticle);
 
 // 2. Latest: Top 4 excluding the hero
 const latestStories =
     publishedStories.length > 0
         ? publishedStories
-              .filter((s) => s.$id && s.$id !== heroStory.$id)
+              .filter((s) => s.$id && s.$id !== heroStory?.$id)
               .slice(0, 4)
         : (VOX_HOME_DATA.latest as CleanArticle[]);
 
-// 3. Politics & Culture (Filtered from live data or fallback)
-const politicsStories = (publishedStories || [])
-    .filter((s) => s.category === "Politics")
-    .slice(0, 3);
-const displayPolitics =
-    politicsStories.length > 0
-        ? politicsStories
-        : (VOX_HOME_DATA.politics as unknown as CleanArticle[]);
+// 3. Dynamic Sections (Grouped by Category)
+const categoriesWithStories = publishedStories.reduce((acc: any, story) => {
+    const cat = story.category || "General";
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(story);
+    return acc;
+}, {});
 
-const cultureStories = (publishedStories || [])
-    .filter((s) => s.category === "Culture")
-    .slice(0, 4);
-const displayCulture =
-    cultureStories.length > 0
-        ? cultureStories
-        : (VOX_HOME_DATA.culture as unknown as CleanArticle[]);
+const sortedCategories = Object.keys(categoriesWithStories).sort(
+    (a, b) => categoriesWithStories[b].length - categoriesWithStories[a].length
+);
 
-const trending = [
+// Trending: Use any featured stories or just the latest 5
+const trending = (publishedStories.length > 0 
+    ? publishedStories.slice(0, 5).map(s => s.headline || s.title)
+    : [
     "The case for abolishing the penny",
     "Why everyone is playing this word game",
     "How to sleep better",
     "The future of electric planes",
     "Why coffee is getting more expensive",
-];
+]) as string[];
+
+// Videos: Filter stories that have videoUrl
+const liveVideos = publishedStories
+    .filter(s => s.videoUrl)
+    .map(s => ({
+        title: s.headline || s.title,
+        seriesName: s.category,
+        duration: "Live",
+        thumbUrl: s.heroImage || s.imageUrl
+    }));
+
+const displayVideos = liveVideos.length > 0 ? liveVideos : VOX_HOME_DATA.videos;
 ---
 
 <MainLayout title="Explainer - Visual Journalism That Makes Sense of the World">
     <main class="max-w-7xl mx-auto px-6 py-12">
+        <!-- Live Data Sync Debug (Hidden) -->
+        <div style="display:none" data-appwrite-sync-status={publishedStories.length} data-fetch-error={fetchError}></div>
+
         <HeroFeature article={heroStory as any} />
 
         <div
@@ -95,12 +118,11 @@ const trending = [
                                     <div class="text-5xl font-serif-display font-black text-black/10 group-hover:text-[#FAFF00] transition-colors leading-none mb-2">
                                         0{i + 1}
                                     </div>
-                                    <a
-                                        href="#"
+                                    <div
                                         class="text-lg font-bold leading-tight text-black group-hover:text-gray-600 transition-colors block"
                                     >
                                         {item}
-                                    </a>
+                                    </div>
                                 </div>
                             ))
                         }
@@ -122,9 +144,13 @@ const trending = [
                 </div>
                 <div class="flex flex-col">
                     {
-                        latestStories.map((article) => (
-                            <StreamCard article={article as any} />
-                        ))
+                        latestStories.length > 0 ? (
+                            latestStories.map((article) => (
+                                <StreamCard article={article as any} />
+                            ))
+                        ) : (
+                            <p class="text-gray-400 italic">No live stories found. Check your Appwrite connection.</p>
+                        )
                     }
                 </div>
             </div>
@@ -159,127 +185,48 @@ const trending = [
             </div>
         </section>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-16 py-24">
-            <div>
-                <div class="flex items-center gap-4 mb-12">
-                    <h3
-                        class="text-4xl font-serif-display font-black text-black"
-                    >
-                        Politics
-                    </h3>
-                    <span class="h-px flex-1 bg-blue-100"></span>
-                    <a
-                        href="/topic/politics"
-                        class="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:underline"
-                        >View Section →</a
-                    >
-                </div>
-                <div class="space-y-12">
-                    {
-                        displayPolitics.map((s, i) => (
-                            <article
-                                class={`group ${i === 0 ? "" : "flex gap-6 items-start border-t border-gray-100 pt-8"}`}
+        {/* Dynamic Sections Based on Live Categories */}
+        <div class="space-y-24 py-24">
+            {
+                sortedCategories.slice(0, 3).map(catName => (
+                    <div>
+                        <div class="flex items-center gap-4 mb-12">
+                            <h3 class="text-4xl font-serif-display font-black text-black uppercase tracking-tighter">
+                                {catName}
+                            </h3>
+                            <span class="h-px flex-1 bg-gray-100"></span>
+                            <a
+                                href={`/topic/${catName.toLowerCase()}`}
+                                class="text-[10px] font-black uppercase tracking-widest text-black hover:bg-[#FAFF00] px-3 py-1 rounded transition-all"
+                                >Explore {catName} →</a
                             >
-                                {i === 0 ? (
-                                    <>
-                                        <div class="aspect-video overflow-hidden mb-6 bg-gray-100 relative">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+                            {
+                                categoriesWithStories[catName].slice(0, 3).map((s: any, i: number) => (
+                                    <article class="group">
+                                        <div class="aspect-[16/10] overflow-hidden mb-6 bg-gray-100 relative rounded-sm">
                                             <img
-                                                src={s.imageUrl || s.heroImage}
-                                                class="w-full h-full object-cover grayscale-[50%] group-hover:grayscale-0 transition-all duration-700"
+                                                src={s.heroImage || s.imageUrl || 'https://images.unsplash.com/photo-1585829365294-111320e7588e?w=800&q=80'}
+                                                class="w-full h-full object-cover grayscale-[50%] group-hover:grayscale-0 transition-all duration-700 scale-105 group-hover:scale-100"
                                             />
                                         </div>
-                                        <h4 class="text-3xl font-serif-display font-bold leading-tight group-hover:underline decoration-blue-400 underline-offset-4">
-                                            <a
-                                                href={
-                                                    s.slug
-                                                        ? `/article/${s.slug}`
-                                                        : "#"
-                                                }
-                                            >
+                                        <h4 class="text-2xl font-serif-display font-bold leading-tight group-hover:underline decoration-[#FAFF00] decoration-4 underline-offset-4">
+                                            <a href={`/article/${s.slug}`}>
                                                 {s.headline || s.title}
                                             </a>
                                         </h4>
-                                    </>
-                                ) : (
-                                    <h4 class="text-xl font-serif-display font-bold leading-tight group-hover:text-blue-600 transition-colors">
-                                        <a
-                                            href={
-                                                s.slug
-                                                    ? `/article/${s.slug}`
-                                                    : "#"
-                                            }
-                                        >
-                                            {s.headline || s.title}
-                                        </a>
-                                    </h4>
-                                )}
-                            </article>
-                        ))
-                    }
-                </div>
-            </div>
-
-            <div>
-                <div class="flex items-center gap-4 mb-12">
-                    <h3
-                        class="text-4xl font-serif-display font-black text-black"
-                    >
-                        Culture
-                    </h3>
-                    <span class="h-px flex-1 bg-pink-100"></span>
-                    <a
-                        href="/topic/culture"
-                        class="text-[10px] font-black uppercase tracking-widest text-pink-600 hover:underline"
-                        >View Section →</a
-                    >
-                </div>
-                <div class="space-y-12">
-                    {
-                        displayCulture.map((s, i) => (
-                            <article
-                                class={`group ${i === 0 ? "" : "flex gap-6 items-start border-t border-gray-100 pt-8"}`}
-                            >
-                                {i === 0 ? (
-                                    <>
-                                        <div class="aspect-video overflow-hidden mb-6 bg-gray-100 relative">
-                                            <img
-                                                src={s.imageUrl || s.heroImage}
-                                                class="w-full h-full object-cover grayscale-[50%] group-hover:grayscale-0 transition-all duration-700"
-                                            />
-                                        </div>
-                                        <h4 class="text-3xl font-serif-display font-bold leading-tight group-hover:underline decoration-pink-400 underline-offset-4">
-                                            <a
-                                                href={
-                                                    s.slug
-                                                        ? `/article/${s.slug}`
-                                                        : "#"
-                                                }
-                                            >
-                                                {s.headline || s.title}
-                                            </a>
-                                        </h4>
-                                    </>
-                                ) : (
-                                    <h4 class="text-xl font-serif-display font-bold leading-tight group-hover:text-pink-600 transition-colors">
-                                        <a
-                                            href={
-                                                s.slug
-                                                    ? `/article/${s.slug}`
-                                                    : "#"
-                                            }
-                                        >
-                                            {s.headline || s.title}
-                                        </a>
-                                    </h4>
-                                )}
-                            </article>
-                        ))
-                    }
-                </div>
-            </div>
+                                        <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mt-4">By {s.author}</p>
+                                    </article>
+                                ))
+                            }
+                        </div>
+                    </div>
+                ))
+            }
         </div>
     </main>
 
-    <VideoSection videos={VOX_HOME_DATA.videos as any} />
+    <VideoSection videos={displayVideos as any} />
     <Footer />
 </MainLayout>

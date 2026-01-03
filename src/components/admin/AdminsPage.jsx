@@ -56,6 +56,20 @@ export default function AdminsPage() {
     if (confirm(`${action} access for ${profile.name}?`)) {
       try {
         await adminService.updateProfileStatus(profile.$id, newStatus);
+        
+        // If suspending, also trigger a session termination via API
+        if (newStatus === 'suspended') {
+          try {
+            await fetch('/api/admin/suspend', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: profile.userId })
+            });
+          } catch (apiErr) {
+            console.warn("Session termination failed, but profile was suspended:", apiErr);
+          }
+        }
+
         setProfiles(prev => prev.map(p => p.$id === profile.$id ? { ...p, status: newStatus } : p));
       } catch (e) {
         alert("Action failed: " + e.message);

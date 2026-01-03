@@ -5,7 +5,7 @@ import { Client, Databases, Query, Users, Teams, ID } from 'node-appwrite';
 const ENDPOINT = import.meta.env.PUBLIC_APPWRITE_ENDPOINT || process.env.PUBLIC_APPWRITE_ENDPOINT;
 const PROJECT_ID = import.meta.env.PUBLIC_APPWRITE_PROJECT_ID || process.env.PUBLIC_APPWRITE_PROJECT_ID;
 const API_KEY = import.meta.env.APPWRITE_API_KEY || process.env.APPWRITE_API_KEY;
-const DB_ID = import.meta.env.PUBLIC_APPWRITE_DATABASE_ID || process.env.PUBLIC_APPWRITE_DATABASE_ID || 'explainer_cms';
+const DB_ID = import.meta.env.PUBLIC_APPWRITE_DATABASE_ID || process.env.PUBLIC_APPWRITE_DATABASE_ID || 'vox_cms';
 
 // Module-level client initialization
 let client;
@@ -32,6 +32,14 @@ try {
 } catch (e) {
     console.error('[SERVER-APPWRITE] Fatal initialization error:', e.message);
 }
+
+export const COLLECTIONS = {
+    STORIES: 'stories',
+    AUTHORS: 'authors',
+    CATEGORIES: 'categories',
+    PROFILES: 'profiles',
+    CONFIGS: 'configs'
+};
 
 export const serverAuthService = {
     async onboardInvitedUser(userId, teamId, membershipId, secret, password) {

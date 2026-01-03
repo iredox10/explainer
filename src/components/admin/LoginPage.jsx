@@ -3,7 +3,7 @@ import { Shield, Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
 import { fetchSyncUser, loginWithEmail, acceptInvite, requestPasswordReset, completePasswordReset } from '../../lib/authStore';
 
 export default function LoginPage() {
-  const [view, setView] = useState('login'); // 'login', 'forgot', 'reset', 'onboard'
+  const [view, setView] = useState('login'); // 'login', 'forgot', 'reset', 'onboard', 'suspended'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -23,6 +23,11 @@ export default function LoginPage() {
     const membershipId = p.get('membershipId');
 
     setParams({ userId, secret, teamId, membershipId });
+
+    if (p.get('error') === 'suspended') {
+      setView('suspended');
+      return;
+    }
 
     if (membershipId && userId && secret && teamId) {
       // New flow: Show password set screen instead of auto-accepting with no password
@@ -350,6 +355,27 @@ export default function LoginPage() {
                 {isLoading ? <Loader2 className="animate-spin h-5 w-5" /> : <>Join Newsroom <ArrowRight className="w-4 h-4" /></>}
               </button>
             </form>
+          )}
+
+          {view === 'suspended' && (
+            <div className="text-center py-10">
+              <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-lg animate-pulse">
+                <Shield className="w-10 h-10 text-red-500" />
+              </div>
+              <h3 className="text-xl font-black uppercase tracking-tighter text-black mb-2">Access Revoked</h3>
+              <p className="text-xs text-gray-400 font-bold uppercase tracking-widest leading-relaxed px-4">
+                Your administrative credentials have been suspended by the system controller.
+              </p>
+              <div className="mt-8 pt-8 border-t border-gray-50">
+                <p className="text-[10px] text-gray-400 italic mb-6">Contact your newsroom lead for restoration procedures.</p>
+                <button 
+                  onClick={() => window.location.href = '/'}
+                  className="w-full py-4 rounded-xl text-[10px] font-black uppercase tracking-widest text-white bg-black hover:bg-red-600 transition-all"
+                >
+                  Exit Newsroom
+                </button>
+              </div>
+            </div>
           )}
 
           <div className="mt-10 pt-8 border-t border-gray-50 text-center">

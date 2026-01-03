@@ -18,7 +18,7 @@ async function checkStories() {
         );
         console.log('Total Stories:', stories.total);
         stories.documents.forEach(s => {
-            console.log(`- Headline: ${s.headline}, Layout: ${s.layout}, ID: ${s.$id}`);
+            console.log(`- Headline: ${s.headline}, Category: ${s.category}, Status: ${s.status}, ID: ${s.$id}`);
         });
     } catch (e) {
         console.error('Error fetching stories:', e.message);

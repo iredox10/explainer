@@ -18,7 +18,7 @@ export const account = new Account(client);
 export const storage = new Storage(client);
 export const teams = new Teams(client);
 
-export const DB_ID = import.meta.env.PUBLIC_APPWRITE_DATABASE_ID;
+export const DB_ID = import.meta.env.PUBLIC_APPWRITE_DATABASE_ID || 'vox_cms';
 export const MEDIA_BUCKET_ID = 'media';
 export const COLLECTIONS = {
     STORIES: 'stories',
