@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Type, X, AlertCircle, Loader2, Upload, Send, CheckSquare, Eye, Clock, History, Search, ChevronRight, ExternalLink, BookOpen, Zap } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Type, X, AlertCircle, Loader2, Upload, Send, CheckSquare, Eye, Clock, History, Search, ChevronRight, ExternalLink, BookOpen, Zap, Settings2 } from 'lucide-react';
 import { getCurrentUser, ROLES } from '../../lib/authStore';
 import { storyService, categoryService } from '../../lib/services';
 

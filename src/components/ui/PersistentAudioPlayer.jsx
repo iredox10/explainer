@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, RotateCcw, X, ChevronUp, ChevronDown, Settings2, Headphones } from 'lucide-react';
+import { Play, Pause, RotateCcw, X, ChevronDown, Settings2, Headphones } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function PersistentAudioPlayer({ text, title }) {
