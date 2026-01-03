@@ -187,31 +187,31 @@ export default function StoryEditor({ storyId }) {
         <div className="min-h-screen bg-white font-sans text-gray-900 flex">
             {/* Main Editor Zone */}
             <div className="flex-1 flex flex-col min-w-0">
-                <nav className="h-20 border-b border-gray-100 flex items-center justify-between px-8 bg-white/80 backdrop-blur-md sticky top-0 z-40">
-                    <div className="flex items-center gap-6">
-                        <a href="/admin/stories" className="p-3 hover:bg-gray-50 rounded-2xl transition-all border border-transparent hover:border-gray-100 group">
+                <nav className="min-h-20 border-b border-gray-100 flex flex-col md:flex-row items-center justify-between px-4 md:px-8 py-4 md:py-0 bg-white/80 backdrop-blur-md sticky top-0 z-40 gap-4">
+                    <div className="flex items-center gap-4 md:gap-6 w-full md:w-auto">
+                        <a href="/admin/stories" className="p-2 md:p-3 hover:bg-gray-50 rounded-2xl transition-all border border-transparent hover:border-gray-100 group">
                             <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-black" />
                         </a>
-                        <div>
-                            <div className="flex items-center gap-3">
-                                <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded border ${story.workflow_status === 'published' ? 'bg-green-50 text-green-700 border-green-100' :
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-2 md:gap-3">
+                                <span className={`text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] px-1.5 py-0.5 rounded border whitespace-nowrap ${story.workflow_status === 'published' ? 'bg-green-50 text-green-700 border-green-100' :
                                     story.workflow_status === 'pending_review' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-gray-50 text-gray-500 border-gray-100'
                                     }`}>
                                     {story.workflow_status}
                                 </span>
-                                <h1 className="font-bold text-sm truncate max-w-[300px] tracking-tight">{story.headline}</h1>
+                                <h1 className="font-bold text-xs md:text-sm truncate max-w-[150px] md:max-w-[300px] tracking-tight">{story.headline}</h1>
                             </div>
-                            <p className="text-[10px] text-gray-400 font-medium mt-0.5">Editing as <span className="text-black font-bold uppercase">{user.role}</span></p>
+                            <p className="text-[9px] md:text-[10px] text-gray-400 font-medium mt-0.5">Editing as <span className="text-black font-bold uppercase">{user.role}</span></p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        {saveStatus === 'saved' && (<span className="text-xs text-green-600 font-bold flex items-center gap-1.5 animate-in fade-in slide-in-from-right-2"><CheckSquare className="w-4 h-4" /> Changes Synced</span>)}
+                    <div className="flex items-center gap-2 md:gap-3 w-full md:w-auto justify-end overflow-x-auto no-scrollbar pb-2 md:pb-0">
+                        {saveStatus === 'saved' && (<span className="hidden lg:flex text-xs text-green-600 font-bold items-center gap-1.5 animate-in fade-in slide-in-from-right-2 whitespace-nowrap"><CheckSquare className="w-4 h-4" /> Synced</span>)}
 
                         <a
                             href="/admin/guide"
                             target="_blank"
-                            className="p-3 hover:bg-gray-50 rounded-xl text-gray-400 hover:text-black transition-all border border-gray-100 group flex items-center gap-2"
+                            className="p-2 md:p-3 hover:bg-gray-50 rounded-xl text-gray-400 hover:text-black transition-all border border-gray-100 group flex items-center gap-2 shrink-0"
                             title="Open Editorial Guide"
                         >
                             <BookOpen className="w-4 h-4" />
@@ -219,52 +219,52 @@ export default function StoryEditor({ storyId }) {
 
                         <button
                             onClick={handlePreview}
-                            className="bg-gray-100 hover:bg-gray-200 text-black px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-3 transition-all"
+                            className="bg-gray-100 hover:bg-gray-200 text-black px-4 md:px-6 py-2.5 md:py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 md:gap-3 transition-all shrink-0"
                         >
-                            <ExternalLink className="w-4 h-4" /> Live Preview
+                            <ExternalLink className="w-4 h-4" /> <span className="hidden sm:inline">Preview</span>
                         </button>
 
                         <button
                             onClick={() => performSave(story.workflow_status)}
                             disabled={saveStatus === 'saving' || !isDirty || isLocked}
-                            className="px-5 py-3 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-black transition-all disabled:opacity-30"
+                            className="px-3 md:px-5 py-2.5 md:py-3 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-all disabled:opacity-30 shrink-0"
                         >
-                            Save Progress
+                            Save
                         </button>
 
                         {isWriter && story.workflow_status === 'draft' && (
-                            <button onClick={() => performSave('pending_review')} className="bg-black text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-3 hover:bg-[#008751] transition-all shadow-xl">
-                                <Send className="w-4 h-4" /> Submit to Editor
+                            <button onClick={() => performSave('pending_review')} className="bg-black text-white px-4 md:px-6 py-2.5 md:py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 md:gap-3 hover:bg-[#008751] transition-all shadow-xl shrink-0">
+                                <Send className="w-4 h-4" /> <span className="hidden sm:inline">Submit</span>
                             </button>
                         )}
 
                         {isEditor && (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 shrink-0">
                                 {story.workflow_status === 'pending_review' && (
                                     <>
-                                        <button onClick={() => performSave('draft')} className="bg-red-50 text-red-600 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-3 border border-red-100 hover:bg-red-100 transition-all">
-                                            <AlertCircle className="w-4 h-4" /> Kick Back
+                                        <button onClick={() => performSave('draft')} className="bg-red-50 text-red-600 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 border border-red-100 hover:bg-red-100 transition-all">
+                                            Kick
                                         </button>
-                                        <button onClick={() => performSave('approved')} className="bg-blue-600 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-3 hover:bg-blue-700 transition-all shadow-xl">
-                                            <CheckSquare className="w-4 h-4" /> Approve for Final
+                                        <button onClick={() => performSave('approved')} className="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-blue-700 transition-all shadow-xl">
+                                            Approve
                                         </button>
                                     </>
                                 )}
                                 {(story.workflow_status === 'approved' || story.workflow_status === 'published') && (
-                                    <button onClick={() => performSave('published')} className="bg-[#FAFF00] text-black px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-3 hover:bg-black hover:text-white transition-all shadow-[0_10px_20px_rgba(250,255,0,0.3)]">
-                                        <CheckSquare className="w-4 h-4" /> {story.workflow_status === 'published' ? 'Update Live' : 'Go Live'}
+                                    <button onClick={() => performSave('published')} className="bg-[#FAFF00] text-black px-4 md:px-6 py-2.5 md:py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 md:gap-3 hover:bg-black hover:text-white transition-all shadow-[0_10px_20px_rgba(250,255,0,0.3)] shrink-0">
+                                        <CheckSquare className="w-4 h-4" /> <span className="hidden sm:inline">{story.workflow_status === 'published' ? 'Update' : 'Publish'}</span>
                                     </button>
                                 )}
                             </div>
                         )}
 
-                        <button onClick={() => setShowGhostPreview(!showGhostPreview)} className={`p-3 rounded-xl transition-all border flex items-center gap-2 ${showGhostPreview ? 'bg-[#FAFF00] border-[#FAFF00] text-black shadow-lg' : 'bg-white border-gray-100 text-gray-400 hover:text-black'}`}>
-                            <Zap className={`w-5 h-5 ${showGhostPreview ? 'fill-black' : ''}`} />
-                            <span className="text-[10px] font-black uppercase tracking-widest hidden lg:block">Ghost Preview</span>
+                        <button onClick={() => setShowGhostPreview(!showGhostPreview)} className={`p-2 md:p-3 rounded-xl transition-all border flex items-center gap-2 shrink-0 ${showGhostPreview ? 'bg-[#FAFF00] border-[#FAFF00] text-black shadow-lg' : 'bg-white border-gray-100 text-gray-400 hover:text-black'}`}>
+                            <Zap className={`w-4 h-4 md:w-5 md:h-5 ${showGhostPreview ? 'fill-black' : ''}`} />
+                            <span className="text-[9px] font-black uppercase tracking-widest hidden lg:block">Ghost</span>
                         </button>
 
-                        <button onClick={() => setShowMeta(!showMeta)} className={`p-3 rounded-xl transition-all border ${showMeta ? 'bg-gray-100 border-gray-200 text-black' : 'bg-white border-gray-100 text-gray-400'}`}>
-                            <Eye className="w-5 h-5" />
+                        <button onClick={() => setShowMeta(!showMeta)} className={`p-2 md:p-3 rounded-xl transition-all border shrink-0 ${showMeta ? 'bg-gray-100 border-gray-200 text-black' : 'bg-white border-gray-100 text-gray-400'}`}>
+                            <Settings2 className="w-4 h-4 md:w-5 md:h-5" />
                         </button>
                     </div>
                 </nav>
@@ -496,7 +496,7 @@ export default function StoryEditor({ storyId }) {
                                                 className={`bg-white/5 border p-6 rounded-2xl flex items-start gap-6 group transition-colors ${focusedStepIndex === idx ? 'border-[#FAFF00] bg-white/10' : 'border-white/10 hover:border-[#FAFF00]/50'}`}>
                                                 <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center font-black text-[#FAFF00] shrink-0">{idx + 1}</div>
 
-                                                    <div className="grid grid-cols-2 gap-4 flex-1">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 w-full">
                                                         <div className="space-y-4">
                                                             <select
                                                                 className="bg-black border border-white/20 text-white p-3 rounded-lg w-full text-xs font-black uppercase tracking-widest"
@@ -717,8 +717,14 @@ export default function StoryEditor({ storyId }) {
             </div>
 
             {showMeta && (
-                <aside className="w-[400px] border-l border-gray-100 bg-gray-50/30 flex flex-col animate-in slide-in-from-right-full duration-300">
-                    <div className="p-8 space-y-12 overflow-y-auto">
+                <aside className="fixed inset-y-0 right-0 z-50 w-full md:w-[400px] border-l border-gray-100 bg-white md:bg-gray-50/30 flex flex-col animate-in slide-in-from-right-full duration-300 shadow-2xl md:shadow-none">
+                    <div className="flex items-center justify-between p-6 border-b border-gray-100 md:hidden bg-gray-50">
+                        <h3 className="font-black uppercase tracking-widest text-xs">Story Configuration</h3>
+                        <button onClick={() => setShowMeta(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+                    <div className="p-6 md:p-8 space-y-12 overflow-y-auto custom-scrollbar">
                         <section className="space-y-4">
                             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Editorial Protocol</h3>
                             <div className="grid grid-cols-2 gap-2">

@@ -91,13 +91,13 @@ export default function AuthorsPage() {
     <div className="min-h-screen bg-gray-50 flex font-sans text-gray-900">
       <AdminSidebar activePage="authors" />
 
-      <main className="ml-64 flex-1 p-8">
-        <header className="flex justify-between items-center mb-8">
+      <main className="lg:ml-64 flex-1 p-4 md:p-8 pt-24 lg:pt-8">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
           <div>
-            <h1 className="text-2xl font-black text-gray-900">Authors</h1>
-            <p className="text-gray-500 text-sm mt-1">Manage team and contributors</p>
+            <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">Authors</h1>
+            <p className="text-gray-500 text-sm mt-1 font-medium">Manage team and contributors</p>
           </div>
-          <button onClick={openAddModal} className="bg-[#121212] hover:bg-[#008751] text-white px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 shadow-sm">
+          <button onClick={openAddModal} className="w-full md:w-auto bg-[#121212] hover:bg-[#008751] text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-xl transition-all">
             <Plus className="w-4 h-4" /> Add Author
           </button>
         </header>

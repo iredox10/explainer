@@ -23,59 +23,57 @@ import "../../styles/global.css";
         <div class="min-h-screen flex font-sans text-gray-900">
             <AdminSidebar activePage="guide" client:only="react" />
 
-            <main class="ml-64 flex-1 p-8 lg:p-12 max-w-5xl">
-                <header class="mb-16">
-                    <div class="flex items-center gap-4 mb-6">
+            <main class="lg:ml-64 flex-1 p-4 md:p-8 lg:p-12 pt-24 lg:pt-12 max-w-5xl">
+                <header class="mb-12 md:mb-16">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
                         <div class="bg-black p-3 rounded-2xl text-[#FAFF00]">
-                            <BookOpen className="w-8 h-8" />
+                            <BookOpen className="w-6 h-6 md:w-8 md:h-8" />
                         </div>
                         <div>
                             <h1
-                                class="text-4xl font-black text-gray-900 uppercase tracking-tighter"
+                                class="text-3xl md:text-4xl font-black text-gray-900 uppercase tracking-tighter"
                             >
                                 Editorial Guide
                             </h1>
-                            <p class="text-gray-500 font-medium">
+                            <p class="text-gray-500 text-sm md:text-base font-medium">
                                 Mastering the Visual Journalism Stack
                             </p>
                         </div>
                     </div>
                 </header>
 
-                <div class="space-y-12">
+                <div class="space-y-8 md:space-y-12">
                     <!-- Section 1 -->
                     <section
-                        class="bg-white p-10 rounded-[2.5rem] shadow-xl border border-gray-100 relative overflow-hidden"
+                        class="bg-white p-6 md:p-10 rounded-3xl md:rounded-[2.5rem] shadow-xl border border-gray-100 relative overflow-hidden"
                     >
                         <div
                             class="absolute top-0 left-0 w-1.5 h-full bg-[#FAFF00]"
                         >
                         </div>
-                        <div class="flex items-start gap-6">
-                            <div class="bg-gray-50 p-4 rounded-2xl text-black">
+                        <div class="flex flex-col md:flex-row items-start gap-6">
+                            <div class="bg-gray-50 p-4 rounded-2xl text-black shrink-0">
                                 <Video className="w-6 h-6" />
                             </div>
                             <div>
                                 <h2
-                                    class="text-2xl font-black uppercase tracking-tighter mb-4"
-                                >
-                                    1. The Hero Loop
+                                    class="text-xl md:text-2xl font-black uppercase tracking-tighter mb-4"
                                 </h2>
                                 <p
-                                    class="text-gray-600 leading-relaxed mb-6 italic"
+                                    class="text-sm md:text-base text-gray-600 leading-relaxed mb-6 italic"
                                 >
                                     The silent narrative that sets the mood.
                                 </p>
                                 <div
-                                    class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4"
+                                    class="bg-gray-50 p-4 md:p-6 rounded-2xl border border-gray-100 space-y-4"
                                 >
-                                    <p class="text-sm font-medium">
+                                    <p class="text-xs md:text-sm font-medium">
                                         <strong class="text-black"
                                             >Video URL:</strong
                                         > Use a direct MP4 link. This plays in a continuous
                                         loop behind your headline.
                                     </p>
-                                    <p class="text-sm font-medium">
+                                    <p class="text-xs md:text-sm font-medium">
                                         <strong class="text-black"
                                             >Typography:</strong
                                         > Headlines are rendered in high-contrast
@@ -88,23 +86,23 @@ import "../../styles/global.css";
 
                     <!-- Section 2 -->
                     <section
-                        class="bg-white p-10 rounded-[2.5rem] shadow-xl border border-gray-100 relative overflow-hidden"
+                        class="bg-white p-6 md:p-10 rounded-3xl md:rounded-[2.5rem] shadow-xl border border-gray-100 relative overflow-hidden"
                     >
                         <div
                             class="absolute top-0 left-0 w-1.5 h-full bg-black"
                         >
                         </div>
-                        <div class="flex items-start gap-6">
-                            <div class="bg-gray-50 p-4 rounded-2xl text-black">
+                        <div class="flex flex-col md:flex-row items-start gap-6">
+                            <div class="bg-gray-50 p-4 rounded-2xl text-black shrink-0">
                                 <Map className="w-6 h-6" />
                             </div>
                             <div>
                                 <h2
-                                    class="text-2xl font-black uppercase tracking-tighter mb-4"
+                                    class="text-xl md:text-2xl font-black uppercase tracking-tighter mb-4"
                                 >
                                     2. The Map "Fly-To"
                                 </h2>
-                                <p class="text-gray-600 leading-relaxed mb-6">
+                                <p class="text-sm md:text-base text-gray-600 leading-relaxed mb-6">
                                     Cinematic geographic transitions using
                                     real-world coordinates.
                                 </p>
@@ -112,20 +110,20 @@ import "../../styles/global.css";
                                     class="grid grid-cols-1 md:grid-cols-2 gap-4"
                                 >
                                     <div
-                                        class="p-6 rounded-2xl bg-black text-white"
+                                        class="p-4 md:p-6 rounded-2xl bg-black text-white"
                                     >
                                         <h4
                                             class="text-[10px] font-black uppercase tracking-widest text-[#FAFF00] mb-2"
                                         >
                                             Coordinates
                                         </h4>
-                                        <p class="text-xs font-mono opacity-80">
+                                        <p class="text-[10px] md:text-xs font-mono opacity-80">
                                             Center: [3.37, 6.52]<br
                                             />(Longitude, Latitude)
                                         </p>
                                     </div>
                                     <div
-                                        class="p-6 rounded-2xl bg-gray-50 border border-gray-100"
+                                        class="p-4 md:p-6 rounded-2xl bg-gray-50 border border-gray-100"
                                     >
                                         <h4
                                             class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2"
@@ -133,14 +131,14 @@ import "../../styles/global.css";
                                             Zoom Levels
                                         </h4>
                                         <p
-                                            class="text-xs font-bold text-gray-900"
+                                            class="text-[10px] md:text-xs font-bold text-gray-900"
                                         >
                                             1: Continent<br />8: Country<br
                                             />12+: City Density
                                         </p>
                                     </div>
                                 </div>
-                                <p class="mt-6 text-sm text-gray-500">
+                                <p class="mt-6 text-xs md:text-sm text-gray-500">
                                     The map will automatically glide between
                                     steps. Use the <strong class="text-black"
                                         >Highlight</strong
@@ -153,33 +151,33 @@ import "../../styles/global.css";
 
                     <!-- Section 3 -->
                     <section
-                        class="bg-white p-10 rounded-[2.5rem] shadow-xl border border-gray-100 relative overflow-hidden"
+                        class="bg-white p-6 md:p-10 rounded-3xl md:rounded-[2.5rem] shadow-xl border border-gray-100 relative overflow-hidden"
                     >
                         <div
                             class="absolute top-0 left-0 w-1.5 h-full bg-[#FAFF00]"
                         >
                         </div>
-                        <div class="flex items-start gap-6">
-                            <div class="bg-gray-50 p-4 rounded-2xl text-black">
+                        <div class="flex flex-col md:flex-row items-start gap-6">
+                            <div class="bg-gray-50 p-4 rounded-2xl text-black shrink-0">
                                 <BarChart2 className="w-6 h-6" />
                             </div>
                             <div>
                                 <h2
-                                    class="text-2xl font-black uppercase tracking-tighter mb-4"
+                                    class="text-xl md:text-2xl font-black uppercase tracking-tighter mb-4"
                                 >
                                     3. Data Pulses
                                 </h2>
-                                <p class="text-gray-600 leading-relaxed mb-6">
+                                <p class="text-sm md:text-base text-gray-600 leading-relaxed mb-6">
                                     Animating numbers into patterns.
                                 </p>
                                 <div
-                                    class="bg-black text-white p-6 rounded-2xl font-mono text-xs"
+                                    class="bg-black text-white p-4 md:p-6 rounded-2xl font-mono text-[10px] md:text-xs overflow-x-auto"
                                 >
                                     {
                                         `{ type: 'chart', data: [10, 45, 90, 32] }`
                                     }
                                 </div>
-                                <p class="mt-4 text-sm text-gray-500">
+                                <p class="mt-4 text-xs md:text-sm text-gray-500">
                                     Provide a comma-separated list. The line
                                     will "draw" itself as the step becomes
                                     active.
@@ -190,30 +188,30 @@ import "../../styles/global.css";
 
                     <!-- Section 4 -->
                     <section
-                        class="bg-white p-10 rounded-[2.5rem] shadow-xl border border-gray-100 relative overflow-hidden"
+                        class="bg-white p-6 md:p-10 rounded-3xl md:rounded-[2.5rem] shadow-xl border border-gray-100 relative overflow-hidden"
                     >
                         <div
                             class="absolute top-0 left-0 w-1.5 h-full bg-red-500"
                         >
                         </div>
-                        <div class="flex items-start gap-6">
-                            <div class="bg-red-50 p-4 rounded-2xl text-red-600">
+                        <div class="flex flex-col md:flex-row items-start gap-6">
+                            <div class="bg-red-50 p-4 rounded-2xl text-red-600 shrink-0">
                                 <Shield className="w-6 h-6" />
                             </div>
                             <div>
                                 <h2
-                                    class="text-2xl font-black uppercase tracking-tighter mb-4"
+                                    class="text-xl md:text-2xl font-black uppercase tracking-tighter mb-4"
                                 >
                                     4. Newsroom Permissions
                                 </h2>
-                                <p class="text-gray-600 leading-relaxed mb-6">
+                                <p class="text-sm md:text-base text-gray-600 leading-relaxed mb-6">
                                     Managing the editorial hierarchy.
                                 </p>
                                 <div
-                                    class="bg-red-50 p-6 rounded-2xl border border-red-100 space-y-4"
+                                    class="bg-red-50 p-4 md:p-6 rounded-2xl border border-red-100 space-y-4"
                                 >
                                     <h4
-                                        class="text-xs font-black uppercase tracking-widest text-red-700"
+                                        class="text-[10px] font-black uppercase tracking-widest text-red-700"
                                     >
                                         Troubleshooting Invitations
                                     </h4>
@@ -230,13 +228,14 @@ import "../../styles/global.css";
                                         > role in the Appwrite Console.
                                         <br /><br />
                                         Go to <strong
+                                            class="font-black"
                                             >Teams > Editorial Staff</strong
                                         > and verify your account is listed as an
                                         owner. Simply being a "Superadmin" in the
                                         dashboard is not enough for browser-side invitations.
                                     </p>
                                 </div>
-                                <p class="mt-6 text-sm text-gray-500">
+                                <p class="mt-6 text-xs md:text-sm text-gray-500">
                                     This security layer ensures that only
                                     authorized administrators can expand the
                                     newsroom team.
@@ -247,10 +246,10 @@ import "../../styles/global.css";
 
                     <!-- Best Practices -->
                     <section
-                        class="bg-gray-900 text-white p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden"
+                        class="bg-gray-900 text-white p-6 md:p-10 rounded-3xl md:rounded-[2.5rem] shadow-2xl relative overflow-hidden"
                     >
                         <h2
-                            class="text-2xl font-black uppercase tracking-tighter mb-8 flex items-center gap-3"
+                            class="text-xl md:text-2xl font-black uppercase tracking-tighter mb-8 flex items-center gap-3"
                         >
                             <CheckCircle className="text-[#FAFF00] w-6 h-6" /> Best
                             Editorial Practices
@@ -261,7 +260,7 @@ import "../../styles/global.css";
                                     class="bg-[#FAFF00] text-black w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0"
                                     >1</span
                                 >
-                                <p class="text-sm font-medium opacity-80">
+                                <p class="text-sm font-medium opacity-80 leading-relaxed">
                                     Keep scrollytext cards under 50 words. Let
                                     the visuals do the heavy lifting.
                                 </p>
@@ -271,7 +270,7 @@ import "../../styles/global.css";
                                     class="bg-[#FAFF00] text-black w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0"
                                     >2</span
                                 >
-                                <p class="text-sm font-medium opacity-80">
+                                <p class="text-sm font-medium opacity-80 leading-relaxed">
                                     Use "Fly-To" rhythm: start wide (continent
                                     index), then zoom into the specific
                                     geographic point of interest.
@@ -282,7 +281,7 @@ import "../../styles/global.css";
                                     class="bg-[#FAFF00] text-black w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0"
                                     >3</span
                                 >
-                                <p class="text-sm font-medium opacity-80">
+                                <p class="text-sm font-medium opacity-80 leading-relaxed">
                                     Always verify in <strong
                                         class="text-[#FAFF00]"
                                         >Live Preview</strong
@@ -294,7 +293,7 @@ import "../../styles/global.css";
                 </div>
 
                 <footer
-                    class="mt-20 pt-10 border-t border-gray-100 flex justify-between items-center bg-gray-50"
+                    class="mt-12 md:mt-20 pt-10 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center bg-gray-50 gap-6"
                 >
                     <div
                         class="text-[10px] font-black uppercase tracking-widest text-gray-400"
@@ -303,7 +302,7 @@ import "../../styles/global.css";
                     </div>
                     <button
                         onclick="window.location.href = '/admin'"
-                        class="text-[10px] font-black uppercase tracking-widest bg-black text-white px-6 py-3 rounded-xl hover:bg-[#FAFF00] hover:text-black transition-all"
+                        class="w-full sm:w-auto text-[10px] font-black uppercase tracking-widest bg-black text-white px-6 py-3 rounded-xl hover:bg-[#FAFF00] hover:text-black transition-all"
                     >
                         Return to Command Center
                     </button>

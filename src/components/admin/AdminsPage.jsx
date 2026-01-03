@@ -121,8 +121,8 @@ export default function AdminsPage() {
     <div className="min-h-screen bg-gray-50 flex font-sans text-gray-900">
       <AdminSidebar activePage="admins" />
 
-      <main className="ml-64 flex-1 p-8">
-        <header className="flex justify-between items-center mb-8">
+      <main className="lg:ml-64 flex-1 p-4 md:p-8 pt-24 lg:pt-8">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Shield className="w-5 h-5 text-[#008751]" />
@@ -132,7 +132,7 @@ export default function AdminsPage() {
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="bg-black hover:bg-[#008751] text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl"
+            className="w-full md:w-auto bg-black hover:bg-[#008751] text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl"
           >
             Invite Newsroom Staff
           </button>
@@ -142,7 +142,8 @@ export default function AdminsPage() {
         <div className="mb-12">
           <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-4 ml-1">Active Newsroom Staff</h2>
           <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-2xl">
-            <table className="w-full text-left border-collapse">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
                 <tr className="bg-gray-50/50 border-b border-gray-100 text-[10px] uppercase tracking-[0.2em] text-gray-400 font-black">
                   <th className="px-8 py-5">User & Access</th>
@@ -212,6 +213,7 @@ export default function AdminsPage() {
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
 
@@ -224,7 +226,8 @@ export default function AdminsPage() {
               <span className="bg-[#008751] text-white px-2 py-0.5 rounded-full text-[8px] font-black">{invitations.length}</span>
             </h2>
             <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-xl border-l-4 border-l-[#008751]">
-              <table className="w-full text-left border-collapse">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[800px]">
                 <thead>
                   <tr className="bg-gray-50/50 border-b border-gray-100 text-[10px] uppercase tracking-[0.2em] text-gray-400 font-black">
                     <th className="px-8 py-5">Recipient</th>
@@ -286,6 +289,7 @@ export default function AdminsPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         )}

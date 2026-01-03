@@ -64,8 +64,8 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-transparent flex font-sans text-gray-900">
       <AdminSidebar activePage="settings" />
 
-      <main className="ml-64 flex-1 p-8 bg-gray-50/50">
-        <header className="flex justify-between items-end mb-12">
+      <main className="lg:ml-64 flex-1 p-4 md:p-8 pt-24 lg:pt-8 bg-gray-50/50">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <div className="bg-black p-2 rounded-lg">
@@ -78,7 +78,7 @@ export default function SettingsPage() {
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className={`px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3 transition-all shadow-xl ${savedStatus ? 'bg-green-500 text-white' : 'bg-black text-white hover:bg-[#008751]'
+            className={`w-full md:w-auto px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-3 transition-all shadow-xl ${savedStatus ? 'bg-green-500 text-white' : 'bg-black text-white hover:bg-[#008751]'
               }`}
           >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : savedStatus ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}

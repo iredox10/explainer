@@ -195,26 +195,26 @@ export default function AdminDashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Real-time Flow */}
-          <div className="lg:col-span-2 bg-white rounded-[2.5rem] p-10 shadow-2xl border border-gray-100 relative overflow-hidden">
+          <div className="lg:col-span-2 bg-white rounded-3xl md:rounded-[2.5rem] p-6 md:p-10 shadow-2xl border border-gray-100 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1.5 bg-[#FAFF00]"></div>
-            <div className="flex justify-between items-center mb-10">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
               <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Live Traffic Flow</h2>
               <div className="flex gap-2">
-                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse mt-1 sm:mt-0"></span>
                 <span className="text-[10px] font-black uppercase tracking-widest text-black bg-[#FAFF00] px-2 py-0.5 rounded">Real-time Telemetry</span>
               </div>
             </div>
 
             <TrafficChart />
 
-            <div className="mt-8 pt-8 border-t border-gray-50 flex justify-between">
+            <div className="mt-8 pt-8 border-t border-gray-50 flex flex-col sm:flex-row justify-between gap-4">
               <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
                 <Clock className="w-3 h-3" /> Peak Editorial Efficiency
               </div>
-              <div className="flex gap-8 text-[10px] font-black uppercase tracking-widest">
+              <div className="flex gap-4 md:gap-8 text-[10px] font-black uppercase tracking-widest overflow-x-auto no-scrollbar">
                 <span className="text-gray-300">Mon</span>
                 <span className="text-gray-300">Wed</span>
-                <span className="text-black">Sun (Current)</span>
+                <span className="text-black whitespace-nowrap">Sun (Current)</span>
               </div>
             </div>
           </div>
