@@ -7,7 +7,13 @@ import { VOX_HOME_DATA } from "../../data/mock";
 export const prerender = false;
 
 const { slug } = Astro.params;
-let story = await serverStoryService.getStoryBySlug(slug);
+let story;
+
+try {
+  story = await serverStoryService.getStoryBySlug(slug);
+} catch (e) {
+  console.error(`[ARTICLE] Failed to fetch story for slug ${slug}:`, e);
+}
 
 // Fallback to mock data for essential pages if DB fetch fails or is empty
 if (!story) {

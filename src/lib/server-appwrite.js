@@ -19,6 +19,7 @@ try {
             .setEndpoint(ENDPOINT)
             .setProject(PROJECT_ID)
             .setKey(API_KEY);
+        
         serverDatabases = new Databases(client);
         serverUsers = new Users(client);
         serverTeams = new Teams(client);
@@ -40,6 +41,33 @@ export const COLLECTIONS = {
     PROFILES: 'profiles',
     CONFIGS: 'configs'
 };
+
+// Internal helper for resilient fetching (Step 1: Automatic Retries)
+async function resilientFetch(action, name = "Operation", retries = 5) {
+    let lastError;
+    for (let i = 0; i < retries; i++) {
+        try {
+            return await action();
+        } catch (e) {
+            lastError = e;
+            const isTimeout = e.message?.includes('fetch failed') || 
+                             e.code === 'ETIMEDOUT' || 
+                             e.message?.includes('timeout') ||
+                             e.name === 'AbortError';
+            
+            if (isTimeout && i < retries - 1) {
+                const delay = 1000 * (i + 1);
+                console.warn(`[SERVER-APPWRITE] ${name} timed out (${e.message || e.code}). Retry ${i + 1}/${retries} in ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                continue;
+            }
+            // If it's not a timeout, or we're out of retries, throw it
+            console.error(`[SERVER-APPWRITE] ${name} failed permanently after ${i + 1} attempts:`, e.message || e);
+            throw e;
+        }
+    }
+    throw lastError;
+}
 
 export const serverAuthService = {
     async onboardInvitedUser(userId, teamId, membershipId, secret, password) {
@@ -122,53 +150,53 @@ export const serverAuthService = {
 export const serverStoryService = {
     async getStoryById(id) {
         if (!serverDatabases) return null;
-        try {
+        return resilientFetch(async () => {
             return await serverDatabases.getDocument(DB_ID, COLLECTIONS.STORIES, id);
-        } catch (error) {
+        }, "getStoryById").catch(error => {
             console.error('Server Appwrite error fetching story by ID:', error);
             return null;
-        }
+        });
     },
 
     async getStoryBySlug(slug) {
         if (!serverDatabases) return null;
-        try {
+        return resilientFetch(async () => {
             const response = await serverDatabases.listDocuments(DB_ID, COLLECTIONS.STORIES, [
                 Query.equal('slug', slug),
                 Query.limit(1)
             ]);
             return response.documents[0] || null;
-        } catch (error) {
+        }, "getStoryBySlug").catch(error => {
             console.error('Server Appwrite error fetching story by slug:', error);
             return null;
-        }
+        });
     },
 
     async getPublishedStories() {
         if (!serverDatabases) return [];
-        try {
+        return resilientFetch(async () => {
             const response = await serverDatabases.listDocuments(DB_ID, COLLECTIONS.STORIES, [
                 Query.equal('status', 'Published'),
                 Query.orderDesc('publishedAt')
             ]);
             return response.documents;
-        } catch (error) {
+        }, "getPublishedStories").catch(error => {
             console.error('Server Appwrite error fetching published stories:', error);
             return [];
-        }
+        });
     },
 
     async getAllStories() {
         if (!serverDatabases) return [];
-        try {
+        return resilientFetch(async () => {
             const response = await serverDatabases.listDocuments(DB_ID, COLLECTIONS.STORIES, [
                 Query.orderDesc('$createdAt')
             ]);
             return response.documents;
-        } catch (error) {
+        }, "getAllStories").catch(error => {
             console.error('Server Appwrite error fetching all stories:', error);
             return [];
-        }
+        });
     },
 
     calculateReadTime(content) {
@@ -201,15 +229,17 @@ export const serverAdminService = {
         }
 
         try {
-            const response = await serverDatabases.listDocuments(DB_ID, COLLECTIONS.CONFIGS, [Query.limit(1)]);
-            const settings = response.documents[0] || null;
+            return await resilientFetch(async () => {
+                const response = await serverDatabases.listDocuments(DB_ID, COLLECTIONS.CONFIGS, [Query.limit(1)]);
+                const settings = response.documents[0] || null;
 
-            if (settings) {
-                _settingsCache = settings;
-                _lastFetchTime = now;
-            }
+                if (settings) {
+                    _settingsCache = settings;
+                    _lastFetchTime = now;
+                }
 
-            return settings;
+                return settings;
+            }, "getSettings");
         } catch (error) {
             console.error('Server Appwrite error fetching settings:', error.message);
 
@@ -229,25 +259,25 @@ export const serverAdminService = {
 export const serverCategoryService = {
     async getCategories() {
         if (!serverDatabases) return [];
-        try {
+        return resilientFetch(async () => {
             const response = await serverDatabases.listDocuments(DB_ID, COLLECTIONS.CATEGORIES);
             return response.documents;
-        } catch (error) {
+        }, "getCategories").catch(error => {
             console.error('Server Appwrite error fetching categories:', error);
             return [];
-        }
+        });
     },
     async getCategoryBySlug(slug) {
         if (!serverDatabases) return null;
-        try {
+        return resilientFetch(async () => {
             const response = await serverDatabases.listDocuments(DB_ID, COLLECTIONS.CATEGORIES, [
                 Query.equal('slug', slug),
                 Query.limit(1)
             ]);
             return response.documents[0] || null;
-        } catch (error) {
+        }, "getCategoryBySlug").catch(error => {
             console.error('Server Appwrite error fetching category by slug:', error);
             return null;
-        }
+        });
     }
 };
