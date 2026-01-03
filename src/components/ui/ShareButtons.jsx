@@ -68,34 +68,37 @@ export default function ShareButtons({ title, url = null }) {
     ];
 
     return (
-        <div className="flex flex-col gap-3">
-            {socialPlatforms.map((platform) => (
-                <a
-                    key={platform.name}
-                    href={platform.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-white ${platform.color} border-gray-200 hover:border-transparent transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer`}
-                    title={`Share on ${platform.name}`}
-                >
-                    <platform.icon className="w-4 h-4" />
-                </a>
-            ))}
+        <div className="flex flex-row lg:flex-col gap-1.5 md:gap-3">
+            {/* Desktop Platforms (Hidden on mobile) */}
+            <div className="hidden md:flex flex-row lg:flex-col gap-1.5 md:gap-3">
+                {socialPlatforms.map((platform) => (
+                    <a
+                        key={platform.name}
+                        href={platform.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`w-7 h-7 md:w-9 md:h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-white ${platform.color} transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer`}
+                        title={`Share on ${platform.name}`}
+                    >
+                        <platform.icon className="w-3 h-3 md:w-4 md:h-4" />
+                    </a>
+                ))}
+            </div>
 
             <button
                 onClick={handleCopyLink}
-                className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-all duration-200 shadow-sm hover:shadow-md"
+                className="w-7 h-7 md:w-9 md:h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-all duration-200 shadow-sm hover:shadow-md"
                 title="Copy Link"
             >
-                {copied ? <Check className="w-4 h-4 text-green-500" /> : <LinkIcon className="w-4 h-4" />}
+                {copied ? <Check className="w-3 h-3 md:w-4 md:h-4 text-green-500" /> : <LinkIcon className="w-3 h-3 md:w-4 md:h-4" />}
             </button>
 
             <button
                 onClick={handleWebShare}
-                className="lg:hidden w-10 h-10 rounded-full bg-black text-[#FAFF00] flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+                className="md:hidden w-7 h-7 rounded-full bg-black text-[#FAFF00] flex items-center justify-center shadow-lg active:scale-95 transition-transform"
                 title="Share"
             >
-                <Share2 className="w-4 h-4" />
+                <Share2 className="w-3 h-3" />
             </button>
         </div>
     );

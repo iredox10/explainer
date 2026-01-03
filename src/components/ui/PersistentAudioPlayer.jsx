@@ -1,16 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Volume2, RotateCcw, X, ChevronUp, ChevronDown, Gauge, Music, Settings2 } from 'lucide-react';
+import { Play, Pause, RotateCcw, X, ChevronUp, ChevronDown, Settings2, Headphones } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function PersistentAudioPlayer({ text, title }) {
   const [isVisible, setIsVisible] = useState(true);
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(true); // Default to minimized
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [pitch, setPitch] = useState(1);
-  const [voices, setVoices] = useState([]);
-  const [selectedVoice, setSelectedVoice] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
 
   const utteranceRef = useRef(null);
@@ -19,21 +16,6 @@ export default function PersistentAudioPlayer({ text, title }) {
 
   useEffect(() => {
     const synth = window.speechSynthesis;
-    const loadVoices = () => {
-      const availableVoices = synth.getVoices();
-      setVoices(availableVoices.filter(v => v.lang.startsWith('en')));
-
-      const preferredVoice = availableVoices.find(v => v.lang === 'en-US' && (v.name.includes('Google') || v.name.includes('Premium')))
-        || availableVoices.find(v => v.lang.startsWith('en'));
-
-      if (preferredVoice) setSelectedVoice(preferredVoice.name);
-    };
-
-    if (synth.onvoiceschanged !== undefined) {
-      synth.onvoiceschanged = loadVoices;
-    }
-    loadVoices();
-
     return () => {
       synth.cancel();
     };
@@ -65,11 +47,10 @@ export default function PersistentAudioPlayer({ text, title }) {
     const utterance = new SpeechSynthesisUtterance(remainingText);
 
     const allVoices = window.speechSynthesis.getVoices();
-    const voice = allVoices.find(v => v.name === selectedVoice) || allVoices.find(v => v.lang.startsWith('en'));
+    const voice = allVoices.find(v => v.lang.startsWith('en-US') && v.name.includes('Google')) || allVoices.find(v => v.lang.startsWith('en'));
 
     if (voice) utterance.voice = voice;
     utterance.rate = playbackSpeed;
-    utterance.pitch = pitch;
 
     utterance.onboundary = (event) => {
       const charIndex = startIndex + event.charIndex;
@@ -97,21 +78,6 @@ export default function PersistentAudioPlayer({ text, title }) {
     window.speechSynthesis.speak(utterance);
   };
 
-  const updateSpeed = (speed) => {
-    setPlaybackSpeed(speed);
-    if (isPlaying) {
-      playNarration(lastCharIndex); // Restart with new speed from current index
-    }
-  };
-
-  const reset = () => {
-    window.speechSynthesis.cancel();
-    setIsPlaying(false);
-    setIsActuallyPaused(false);
-    setProgress(0);
-    setLastCharIndex(0);
-  };
-
   const closePlayer = () => {
     window.speechSynthesis.cancel();
     setIsVisible(false);
@@ -120,175 +86,124 @@ export default function PersistentAudioPlayer({ text, title }) {
   if (!isVisible || !text) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[100]">
-      {/* Toggle Badge */}
-      <div className="max-w-7xl mx-auto px-6 flex justify-end">
-        <motion.button
-          initial={{ y: 20 }}
-          animate={{ y: isMinimized ? 0 : 20 }}
-          onClick={() => setIsMinimized(!isMinimized)}
-          className="bg-black text-[#FAFF00] px-4 py-2 rounded-t-lg flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-2xl border-x border-t border-white/10 z-10"
-        >
-          {isMinimized ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          {isPlaying ? 'Now Playing' : 'Discovery Audio'}
-        </motion.button>
-      </div>
+    <div className="fixed bottom-0 left-0 right-0 z-[100] pointer-events-none px-4 pb-4 md:px-8 md:pb-8">
+      <div className="max-w-7xl mx-auto flex justify-end items-end flex-col gap-3">
+        
+        {/* Floating Mini Player / Trigger */}
+        <AnimatePresence>
+          {isMinimized && (
+            <motion.button
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              onClick={() => setIsMinimized(false)}
+              className="pointer-events-auto bg-black text-[#FAFF00] w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-2xl border border-white/10 hover:scale-110 transition-transform relative group"
+            >
+              <Headphones className="w-5 h-5 md:w-6 md:h-6" />
+              {isPlaying && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#FAFF00] rounded-full border-2 border-black animate-pulse" />
+              )}
+              {/* Progress Ring */}
+              <svg className="absolute inset-0 w-full h-full -rotate-90">
+                <circle
+                  cx="50%" cy="50%" r="45%"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeDasharray="283"
+                  strokeDashoffset={283 - (283 * progress) / 100}
+                  className="text-[#FAFF00] opacity-40"
+                />
+              </svg>
+            </motion.button>
+          )}
+        </AnimatePresence>
 
-      <AnimatePresence>
-        {!isMinimized && (
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 260, damping: 20 }}
-            className="border-t border-gray-200 bg-white/98 backdrop-blur-xl shadow-[0_-10px_40px_rgba(0,0,0,0.15)] px-4 py-3 md:px-8 md:py-6"
-          >
-            <div className="mx-auto max-w-7xl flex flex-col md:flex-row items-center justify-between gap-6">
-
-              {/* Left Side: Track Info */}
-              <div className="flex items-center gap-5 flex-1 min-w-0">
-                <div className="relative w-12 h-12 md:w-16 md:h-16 rounded-sm overflow-hidden bg-black shrink-0 group cursor-pointer shadow-xl" onClick={togglePlay}>
-                  <div className={`absolute inset-0 flex items-center justify-center bg-black/40 ${isPlaying ? 'opacity-0' : 'opacity-100'} group-hover:opacity-100 transition-opacity z-10`}>
-                    <Play className="w-5 h-5 text-white fill-current" />
-                  </div>
-                  <div className={`absolute inset-0 flex items-end justify-center gap-1 pb-3 ${isPlaying ? 'opacity-100' : 'opacity-0'} transition-opacity z-20`}>
-                    <div className="w-1 bg-[#FAFF00] animate-[bounce_1s_infinite] h-4"></div>
-                    <div className="w-1 bg-[#FAFF00] animate-[bounce_1.2s_infinite] h-8"></div>
-                    <div className="w-1 bg-[#FAFF00] animate-[bounce_0.8s_infinite] h-3"></div>
-                  </div>
-                  <img src="https://api.dicebear.com/7.x/shapes/svg?seed=explainer-audio" className="w-full h-full object-cover opacity-60" alt="Cover" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-[#FAFF00] bg-black px-2 py-0.5 rounded shadow-sm">
-                      {isPlaying ? 'Surveillance Active' : 'Standby'}
-                    </span>
-                    {playbackSpeed !== 1 && (
-                      <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 rounded">{playbackSpeed}x Speed</span>
-                    )}
-                  </div>
-                  <h4 className="font-serif-display font-black text-lg text-black truncate leading-none tracking-tight mb-1">{title}</h4>
-                  <p className="text-[10px] text-gray-500 truncate font-bold uppercase tracking-tighter opacity-70">Resemble AI Chatterbox Turbo • Investigative Feed</p>
-                </div>
+        {/* Expanded Minimal Player */}
+        <AnimatePresence>
+          {!isMinimized && (
+            <motion.div
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 50, opacity: 0 }}
+              className="pointer-events-auto w-full max-w-sm bg-black text-white rounded-2xl md:rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10 overflow-hidden"
+            >
+              {/* Progress Bar (Top) */}
+              <div className="h-1 bg-white/10 w-full overflow-hidden relative">
+                <motion.div 
+                  style={{ width: `${progress}%` }} 
+                  className="absolute top-0 left-0 h-full bg-[#FAFF00] shadow-[0_0_10px_#FAFF00]"
+                />
               </div>
 
-              {/* Center: Playback & Speed Controls */}
-              <div className="flex flex-col items-center gap-4 flex-1">
-                <div className="flex items-center gap-8">
-                  <button onClick={reset} className="text-gray-300 hover:text-black transition-colors" title="Restart Dispatch">
-                    <RotateCcw className="w-5 h-5" />
-                  </button>
+              <div className="p-4 md:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-[#FAFF00] mb-1 block">Listen to Discovery</span>
+                    <h4 className="text-sm font-bold truncate tracking-tight">{title}</h4>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => setIsMinimized(true)} className="p-2 text-gray-400 hover:text-white transition-colors">
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                    <button onClick={closePlayer} className="p-2 text-gray-400 hover:text-red-500 transition-colors">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
 
-                  <button
-                    onClick={togglePlay}
-                    className="w-14 h-14 rounded-full bg-black text-white flex items-center justify-center hover:scale-110 hover:bg-[#FAFF00] hover:text-black transition-all shadow-2xl active:scale-95"
-                  >
-                    {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current pl-1" />}
-                  </button>
-
-                  <div className="relative group">
-                    <button
-                      className={`p-2 rounded-full transition-colors ${showSettings ? 'bg-gray-100 text-black' : 'text-gray-300 hover:text-black'}`}
-                      onClick={() => setShowSettings(!showSettings)}
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <button 
+                      onClick={() => playNarration(0)}
+                      className="p-2 text-gray-400 hover:text-[#FAFF00] transition-colors"
                     >
-                      <Settings2 className="w-5 h-5" />
+                      <RotateCcw className="w-4 h-4" />
+                    </button>
+                    
+                    <button
+                      onClick={togglePlay}
+                      className="w-12 h-12 rounded-full bg-[#FAFF00] text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
+                    >
+                      {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
                     </button>
 
-                    {showSettings && (
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 bg-white border border-gray-100 shadow-2xl rounded-xl p-4 w-64 z-[110]">
-                        <h5 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 border-b pb-2">Audio Engineering</h5>
-
-                        <div className="space-y-6">
-                          {/* Speed Controller */}
-                          <div>
-                            <div className="flex items-center gap-2 mb-3">
-                              <Gauge className="w-3.5 h-3.5 text-black" />
-                              <span className="text-[10px] font-black uppercase tracking-widest">Rate: {playbackSpeed}x</span>
-                            </div>
-                            <div className="flex gap-2">
-                              {[0.75, 1, 1.25, 1.5, 2].map(s => (
-                                <button
-                                  key={s}
-                                  onClick={() => updateSpeed(s)}
-                                  className={`flex-1 py-1 text-[10px] font-bold rounded transition-all ${playbackSpeed === s ? 'bg-black text-[#FAFF00]' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
-                                >
-                                  {s}x
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Pitch Controller */}
-                          <div>
-                            <div className="flex items-center gap-2 mb-3">
-                              <Music className="w-3.5 h-3.5 text-black" />
-                              <span className="text-[10px] font-black uppercase tracking-widest">Pitch: {pitch === 1 ? 'Natural' : pitch > 1 ? 'High' : 'Deep'}</span>
-                            </div>
-                            <input
-                              type="range" min="0.5" max="2" step="0.1"
-                              value={pitch}
-                              onChange={(e) => {
-                                setPitch(parseFloat(e.target.value));
-                                if (isPlaying) playNarration(lastCharIndex);
-                              }}
-                              className="w-full accent-black"
-                            />
-                          </div>
-
-                          {/* Voice Selector */}
-                          {voices.length > 0 && (
-                            <div>
-                              <span className="text-[10px] font-black uppercase tracking-widest mb-2 block">Surveillance Voice</span>
-                              <select
-                                value={selectedVoice}
-                                onChange={(e) => {
-                                  setSelectedVoice(e.target.value);
-                                  if (isPlaying) playNarration(lastCharIndex);
-                                }}
-                                className="w-full text-xs font-bold border-none bg-gray-50 rounded p-1.5 focus:ring-0"
+                    <div className="relative">
+                      <button 
+                        onClick={() => setShowSettings(!showSettings)}
+                        className={`p-2 rounded-lg transition-colors ${showSettings ? 'bg-white/10 text-[#FAFF00]' : 'text-gray-400 hover:text-white'}`}
+                      >
+                        <Settings2 className="w-4 h-4" />
+                      </button>
+                      
+                      {showSettings && (
+                        <div className="absolute bottom-full left-0 mb-4 bg-gray-900 border border-white/10 rounded-xl p-3 w-40 shadow-2xl z-10">
+                          <span className="text-[8px] font-black uppercase tracking-widest text-gray-500 block mb-2">Speed</span>
+                          <div className="grid grid-cols-3 gap-1">
+                            {[1, 1.25, 1.5].map(s => (
+                              <button
+                                key={s}
+                                onClick={() => { setPlaybackSpeed(s); if(isPlaying) playNarration(lastCharIndex); }}
+                                className={`py-1.5 text-[10px] font-bold rounded ${playbackSpeed === s ? 'bg-[#FAFF00] text-black' : 'bg-white/5 text-white'}`}
                               >
-                                {voices.slice(0, 5).map(v => (
-                                  <option key={v.name} value={v.name}>{v.name.split(' - ')[0]}</option>
-                                ))}
-                              </select>
-                            </div>
-                          )}
+                                {s}x
+                              </button>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="text-[10px] font-mono text-[#FAFF00]/60 font-bold">
+                    {Math.round(progress)}%
                   </div>
                 </div>
-
-                {/* Tracking Progress */}
-                <div className="w-full flex items-center gap-3">
-                  <span className="text-[10px] font-mono text-gray-400 tabular-nums">0%</span>
-                  <div className="h-1 bg-gray-100 rounded-full flex-1 overflow-hidden relative group cursor-pointer" onClick={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const percentage = x / rect.width;
-                    const newIndex = Math.floor(text.length * percentage);
-                    playNarration(newIndex);
-                  }}>
-                    <div style={{ width: `${progress}%` }} className="absolute top-0 left-0 h-full bg-black shadow-[0_0_10px_rgba(0,0,0,0.35)]"></div>
-                  </div>
-                  <span className="text-[10px] font-mono text-gray-400 tabular-nums">{Math.round(progress)}%</span>
-                </div>
               </div>
-
-              {/* Right Side: Special Features & Exit */}
-              <div className="flex items-center gap-6 flex-1 justify-end">
-
-                <div className="h-10 w-px bg-gray-100 hidden md:block"></div>
-
-                <button onClick={closePlayer} className="text-gray-300 hover:text-red-500 transition-colors p-2" title="Terminate Feed">
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

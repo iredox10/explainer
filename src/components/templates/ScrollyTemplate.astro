@@ -8,6 +8,7 @@ import ProgressBar from "../../components/ui/ProgressBar.jsx";
 
 import ShareButtons from "../../components/ui/ShareButtons.jsx";
 import PersistentAudioPlayer from "../../components/ui/PersistentAudioPlayer.jsx";
+import { Bookmark, Clock, Calendar } from "lucide-react";
 
 const { story } = Astro.props;
 
@@ -47,7 +48,7 @@ const displayReadTime = `${readTime} min read`;
   <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12">
     {/* Left Sidebar: Social Sticky */}
     <aside class="hidden lg:block lg:col-span-2">
-      <div class="sticky top-32 flex flex-col gap-6 items-start py-24">
+      <div class="sticky top-32 flex flex-col gap-6 items-start py-12">
         <span
           class="text-[10px] font-black uppercase tracking-widest text-gray-400"
           >Share</span
@@ -55,6 +56,18 @@ const displayReadTime = `${readTime} min read`;
         <ShareButtons client:load title={story.headline} />
       </div>
     </aside>
+
+    {/* Mobile Share Bar */}
+    <div class="lg:hidden flex items-center justify-between py-6 border-b border-gray-100">
+      <div class="flex items-center gap-3">
+        <span class="text-[9px] font-black uppercase tracking-widest text-gray-400">Share</span>
+        <ShareButtons client:load title={story.headline} />
+      </div>
+      <button class="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+        <Bookmark className="w-3 h-3" />
+        Save
+      </button>
+    </div>
 
     <section
       class="lg:col-span-8 lg:col-start-3 py-24 text-2xl font-serif leading-relaxed text-gray-900"
