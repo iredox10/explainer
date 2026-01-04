@@ -1,12 +1,20 @@
-<nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 font-sans transition-all duration-300" id="main-nav">
-    <div class="h-1 w-full bg-[#FAFF00]"></div>
+---
+interface Props {
+    accentColor?: string;
+}
+
+const { accentColor = "#FAFF00" } = Astro.props;
+---
+
+<nav class="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-100 dark:border-gray-800 font-sans transition-all duration-300" id="main-nav">
+    <div class="h-1 w-full" style={{ backgroundColor: accentColor }}></div>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-20 items-center">
             <!-- Left Side: Logo & Links -->
             <div class="flex items-center gap-4 md:gap-12">
                 <button 
                     id="mobile-menu-button"
-                    class="md:hidden p-2 text-black hover:bg-gray-100 rounded-lg transition-colors"
+                    class="md:hidden p-2 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                     aria-label="Toggle Menu"
                 >
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -16,26 +24,26 @@
                 </button>
 
                 <a href="/" class="flex-shrink-0 group">
-                    <span class="font-serif-display font-black tracking-tighter text-2xl md:text-4xl text-black group-hover:text-gray-700 transition-colors">
+                    <span class="font-serif-display font-black tracking-tighter text-2xl md:text-4xl text-black dark:text-white group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">
                         Explainer<span class="text-[#FAFF00]">.</span>
                     </span>
                 </a>
                 <div class="hidden md:flex md:space-x-8">
-                    <a href="/topic/technology" class="relative text-black px-1 py-2 font-bold text-xs uppercase tracking-widest group">
+                    <a href="/topic/technology" class="relative text-black dark:text-gray-300 px-1 py-2 font-bold text-xs uppercase tracking-widest group hover:text-black dark:hover:text-white">
                       Technology
-                      <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-black transition-all group-hover:w-full"></span>
+                      <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-black dark:bg-[#FAFF00] transition-all group-hover:w-full"></span>
                     </a>
-                    <a href="/topic/politics" class="relative text-black px-1 py-2 font-bold text-xs uppercase tracking-widest group">
+                    <a href="/topic/politics" class="relative text-black dark:text-gray-300 px-1 py-2 font-bold text-xs uppercase tracking-widest group hover:text-black dark:hover:text-white">
                       Politics
-                      <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-black transition-all group-hover:w-full"></span>
+                      <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-black dark:bg-[#FAFF00] transition-all group-hover:w-full"></span>
                     </a>
-                    <a href="/topic/culture" class="relative text-black px-1 py-2 font-bold text-xs uppercase tracking-widest group">
+                    <a href="/topic/culture" class="relative text-black dark:text-gray-300 px-1 py-2 font-bold text-xs uppercase tracking-widest group hover:text-black dark:hover:text-white">
                       Culture
-                      <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-black transition-all group-hover:w-full"></span>
+                      <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-black dark:bg-[#FAFF00] transition-all group-hover:w-full"></span>
                     </a>
-                    <a href="/topic/science" class="relative text-black px-1 py-2 font-bold text-xs uppercase tracking-widest group">
+                    <a href="/topic/science" class="relative text-black dark:text-gray-300 px-1 py-2 font-bold text-xs uppercase tracking-widest group hover:text-black dark:hover:text-white">
                       Science
-                      <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-black transition-all group-hover:w-full"></span>
+                      <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-black dark:bg-[#FAFF00] transition-all group-hover:w-full"></span>
                     </a>
                 </div>
             </div>
@@ -43,14 +51,25 @@
             <!-- Right Side: Membership -->
             <div class="flex items-center gap-3 md:gap-6">
                 <button 
-                    class="text-black hover:text-gray-600 group flex items-center gap-2 p-2"
+                    id="theme-toggle"
+                    class="p-2 text-black dark:text-white hover:text-gray-600 dark:hover:text-[#FAFF00] transition-colors"
+                    aria-label="Toggle Dark Mode"
+                >
+                    <!-- Sun icon -->
+                    <svg id="sun-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 18v1m9-9h1M3 9h1m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707-.707M12 8a4 4 0 110 8 4 4 0 010-8z"></path></svg>
+                    <!-- Moon icon -->
+                    <svg id="moon-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </button>
+
+                <button 
+                    class="text-black dark:text-white hover:text-gray-600 dark:hover:text-gray-300 group flex items-center gap-2 p-2"
                     onclick="window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))"
                     aria-label="Search"
                 >
                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                   <span class="hidden md:block text-[10px] font-bold text-gray-400 border border-gray-200 rounded px-1.5 py-0.5 group-hover:border-gray-400 transition-colors">⌘K</span>
+                   <span class="hidden md:block text-[10px] font-bold text-gray-400 border border-gray-200 dark:border-gray-700 rounded px-1.5 py-0.5 group-hover:border-gray-400 dark:group-hover:border-gray-500 transition-colors">⌘K</span>
                 </button>
-                <a href="#" class="bg-black text-white px-4 md:px-6 py-2.5 md:py-3 font-bold text-[10px] md:text-xs uppercase tracking-widest hover:bg-[#FAFF00] hover:text-black transition-all duration-300 transform hover:-translate-y-0.5">
+                <a href="#" class="bg-black dark:bg-[#FAFF00] text-white dark:text-black px-4 md:px-6 py-2.5 md:py-3 font-bold text-[10px] md:text-xs uppercase tracking-widest hover:bg-[#FAFF00] dark:hover:bg-white hover:text-black transition-all duration-300 transform hover:-translate-y-0.5">
                     Subscribe
                 </a>
             </div>
@@ -58,17 +77,19 @@
     </div>
 
     <!-- Mobile Menu -->
-    <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100 overflow-hidden transition-all duration-300 ease-in-out max-h-0">
+    <div id="mobile-menu" class="hidden md:hidden bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 overflow-hidden transition-all duration-300 ease-in-out max-h-0">
         <div class="px-4 py-6 space-y-4">
-            <a href="/topic/technology" class="block text-black font-black uppercase tracking-widest text-sm py-2 border-b border-gray-50">Technology</a>
-            <a href="/topic/politics" class="block text-black font-black uppercase tracking-widest text-sm py-2 border-b border-gray-50">Politics</a>
-            <a href="/topic/culture" class="block text-black font-black uppercase tracking-widest text-sm py-2 border-b border-gray-50">Culture</a>
-            <a href="/topic/science" class="block text-black font-black uppercase tracking-widest text-sm py-2 border-b border-gray-50">Science</a>
+            <a href="/topic/technology" class="block text-black dark:text-white font-black uppercase tracking-widest text-sm py-2 border-b border-gray-50 dark:border-gray-800">Technology</a>
+            <a href="/topic/politics" class="block text-black dark:text-white font-black uppercase tracking-widest text-sm py-2 border-b border-gray-50 dark:border-gray-800">Politics</a>
+            <a href="/topic/culture" class="block text-black dark:text-white font-black uppercase tracking-widest text-sm py-2 border-b border-gray-50 dark:border-gray-800">Culture</a>
+            <a href="/topic/science" class="block text-black dark:text-white font-black uppercase tracking-widest text-sm py-2 border-b border-gray-50 dark:border-gray-800">Science</a>
+            <a href="/newsletters" class="block text-black dark:text-white font-black uppercase tracking-widest text-sm py-2 border-b border-gray-50 dark:border-gray-800">Dispatches</a>
+            <a href="/about" class="block text-black dark:text-white font-black uppercase tracking-widest text-sm py-2 border-b border-gray-50 dark:border-gray-800">About & Masthead</a>
             <div class="pt-4">
                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Newsletter</p>
                 <div class="flex gap-2">
-                    <input type="email" placeholder="Email address" class="flex-1 bg-gray-50 border-none px-4 py-3 rounded-lg text-xs font-bold focus:ring-2 focus:ring-[#FAFF00] outline-none" />
-                    <button class="bg-black text-white px-4 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest">Join</button>
+                    <input type="email" placeholder="Email address" class="flex-1 bg-gray-50 dark:bg-gray-800 border-none px-4 py-3 rounded-lg text-xs font-bold focus:ring-2 focus:ring-[#FAFF00] outline-none text-black dark:text-white" />
+                    <button class="bg-black dark:bg-[#FAFF00] text-white dark:text-black px-4 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest">Join</button>
                 </div>
             </div>
         </div>
@@ -76,6 +97,29 @@
 </nav>
 
 <script>
+    const themeToggle = document.getElementById('theme-toggle');
+    const sunIcon = document.getElementById('sun-icon');
+    const moonIcon = document.getElementById('moon-icon');
+
+    const updateIcons = () => {
+        if (document.documentElement.classList.contains('dark')) {
+            sunIcon?.classList.remove('hidden');
+            moonIcon?.classList.add('hidden');
+        } else {
+            sunIcon?.classList.add('hidden');
+            moonIcon?.classList.remove('hidden');
+        }
+    };
+
+    updateIcons();
+
+    themeToggle?.addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark');
+        const isDark = document.documentElement.classList.contains('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        updateIcons();
+    });
+
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mobileMenu = document.getElementById('mobile-menu');
     const menuIcon = document.getElementById('menu-icon');

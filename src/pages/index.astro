@@ -7,6 +7,7 @@ import Footer from "../components/Footer.astro";
 import NewsletterForm from "../components/ui/NewsletterForm.jsx";
 import { serverStoryService } from "../lib/server-appwrite.js";
 import { VOX_HOME_DATA } from "../data/mock";
+import { TrendingUp } from "lucide-react";
 
 // Types/Interfaces for data consistency
 interface CleanArticle {
@@ -22,6 +23,7 @@ interface CleanArticle {
     readTime?: string;
     isFeatured?: boolean;
     videoUrl?: string;
+    viewCount?: number;
 }
 
 // Fetch Published Stories with absolute fail-safe
@@ -70,16 +72,20 @@ const sortedCategories = Object.keys(categoriesWithStories).sort(
     (a, b) => categoriesWithStories[b].length - categoriesWithStories[a].length
 );
 
-// Trending: Use any featured stories or just the latest 5
-const trending = (publishedStories.length > 0 
-    ? publishedStories.slice(0, 5).map(s => s.headline || s.title)
+// Trending: Rank by viewCount, then fallback to latest
+const trendingStories = [...publishedStories]
+    .sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0))
+    .slice(0, 5);
+
+const trendingItems = (trendingStories.length > 0 
+    ? trendingStories.map(s => ({ title: s.headline || s.title, slug: s.slug }))
     : [
-    "The case for abolishing the penny",
-    "Why everyone is playing this word game",
-    "How to sleep better",
-    "The future of electric planes",
-    "Why coffee is getting more expensive",
-]) as string[];
+    { title: "The case for abolishing the penny", slug: "#" },
+    { title: "Why everyone is playing this word game", slug: "#" },
+    { title: "How to sleep better", slug: "#" },
+    { title: "The future of electric planes", slug: "#" },
+    { title: "Why coffee is getting more expensive", slug: "#" },
+]) as { title: string, slug: string }[];
 
 // Videos: Filter stories that have videoUrl
 const liveVideos = publishedStories
@@ -95,35 +101,68 @@ const displayVideos = liveVideos.length > 0 ? liveVideos : VOX_HOME_DATA.videos;
 ---
 
 <MainLayout title="Explainer - Visual Journalism That Makes Sense of the World">
-    <main class="max-w-7xl mx-auto px-6 py-12">
+    <main class="max-w-7xl mx-auto px-6 py-12 bg-white dark:bg-gray-900 transition-colors duration-300">
         <!-- Live Data Sync Debug (Hidden) -->
         <div style="display:none" data-appwrite-sync-status={publishedStories.length} data-fetch-error={fetchError}></div>
 
         <HeroFeature article={heroStory as any} />
 
+        {/* Top Links Section */}
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+            <a href="/newsletters" class="group bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 flex items-center justify-between hover:border-black dark:hover:border-[#FAFF00] transition-all shadow-sm">
+                <div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-[#FAFF00] bg-black px-2 py-0.5 rounded mb-2 inline-block">Archive</span>
+                    <h3 class="text-xl font-bold dark:text-white">Past Dispatches</h3>
+                    <p class="text-xs text-gray-400 font-medium">Browse our full intelligence history</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center group-hover:bg-[#FAFF00] transition-colors">
+                    <TrendingUp className="w-5 h-5 text-black" />
+                </div>
+            </a>
+            <a href="/about" class="group bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 flex items-center justify-between hover:border-black dark:hover:border-[#FAFF00] transition-all shadow-sm">
+                <div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-black bg-[#FAFF00] px-2 py-0.5 rounded mb-2 inline-block">Manifesto</span>
+                    <h3 class="text-xl font-bold dark:text-white">The Newsroom</h3>
+                    <p class="text-xs text-gray-400 font-medium">Meet the team behind the systems</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center group-hover:bg-[#FAFF00] transition-colors">
+                    <TrendingUp className="w-5 h-5 text-black" />
+                </div>
+            </a>
+            <div class="bg-[#FAFF00] p-6 rounded-2xl flex items-center justify-between shadow-lg">
+                <div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-white bg-black px-2 py-0.5 rounded mb-2 inline-block">Beta</span>
+                    <h3 class="text-xl font-bold text-black">Explainer Intelligence</h3>
+                    <p class="text-xs text-black/60 font-medium">Powering visual journalism</p>
+                </div>
+                <TrendingUp className="w-8 h-8 text-black opacity-20" />
+            </div>
+        </section>
+
         <div
-            class="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-24 border-b border-gray-100 pb-24"
+            class="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-24 border-b border-gray-100 dark:border-gray-800 pb-24"
         >
             <div class="hidden lg:block lg:col-span-3">
                 <div class="sticky top-32">
                     <h2
-                        class="text-[10px] font-black uppercase tracking-[0.25em] mb-10 text-gray-400 border-b border-gray-100 pb-2"
+                        class="text-[10px] font-black uppercase tracking-[0.25em] mb-10 text-gray-400 border-b border-gray-100 dark:border-gray-800 pb-2 flex justify-between items-center"
                     >
-                        Trending Now
+                        <span>Most Popular</span>
+                        <TrendingUp className="w-3 h-3 text-[#FAFF00]" />
                     </h2>
                     <div class="space-y-10">
                         {
-                            trending.map((item, i) => (
-                                <div class="group cursor-pointer">
-                                    <div class="text-5xl font-serif-display font-black text-black/10 group-hover:text-[#FAFF00] transition-colors leading-none mb-2">
+                            trendingItems.map((item: any, i: number) => (
+                                <a href={item.slug !== '#' ? `/article/${item.slug}` : '#'} class="group block">
+                                    <div class="text-5xl font-serif-display font-black text-black/10 dark:text-white/10 group-hover:text-[#FAFF00] transition-colors leading-none mb-2">
                                         0{i + 1}
                                     </div>
                                     <div
-                                        class="text-lg font-bold leading-tight text-black group-hover:text-gray-600 transition-colors block"
+                                        class="text-lg font-bold leading-tight text-black dark:text-white group-hover:text-gray-600 dark:group-hover:text-[#FAFF00] transition-colors block"
                                     >
-                                        {item}
+                                        {item.title}
                                     </div>
-                                </div>
+                                </a>
                             ))
                         }
                     </div>
@@ -133,12 +172,12 @@ const displayVideos = liveVideos.length > 0 ? liveVideos : VOX_HOME_DATA.videos;
             <div class="lg:col-span-9 lg:pl-12">
                 <div class="flex items-end justify-between mb-12">
                     <h2
-                        class="text-6xl md:text-7xl font-serif-display font-black text-black tracking-tighter"
+                        class="text-6xl md:text-7xl font-serif-display font-black text-black dark:text-white tracking-tighter"
                     >
                         Latest
                     </h2>
                     <div
-                        class="hidden md:block h-px flex-1 bg-gray-200 ml-8 mb-4"
+                        class="hidden md:block h-px flex-1 bg-gray-200 dark:bg-gray-800 ml-8 mb-4"
                     >
                     </div>
                 </div>
@@ -156,7 +195,7 @@ const displayVideos = liveVideos.length > 0 ? liveVideos : VOX_HOME_DATA.videos;
             </div>
         </div>
 
-        <section class="py-24 my-12 border-b border-gray-100">
+        <section class="py-24 my-12 border-b border-gray-100 dark:border-gray-800">
             <div
                 class="bg-[#FAFF00] p-12 md:p-20 relative overflow-hidden rounded-sm shadow-2xl"
             >
@@ -191,13 +230,13 @@ const displayVideos = liveVideos.length > 0 ? liveVideos : VOX_HOME_DATA.videos;
                 sortedCategories.slice(0, 3).map(catName => (
                     <div>
                         <div class="flex items-center gap-4 mb-12">
-                            <h3 class="text-4xl font-serif-display font-black text-black">
+                            <h3 class="text-4xl font-serif-display font-black text-black dark:text-white">
                                 {catName}
                             </h3>
-                            <span class="h-px flex-1 bg-gray-100"></span>
+                            <span class="h-px flex-1 bg-gray-100 dark:bg-gray-800"></span>
                             <a
                                 href={`/topic/${catName.toLowerCase()}`}
-                                class="text-[10px] font-black uppercase tracking-widest text-black hover:bg-[#FAFF00] px-3 py-1 rounded transition-all"
+                                class="text-[10px] font-black uppercase tracking-widest text-black dark:text-[#FAFF00] hover:bg-[#FAFF00] dark:hover:bg-white dark:hover:text-black px-3 py-1 rounded transition-all"
                                 >Explore {catName} →</a
                             >
                         </div>
@@ -205,13 +244,13 @@ const displayVideos = liveVideos.length > 0 ? liveVideos : VOX_HOME_DATA.videos;
                             {
                                 categoriesWithStories[catName].slice(0, 3).map((s: any, i: number) => (
                                     <article class="group">
-                                        <div class="aspect-[16/10] overflow-hidden mb-6 bg-gray-100 relative rounded-sm">
+                                        <div class="aspect-[16/10] overflow-hidden mb-6 bg-gray-100 dark:bg-gray-800 relative rounded-sm">
                                             <img
                                                 src={s.heroImage || s.imageUrl || 'https://images.unsplash.com/photo-1585829365294-111320e7588e?w=800&q=80'}
                                                 class="w-full h-full object-cover grayscale-[50%] group-hover:grayscale-0 transition-all duration-700"
                                             />
                                         </div>
-                                        <h4 class="text-2xl font-serif-display font-bold leading-tight group-hover:underline decoration-yellow-400 underline-offset-4">
+                                        <h4 class="text-2xl font-serif-display font-bold leading-tight group-hover:underline decoration-yellow-400 underline-offset-4 dark:text-white">
                                             <a href={`/article/${s.slug}`}>
                                                 {s.headline || s.title}
                                             </a>

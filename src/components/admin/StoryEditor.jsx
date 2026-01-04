@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Type, X, AlertCircle, Loader2, Upload, Send, CheckSquare, Eye, Clock, History, Search, ChevronRight, ExternalLink, BookOpen, Zap, Settings2 } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Type, X, AlertCircle, Loader2, Upload, Send, CheckSquare, Eye, Clock, History, Search, ChevronRight, ExternalLink, BookOpen, Zap, Settings2, List, Share2, MessageSquare } from 'lucide-react';
 import { getCurrentUser, ROLES } from '../../lib/authStore';
-import { storyService, categoryService } from '../../lib/services';
+import { storyService, categoryService, commentService } from '../../lib/services';
 
 export default function StoryEditor({ storyId }) {
     const [user, setUser] = useState(null);
@@ -14,6 +14,9 @@ export default function StoryEditor({ storyId }) {
     const [showGhostPreview, setShowGhostPreview] = useState(false);
     const [focusedStepIndex, setFocusedStepIndex] = useState(null);
     const [categories, setCategories] = useState([]);
+    const [comments, setComments] = useState([]);
+    const [newComment, setNewComment] = useState('');
+    const [isCommenting, setIsCommenting] = useState(false);
 
     const fileInputRef = useRef(null);
     const previewIframeRef = useRef(null);
@@ -37,7 +40,28 @@ export default function StoryEditor({ storyId }) {
         setUser(u);
         loadStory(u);
         fetchCategories();
+        if (storyId !== 'new-story') fetchComments();
     }, [storyId]);
+
+    const fetchComments = async () => {
+        const data = await commentService.getStoryComments(storyId);
+        setComments(data);
+    };
+
+    const handleAddComment = async (e) => {
+        e.preventDefault();
+        if (!newComment.trim()) return;
+        setIsCommenting(true);
+        try {
+            const comment = await commentService.addComment(storyId, newComment);
+            setComments([comment, ...comments]);
+            setNewComment('');
+        } catch (e) {
+            alert("Failed to add comment");
+        } finally {
+            setIsCommenting(false);
+        }
+    };
 
     const fetchCategories = async () => {
         try {
@@ -294,6 +318,69 @@ export default function StoryEditor({ storyId }) {
                             <div className="space-y-8">
                                 {content.map((block) => (
                                     <div key={block.id} className="relative group min-h-[50px]">
+                                        {block.type === 'explained' && (
+                                            <div className="bg-black text-white p-8 rounded-[2rem] border-l-8 border-[#FAFF00] space-y-6">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="bg-[#FAFF00] p-2 rounded-lg text-black">
+                                                            <BookOpen className="w-4 h-4" />
+                                                        </div>
+                                                        <h4 className="text-sm font-black uppercase tracking-widest text-[#FAFF00]">In a Nutshell</h4>
+                                                    </div>
+                                                    <button 
+                                                        onClick={() => updateContent(content.map(b => b.id === block.id ? { ...b, points: [...(b.points || []), ''] } : b))}
+                                                        className="text-[9px] font-black uppercase tracking-widest bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-all"
+                                                    >
+                                                        Add Bullet
+                                                    </button>
+                                                </div>
+                                                <input
+                                                    className="w-full bg-transparent text-2xl font-black outline-none border-none placeholder:text-white/20 tracking-tighter"
+                                                    placeholder="Focus Title..."
+                                                    value={block.title}
+                                                    onChange={(e) => updateContent(content.map(b => b.id === block.id ? { ...b, title: e.target.value } : b))}
+                                                />
+                                                <div className="space-y-4">
+                                                    {(block.points || []).map((point, pIdx) => (
+                                                        <div key={pIdx} className="flex gap-4 group/point">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-[#FAFF00] mt-2.5 shrink-0" />
+                                                            <textarea
+                                                                className="flex-1 bg-transparent text-sm font-medium leading-relaxed outline-none resize-none border-none placeholder:text-white/10"
+                                                                placeholder="Core insight point..."
+                                                                rows="1"
+                                                                value={point}
+                                                                onChange={(e) => {
+                                                                    const newPoints = [...block.points];
+                                                                    newPoints[pIdx] = e.target.value;
+                                                                    updateContent(content.map(b => b.id === block.id ? { ...b, points: newPoints } : b));
+                                                                }}
+                                                            />
+                                                            <button 
+                                                                onClick={() => updateContent(content.map(b => b.id === block.id ? { ...b, points: b.points.filter((_, i) => i !== pIdx) } : b))}
+                                                                className="opacity-0 group-hover/point:opacity-100 text-white/20 hover:text-red-400 transition-all"
+                                                            >
+                                                                <X className="w-3 h-3" />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {block.type === 'embed' && (
+                                            <div className="bg-gray-900 p-8 rounded-3xl border border-white/5 space-y-4">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <Share2 className="w-4 h-4 text-[#FAFF00]" />
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Multimedia Integration</span>
+                                                </div>
+                                                <input
+                                                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-4 text-white text-xs font-mono outline-none focus:border-[#FAFF00] transition-all"
+                                                    placeholder="Paste URL (YouTube, Twitter, Spotify...)"
+                                                    value={block.url}
+                                                    onChange={(e) => updateContent(content.map(b => b.id === block.id ? { ...b, url: e.target.value } : b))}
+                                                />
+                                                <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest">Supported: YouTube, X/Twitter, Spotify, TikTok, Vimeo</p>
+                                            </div>
+                                        )}
                                         {block.type === 'beforeAfter' && (
                                             <div className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100 space-y-6">
                                                 <div className="flex items-center justify-between mb-4">
@@ -689,6 +776,12 @@ export default function StoryEditor({ storyId }) {
                                         <button onClick={() => updateContent([...content, { id: Date.now(), type: 'beforeAfter', leftImage: '', rightImage: '', leftLabel: 'Before', rightLabel: 'After', caption: '' }])} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
                                             <Plus className="w-4 h-4" /> Before/After
                                         </button>
+                                        <button onClick={() => updateContent([...content, { id: Date.now(), type: 'explained', title: 'The Big Picture', points: [''] }])} className="flex items-center gap-3 px-6 py-3 bg-black text-[#FAFF00] hover:scale-105 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg">
+                                            <BookOpen className="w-4 h-4" /> Explained
+                                        </button>
+                                        <button onClick={() => updateContent([...content, { id: Date.now(), type: 'embed', url: '' }])} className="flex items-center gap-3 px-6 py-3 bg-gray-900 text-white hover:bg-black rounded-xl text-xs font-black uppercase tracking-widest transition-all">
+                                            <Share2 className="w-4 h-4" /> Embed
+                                        </button>
                                     </div>
                                 )}
                             </div>
@@ -802,6 +895,45 @@ export default function StoryEditor({ storyId }) {
                                 <p className="text-[#1a0dab] text-lg font-bold hover:underline cursor-pointer leading-tight">{story.headline || 'Your Headline Here'}</p>
                                 <p className="text-[#006621] text-xs">explainer.africa › {story.category.toLowerCase()} › {story.slug || '...'}</p>
                                 <p className="text-gray-500 text-xs line-clamp-2">{story.subhead || 'No subhead provided. This will default to the first paragraph in search results.'}</p>
+                            </div>
+                        </section>
+
+                        <section className="space-y-6">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Editorial Intel</h3>
+                                <MessageSquare className="w-4 h-4 text-gray-300" />
+                            </div>
+                            
+                            <form onSubmit={handleAddComment} className="space-y-3">
+                                <textarea 
+                                    className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-xs font-medium placeholder:text-gray-300 outline-none focus:border-black transition-all resize-none"
+                                    placeholder="Leave an internal note for the team..."
+                                    rows="3"
+                                    value={newComment}
+                                    onChange={(e) => setNewComment(e.target.value)}
+                                />
+                                <button 
+                                    type="submit" 
+                                    disabled={isCommenting || !newComment.trim()}
+                                    className="w-full bg-black text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#FAFF00] hover:text-black transition-all disabled:opacity-20"
+                                >
+                                    {isCommenting ? 'Transmitting...' : 'Post Intel'}
+                                </button>
+                            </form>
+
+                            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                {comments.map(c => (
+                                    <div key={c.$id} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-2">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[9px] font-black uppercase tracking-widest text-gray-900">{c.userName}</span>
+                                            <span className="text-[8px] font-bold text-gray-400 uppercase">{new Date(c.timestamp).toLocaleDateString()}</span>
+                                        </div>
+                                        <p className="text-[11px] text-gray-600 leading-relaxed">{c.text}</p>
+                                    </div>
+                                ))}
+                                {comments.length === 0 && (
+                                    <p className="text-[10px] text-gray-300 font-bold uppercase tracking-widest text-center py-4 italic">No internal notes yet.</p>
+                                )}
                             </div>
                         </section>
 

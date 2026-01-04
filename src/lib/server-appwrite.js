@@ -199,6 +199,14 @@ export const serverStoryService = {
         });
     },
 
+    async incrementViewCount(id, currentCount = 0) {
+        if (!serverDatabases) return null;
+        // Run in background, don't wait for it to return to speed up SSR
+        serverDatabases.updateDocument(DB_ID, COLLECTIONS.STORIES, id, {
+            viewCount: (currentCount || 0) + 1
+        }).catch(err => console.warn(`[VIEW_COUNT] Failed to increment for ${id}:`, err.message));
+    },
+
     calculateReadTime(content) {
         try {
             const blocks = typeof content === 'string' ? JSON.parse(content) : content;

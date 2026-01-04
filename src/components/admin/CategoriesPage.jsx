@@ -31,7 +31,7 @@ export default function CategoriesPage() {
   };
 
   const openAddModal = () => {
-    setEditingCategory({ name: "", slug: "", color: "#000000" });
+    setEditingCategory({ name: "", slug: "", color: "#000000", themeColor: "#FAFF00" });
     setIsModalOpen(true);
   };
 
@@ -104,7 +104,7 @@ export default function CategoriesPage() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {isLoading ? (
-                <tr><td colSpan="4" className="px-6 py-12 text-center"><Loader2 className="animate-spin w-8 h-8 text-gray-200 mx-auto" /></td></tr>
+                <tr><td colSpan="5" className="px-6 py-12 text-center"><Loader2 className="animate-spin w-8 h-8 text-gray-200 mx-auto" /></td></tr>
               ) : categories.length > 0 ? (
                 categories.map((cat) => (
                   <tr key={cat.$id} className="hover:bg-gray-50 transition-colors group">
@@ -114,6 +114,12 @@ export default function CategoriesPage() {
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 rounded-full border border-gray-200 shadow-sm" style={{ backgroundColor: cat.color }}></div>
                         <span className="text-xs text-gray-400 font-mono uppercase">{cat.color}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded border border-gray-200 shadow-sm" style={{ backgroundColor: cat.themeColor || '#FAFF00' }}></div>
+                        <span className="text-xs text-gray-400 font-mono uppercase">{cat.themeColor || '#FAFF00'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -144,6 +150,7 @@ export default function CategoriesPage() {
                 <div><label className="block text-xs font-bold text-gray-500 mb-1">Category Name</label><input type="text" className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#008751]" value={editingCategory.name} onChange={e => handleModalChange('name', e.target.value)} required /></div>
                 <div><label className="block text-xs font-bold text-gray-500 mb-1">Slug</label><input type="text" className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#008751]" value={editingCategory.slug} onChange={e => handleModalChange('slug', e.target.value)} required /></div>
                 <div><label className="block text-xs font-bold text-gray-500 mb-1">Accent Color</label><div className="flex items-center gap-2"><input type="color" className="w-10 h-10 rounded border-0 cursor-pointer" value={editingCategory.color} onChange={e => handleModalChange('color', e.target.value)} /><span className="text-sm font-mono text-gray-600">{editingCategory.color}</span></div></div>
+                <div><label className="block text-xs font-bold text-gray-500 mb-1">Theme Color (Vertical Identity)</label><div className="flex items-center gap-2"><input type="color" className="w-10 h-10 rounded border-0 cursor-pointer" value={editingCategory.themeColor || '#FAFF00'} onChange={e => handleModalChange('themeColor', e.target.value)} /><span className="text-sm font-mono text-gray-600">{editingCategory.themeColor || '#FAFF00'}</span></div></div>
                 <div className="pt-4 flex justify-end gap-3">
                   <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors">Cancel</button>
                   <button type="submit" className="bg-[#008751] text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-[#006b3f] transition-colors shadow-sm flex items-center gap-2"><Check className="w-4 h-4" />{editingCategory.$id ? 'Save Changes' : 'Create Category'}</button>

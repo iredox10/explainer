@@ -1,0 +1,112 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+import VoxNav from "../components/ui/VoxNav.astro";
+import Footer from "../components/Footer.astro";
+import { databases, DB_ID } from "../lib/appwrite";
+import { Query } from "appwrite";
+import { Mail, ArrowRight, Calendar, User } from "lucide-react";
+
+// Fetch past dispatches
+let dispatches: any[] = [];
+try {
+    const res = await databases.listDocuments(DB_ID, 'newsletters', [
+        Query.orderDesc('sentAt'),
+        Query.limit(20)
+    ]);
+    dispatches = res.documents;
+} catch (e) {
+    console.error("Failed to fetch dispatches:", e);
+}
+---
+
+<MainLayout title="Newsletter Archive - Explainer">
+    <VoxNav />
+    
+    <main class="bg-[#fcfcfc] min-h-screen">
+        <section class="pt-24 pb-16 px-6 bg-black text-white overflow-hidden relative">
+            <div class="absolute top-0 right-0 w-96 h-96 bg-[#FAFF00]/10 rounded-full blur-3xl -mr-48 -mt-48"></div>
+            <div class="max-w-7xl mx-auto relative z-10">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 bg-[#FAFF00] rounded-lg text-black">
+                        <Mail className="w-6 h-6" />
+                    </div>
+                    <span class="text-[10px] font-black uppercase tracking-[0.3em] text-[#FAFF00]">Intelligence Briefings</span>
+                </div>
+                <h1 class="text-6xl md:text-8xl font-serif-display font-black tracking-tighter uppercase italic mb-8">
+                    The Dispatch<span class="text-[#FAFF00]">.</span>
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-400 max-w-2xl leading-relaxed">
+                    Our weekly intelligence briefing breaks down the hidden systems shaping our world. Browse past dispatches or subscribe to join the network.
+                </p>
+            </div>
+        </section>
+
+        <section class="py-24 px-6">
+            <div class="max-w-7xl mx-auto">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-16">
+                    {/* Left: Archive List */}
+                    <div class="lg:col-span-8 space-y-12">
+                        {dispatches.length > 0 ? dispatches.map((d) => (
+                            <article class="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-xl hover:shadow-2xl transition-all border border-gray-100 group relative">
+                                <div class="absolute top-8 right-8 text-[#FAFF00]/20 group-hover:text-[#FAFF00]/40 transition-colors">
+                                    <Mail className="w-12 h-12" />
+                                </div>
+                                <div class="flex items-center gap-4 mb-6">
+                                    <div class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                        <Calendar className="w-3.5 h-3.5" />
+                                        {new Date(d.sentAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+                                    </div>
+                                    <div class="w-1 h-1 rounded-full bg-gray-200"></div>
+                                    <div class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#008751]">
+                                        <User className="w-3.5 h-3.5" />
+                                        {d.author}
+                                    </div>
+                                </div>
+                                <h2 class="text-3xl md:text-4xl font-serif-display font-black text-black uppercase tracking-tight mb-6 leading-none group-hover:text-[#008751] transition-colors">
+                                    {d.subject}
+                                </h2>
+                                <div class="prose prose-sm font-medium text-gray-600 line-clamp-4 leading-relaxed mb-8 whitespace-pre-wrap">
+                                    {d.content}
+                                </div>
+                                <button class="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-black group-hover:gap-5 transition-all">
+                                    Read Full Dispatch <ArrowRight className="w-4 h-4 text-[#FAFF00]" />
+                                </button>
+                            </article>
+                        )) : (
+                            <div class="py-24 text-center bg-white rounded-[3rem] border-2 border-dashed border-gray-100">
+                                <Mail className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                                <p class="text-gray-400 font-bold uppercase tracking-widest text-xs">No dispatches archived yet.</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right: Sidebar */}
+                    <div class="lg:col-span-4">
+                        <div class="sticky top-32 space-y-8">
+                            <div class="bg-[#FAFF00] p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+                                <div class="absolute -top-10 -right-10 w-32 h-32 bg-white/30 rounded-full blur-3xl"></div>
+                                <h3 class="text-2xl font-black text-black uppercase tracking-tighter mb-4 leading-none">Join the Network</h3>
+                                <p class="text-black/70 text-sm font-medium mb-8">Get the next dispatch delivered straight to your secure inbox.</p>
+                                <div class="space-y-3">
+                                    <input type="email" placeholder="agent@network.com" class="w-full bg-white/50 border-2 border-transparent focus:border-black p-4 rounded-2xl outline-none text-sm font-bold placeholder:text-black/30" />
+                                    <button class="w-full bg-black text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:scale-[1.02] transition-all shadow-xl">Secure Access</button>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-xl">
+                                <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-6 border-b border-gray-50 pb-2">Archive Categories</h4>
+                                <div class="flex flex-wrap gap-2">
+                                    {['Investigations', 'Policy', 'Technology', 'Science', 'Culture'].map(tag => (
+                                        <span class="px-3 py-1.5 bg-gray-50 rounded-lg text-[10px] font-black uppercase tracking-tight text-gray-500 hover:bg-black hover:text-[#FAFF00] cursor-pointer transition-all border border-gray-100">{tag}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <Footer />
+</MainLayout>

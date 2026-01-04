@@ -25,6 +25,11 @@ if (!story) {
 if (!story) {
   return Astro.redirect("/404");
 }
+
+// Popularity Engine: Increment View Count
+if (story.$id) {
+  (serverStoryService as any).incrementViewCount(story.$id, story.viewCount);
+}
 ---
 
 {

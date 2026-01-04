@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, MoreVertical, FileText, CheckCircle, Clock, AlertCircle, Loader2, Send, Trash2, Edit3, MoreHorizontal } from 'lucide-react';
+import { Plus, Search, Filter, MoreVertical, FileText, CheckCircle, Clock, AlertCircle, Loader2, Send, Trash2, Edit3, MoreHorizontal, MessageSquare, Eye } from 'lucide-react';
 import AdminSidebar from './AdminSidebar';
 import { getCurrentUser, ROLES } from '../../lib/authStore';
-import { storyService } from '../../lib/services';
+import { storyService, commentService } from '../../lib/services';
 
 export default function StoriesPage() {
   const [user, setUser] = useState(null);
   const [stories, setStories] = useState([]);
+  const [commentCounts, setCommentCounts] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all'); // all, draft, pending, published
   const [searchQuery, setSearchQuery] = useState('');
@@ -45,6 +46,12 @@ export default function StoriesPage() {
         setStories(data.filter(s => s.author_id === currentUser.id));
       } else {
         setStories(data);
+      }
+
+      // Fetch comment counts for the loaded stories
+      if (data.length > 0) {
+        const counts = await commentService.getCommentCounts(data.map(s => s.$id));
+        setCommentCounts(counts);
       }
     } catch (e) {
       console.error(e);
@@ -157,6 +164,16 @@ export default function StoriesPage() {
                         {story.workflow_status}
                       </span>
                       <span className="text-[8px] md:text-[10px] text-gray-400 font-black uppercase tracking-widest truncate">{story.category}</span>
+                      {commentCounts[story.$id] > 0 && (
+                        <div className="flex items-center gap-1 bg-black text-[#FAFF00] px-1.5 py-0.5 rounded text-[8px] font-black animate-in zoom-in duration-300">
+                          <MessageSquare className="w-2.5 h-2.5 fill-[#FAFF00]" />
+                          {commentCounts[story.$id]}
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1 text-gray-400 text-[8px] font-black uppercase tracking-widest">
+                        <Eye className="w-2.5 h-2.5" />
+                        {story.viewCount || 0}
+                      </div>
                     </div>
                     <h3 className="text-base md:text-xl font-black text-gray-900 uppercase tracking-tighter truncate group-hover:text-black transition-colors">{story.headline || 'Untitled Dispatch'}</h3>
                     <p className="text-[10px] md:text-xs text-gray-400 font-medium truncate mt-1">Author: <span className="text-gray-700 font-bold uppercase">{story.author}</span> • {new Date(story.$updatedAt).toLocaleDateString()}</p>

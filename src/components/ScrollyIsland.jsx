@@ -10,24 +10,20 @@ const MotionGeography = motion(Geography);
 function AnimatedMap({ center = [20, 0], zoom = 1, highlight, label }) {
     const springConfig = { damping: 20, stiffness: 100, mass: 1 };
 
-    // Motion values for our coordinates
     const lon = useMotionValue(center[0]);
     const lat = useMotionValue(center[1]);
     const z = useMotionValue(zoom);
 
-    // Smooth springs
     const smoothLon = useSpring(lon, springConfig);
     const smoothLat = useSpring(lat, springConfig);
     const smoothZ = useSpring(z, springConfig);
 
-    // Sync props to motion values
     useEffect(() => {
         lon.set(center[0]);
         lat.set(center[1]);
         z.set(zoom);
     }, [center, zoom, lon, lat, z]);
 
-    // Internal state to force re-render for ZoomableGroup (since it needs raw numbers)
     const [renderCenter, setRenderCenter] = useState(center);
     const [renderZoom, setRenderZoom] = useState(zoom);
 
@@ -39,7 +35,7 @@ function AnimatedMap({ center = [20, 0], zoom = 1, highlight, label }) {
     }, [smoothLon, smoothLat, smoothZ]);
 
     return (
-        <div className="relative h-full w-full flex items-center justify-center bg-white">
+        <div className="relative h-full w-full flex items-center justify-center bg-white dark:bg-gray-950 transition-colors duration-300">
             <ComposableMap
                 projection="geoMercator"
                 projectionConfig={{
@@ -65,9 +61,10 @@ function AnimatedMap({ center = [20, 0], zoom = 1, highlight, label }) {
                                         geography={geo}
                                         initial={false}
                                         animate={{
-                                            fill: isHighlighted ? "#FAFF00" : "#F5F5F3",
+                                            fill: isHighlighted ? "#FAFF00" : "currentColor",
                                         }}
                                         transition={{ duration: 0.8 }}
+                                        className={isHighlighted ? "text-[#FAFF00]" : "text-[#F5F5F3] dark:text-gray-800"}
                                         stroke="#D6D6DA"
                                         strokeWidth={0.5}
                                         style={{
@@ -88,26 +85,21 @@ function AnimatedMap({ center = [20, 0], zoom = 1, highlight, label }) {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="absolute bottom-6 right-6 md:bottom-10 md:right-10 bg-white/10 backdrop-blur-md border-l-4 border-[#FAFF00] px-4 py-3 md:px-8 md:py-6 shadow-2xl"
+                    className="absolute bottom-6 right-6 md:bottom-10 md:right-10 bg-white/10 dark:bg-black/40 backdrop-blur-md border-l-4 border-[#FAFF00] px-4 py-3 md:px-8 md:py-6 shadow-2xl"
                 >
-                    <span className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mb-1 md:mb-2">Operational Sector</span>
-                    <span className="block text-lg md:text-2xl font-bold text-black font-serif-display leading-none">{label}</span>
+                    <span className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400 mb-1 md:mb-2">Operational Sector</span>
+                    <span className="block text-lg md:text-2xl font-bold text-black dark:text-white font-serif-display leading-none">{label}</span>
                 </motion.div>
             </AnimatePresence>
-
         </div>
     );
 }
 
-
-// Sub-Component B: AnimatedChart
-// Sub-Component B: AnimatedChart
 function AnimatedChart({ type = 'line', data = [10, 20, 30], labels = [], colors = [], accentColor, label }) {
     const maxVal = Math.max(...data, 1);
     const chartHeight = 200;
     const chartWidth = 300;
 
-    // Line Chart Logic
     const points = data
         .map((val, i) => {
             const x = data.length > 1 ? (i / (data.length - 1)) * chartWidth : chartWidth / 2;
@@ -116,7 +108,6 @@ function AnimatedChart({ type = 'line', data = [10, 20, 30], labels = [], colors
         })
         .join(" ");
 
-    // Pie Chart Logic
     const total = data.reduce((a, b) => a + b, 0);
     let cumulativePercent = 0;
 
@@ -135,15 +126,15 @@ function AnimatedChart({ type = 'line', data = [10, 20, 30], labels = [], colors
     };
 
     return (
-        <div className="relative h-full w-full flex items-center justify-center bg-[#f8f9fa] p-4">
-            <div className="w-full max-w-[640px] max-h-[90vh] overflow-y-auto bg-white p-6 md:p-12 shadow-2xl border-t-4 border-[#FAFF00] custom-scrollbar">
-                <h3 className="mb-6 md:mb-10 text-xl md:text-3xl font-bold text-black font-serif-display leading-tight">{label}</h3>
+        <div className="relative h-full w-full flex items-center justify-center bg-[#f8f9fa] dark:bg-gray-950 p-4 transition-colors duration-300">
+            <div className="w-full max-w-[640px] max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 p-6 md:p-12 shadow-2xl border-t-4 border-[#FAFF00] custom-scrollbar transition-colors">
+                <h3 className="mb-6 md:mb-10 text-xl md:text-3xl font-bold text-black dark:text-white font-serif-display leading-tight">{label}</h3>
 
                 <div className="aspect-video w-full flex items-center justify-center">
                     <svg viewBox={`-10 -10 ${chartWidth + 20} ${chartHeight + 20}`} className="w-full h-full overflow-visible">
                         {type === 'line' && (
                             <>
-                                <line x1="0" y1={chartHeight} x2={chartWidth} y2={chartHeight} stroke="#e5e7eb" strokeWidth="1" />
+                                <line x1="0" y1={chartHeight} x2={chartWidth} y2={chartHeight} stroke="currentColor" className="text-gray-200 dark:text-gray-800" strokeWidth="1" />
                                 <motion.polyline
                                     points={points}
                                     fill="none"
@@ -168,7 +159,7 @@ function AnimatedChart({ type = 'line', data = [10, 20, 30], labels = [], colors
 
                         {type === 'bar' && (
                             <g>
-                                <line x1="0" y1={chartHeight} x2={chartWidth} y2={chartHeight} stroke="#e5e7eb" strokeWidth="1" />
+                                <line x1="0" y1={chartHeight} x2={chartWidth} y2={chartHeight} stroke="currentColor" className="text-gray-200 dark:text-gray-800" strokeWidth="1" />
                                 {data.map((val, i) => {
                                     const h = (val / maxVal) * (chartHeight - 20);
                                     const w = (chartWidth / data.length) * 0.8;
@@ -224,16 +215,16 @@ function AnimatedChart({ type = 'line', data = [10, 20, 30], labels = [], colors
                     </svg>
                 </div>
 
-                <div className="mt-6 md:mt-8 grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 border-t border-gray-50 pt-6 md:pt-8">
+                <div className="mt-6 md:mt-8 grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 border-t border-gray-50 dark:border-gray-800 pt-6 md:pt-8 transition-colors">
                     {data.map((v, i) => (
                         <div key={i} className="flex flex-col gap-1 border-l-2 pl-3" style={{ borderColor: getSegmentColor(i) }}>
-                            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                            <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500">
                                 {labels[i] || `Category ${i + 1}`}
                             </span>
                             <div className="flex items-baseline gap-2">
-                                <span className="text-lg md:text-xl font-bold text-black">{v}</span>
+                                <span className="text-lg md:text-xl font-bold text-black dark:text-white">{v}</span>
                                 {type === 'pie' && total > 0 && (
-                                    <span className="text-[8px] md:text-[10px] font-medium text-gray-400">({Math.round((v / total) * 100)}%)</span>
+                                    <span className="text-[8px] md:text-[10px] font-medium text-gray-400 dark:text-gray-500">({Math.round((v / total) * 100)}%)</span>
                                 )}
                             </div>
                         </div>
@@ -262,10 +253,10 @@ export default function ScrollyIsland({ steps, forcedStep = null }) {
 
     if (!steps || steps.length === 0) {
         return (
-            <div className="h-screen flex items-center justify-center bg-gray-50 border-y border-gray-100">
+            <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 border-y border-gray-100 dark:border-gray-800 transition-colors">
                 <div className="text-center p-12">
-                    <p className="text-xs font-black uppercase tracking-[0.3em] text-gray-300 mb-4">Discovery Engine Offline</p>
-                    <h3 className="text-2xl font-serif italic text-gray-400">No scrollytelling steps defined for this story.</h3>
+                    <p className="text-xs font-black uppercase tracking-[0.3em] text-gray-300 dark:text-gray-700 mb-4">Discovery Engine Offline</p>
+                    <h3 className="text-2xl font-serif italic text-gray-400 dark:text-gray-600">No scrollytelling steps defined for this story.</h3>
                 </div>
             </div>
         );
@@ -276,7 +267,7 @@ export default function ScrollyIsland({ steps, forcedStep = null }) {
     return (
         <div className="relative">
             {/* Layer 1: The Visuals (Sticky Background) */}
-            <div className="sticky top-0 flex h-screen items-center justify-center overflow-hidden bg-white">
+            <div className="sticky top-0 flex h-screen items-center justify-center overflow-hidden bg-white dark:bg-gray-950 transition-colors duration-300">
                 <div className="absolute inset-0 h-full w-full">
                     <AnimatePresence mode="wait">
                         {currentStep.type === 'map' && (
@@ -319,7 +310,7 @@ export default function ScrollyIsland({ steps, forcedStep = null }) {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 0 }}
                                 exit={{ opacity: 0 }}
-                                className="h-full w-full bg-white"
+                                className="h-full w-full bg-white dark:bg-gray-950"
                             />
                         )}
                     </AnimatePresence>
@@ -338,14 +329,14 @@ export default function ScrollyIsland({ steps, forcedStep = null }) {
                                     viewport={{ margin: "-20% 0px -20% 0px" }}
                                     transition={{ duration: 0.8, ease: "circOut" }}
                                     className={`pointer-events-auto shadow-2xl transition-all duration-500 ${step.type === 'text'
-                                        ? 'w-full max-w-3xl bg-white/50 backdrop-blur-sm p-8 md:p-20 border-y-4 border-[#FAFF00] shadow-none !bg-transparent'
-                                        : 'w-full max-w-[calc(100vw-3rem)] md:max-w-md bg-white p-6 md:p-8 border-l-4 border-[#FAFF00]'
+                                        ? 'w-full max-w-3xl bg-white/50 dark:bg-black/50 backdrop-blur-sm p-8 md:p-20 border-y-4 border-[#FAFF00] shadow-none !bg-transparent'
+                                        : 'w-full max-w-[calc(100vw-3rem)] md:max-w-md bg-white dark:bg-gray-900 p-6 md:p-8 border-l-4 border-[#FAFF00] dark:text-white shadow-2xl'
                                         }`}
                                 >
-                                    <span className="block text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 mb-3">
+                                    <span className="block text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3">
                                         {step.type === 'text' ? 'Narrative Context' : `Step ${index + 1}/${steps.length}`}
                                     </span>
-                                    <p className={`leading-relaxed text-gray-900 font-serif ${step.type === 'text' ? 'text-2xl md:text-4xl font-bold tracking-tight' : 'text-lg md:text-xl font-medium'
+                                    <p className={`leading-relaxed text-gray-900 dark:text-gray-100 font-serif ${step.type === 'text' ? 'text-2xl md:text-4xl font-bold tracking-tight' : 'text-lg md:text-xl font-medium'
                                         }`}>
                                         {step.text}
                                     </p>

@@ -341,6 +341,53 @@ export const logService = {
     }
 };
 
+export const commentService = {
+    async getStoryComments(storyId) {
+        try {
+            const response = await databases.listDocuments(DB_ID, 'editorial_comments', [
+                Query.equal('storyId', storyId),
+                Query.orderDesc('timestamp')
+            ]);
+            return response.documents;
+        } catch (error) {
+            console.error('Error fetching comments:', error);
+            return [];
+        }
+    },
+    async addComment(storyId, text) {
+        const user = JSON.parse(localStorage.getItem('explainer_admin_user') || '{}');
+        try {
+            return await databases.createDocument(DB_ID, 'editorial_comments', ID.unique(), {
+                storyId,
+                userId: user.id,
+                userName: user.name,
+                text,
+                timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+            console.error('Error adding comment:', error);
+            throw error;
+        }
+    },
+    async getCommentCounts(storyIds) {
+        try {
+            // lightweight multi-fetch
+            const response = await databases.listDocuments(DB_ID, 'editorial_comments', [
+                Query.equal('storyId', storyIds),
+                Query.limit(storyIds.length * 10)
+            ]);
+            
+            // reduce to map of {storyId: count}
+            return response.documents.reduce((acc, c) => {
+                acc[c.storyId] = (acc[c.storyId] || 0) + 1;
+                return acc;
+            }, {});
+        } catch (error) {
+            return {};
+        }
+    }
+};
+
 export const newsletterService = {
     async getSubscribersCount() {
         try {

@@ -28,6 +28,18 @@ async function extendSchema() {
             }
         }
 
+        // Add editorial_comments attribute
+        try {
+            await databases.createStringAttribute(DB_ID, COLLECTION_ID, 'editorial_comments', 10000, false, '[]');
+            console.log('✅ Added: editorial_comments (Size: 10000)');
+        } catch (e) {
+            if (e.code === 409) {
+                console.log('ℹ️ Skip: editorial_comments already exists');
+            } else {
+                throw e;
+            }
+        }
+
         console.log('🎉 Schema extension complete!');
         console.log('⚠️ Note: Appwrite may take a few seconds to index the new field.');
     } catch (error) {

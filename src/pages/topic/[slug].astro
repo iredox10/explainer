@@ -58,6 +58,7 @@ const color =
   categoryRecord?.colorClass || fallbackData?.color || "bg-gray-200";
 const accent =
   categoryRecord?.accentClass || fallbackData?.accent || "text-black";
+const themeColor = categoryRecord?.themeColor || "#FAFF00";
 
 if (!title) {
   return Astro.redirect("/404");
@@ -83,16 +84,18 @@ const displayStories =
           : VOX_HOME_DATA.futurePerfect;
 ---
 
-<MainLayout title={`${title} - Explainer`}>
+<MainLayout title={`${title} - Explainer`} accentColor={themeColor}>
   <main class="min-h-screen bg-[#fdfdfd]">
     <div class="relative pt-20 pb-12 px-6 overflow-hidden">
       <div
-        class={`absolute top-0 left-0 w-full h-[60%] ${color} opacity-30 -skew-y-2 transform origin-top-left scale-110`}
+        class="absolute top-0 left-0 w-full h-[60%] opacity-30 -skew-y-2 transform origin-top-left scale-110"
+        style={{ backgroundColor: themeColor }}
       >
       </div>
       <div class="relative max-w-7xl mx-auto">
         <span
-          class={`font-black uppercase tracking-[0.2em] text-xs ${accent} mb-4 block`}
+          class="font-black uppercase tracking-[0.2em] text-xs mb-4 block"
+          style={{ color: themeColor === '#FAFF00' ? '#000' : themeColor }}
           >Section</span
         >
         <h1
@@ -102,6 +105,7 @@ const displayStories =
         </h1>
         <p
           class="text-xl md:text-2xl font-serif text-gray-600 max-w-2xl leading-relaxed border-l-4 border-black pl-6"
+          style={{ borderLeftColor: themeColor }}
         >
           {description}
         </p>

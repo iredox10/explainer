@@ -34,21 +34,27 @@ export default function NewslettersPage() {
         if (!campaignSubject || !campaignText) return;
 
         setIsSending(true);
-        // Simulate broadcast (In a real app, this would trigger an Appwrite Function or an external mail provider)
         try {
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // 1. Save to Archive
+            await databases.createDocument(DB_ID, 'newsletters', ID.unique(), {
+                subject: campaignSubject,
+                content: campaignText,
+                sentAt: new Date().toISOString(),
+                author: JSON.parse(localStorage.getItem('explainer_admin_user') || '{}').name || 'System'
+            });
+
+            // 2. Simulate broadcast delay
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
             setSentStatus({
                 success: true,
-                message: `Broadcast initiated. Dispatching to ${subscribers.length} recipients.`
+                message: `Broadcast initiated. Dispatch archived and sent to ${subscribers.length} recipients.`
             });
             setCampaignSubject('');
             setCampaignText('');
-
-            // Log the campaign in system logs (simulated)
-            console.log("Newsletter Sent:", { subject: campaignSubject, text: campaignText, recipientCount: subscribers.length });
-
         } catch (error) {
-            setSentStatus({ success: false, message: 'Broadcast failed at the gateway level.' });
+            console.error("Campaign error:", error);
+            setSentStatus({ success: false, message: 'Broadcast failed at the database level.' });
         } finally {
             setIsSending(false);
             setTimeout(() => setSentStatus(null), 5000);

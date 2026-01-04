@@ -1,0 +1,86 @@
+---
+interface Props {
+    url: string;
+}
+
+const { url } = Astro.props;
+
+function getEmbedData(url: string) {
+    if (!url) return null;
+
+    // YouTube
+    const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+    if (ytMatch) {
+        return {
+            type: 'youtube',
+            src: `https://www.youtube.com/embed/${ytMatch[1]}`
+        };
+    }
+
+    // Spotify
+    if (url.includes('spotify.com')) {
+        const spotifyUrl = url.replace('spotify.com/', 'spotify.com/embed/');
+        return {
+            type: 'spotify',
+            src: spotifyUrl
+        };
+    }
+
+    // TikTok
+    const ttMatch = url.match(/tiktok\.com\/.*\/video\/(\d+)/);
+    if (ttMatch) {
+        return {
+            type: 'tiktok',
+            src: `https://www.tiktok.com/embed/v2/${ttMatch[1]}`
+        };
+    }
+
+    return { type: 'generic', src: url };
+}
+
+const embed = getEmbedData(url);
+---
+
+{embed && (
+    <div class="my-12 w-full">
+        {embed.type === 'youtube' && (
+            <div class="aspect-video w-full rounded-2xl overflow-hidden shadow-2xl bg-black">
+                <iframe
+                    src={embed.src}
+                    class="w-full h-full border-none"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen
+                ></iframe>
+            </div>
+        )}
+
+        {embed.type === 'spotify' && (
+            <iframe
+                style="border-radius:12px"
+                src={embed.src}
+                width="100%"
+                height="352"
+                frameborder="0"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"
+            ></iframe>
+        )}
+
+        {embed.type === 'tiktok' && (
+            <div class="flex justify-center">
+                <iframe
+                    src={embed.src}
+                    style="width: 100%; height: 700px; border: none;"
+                    allowfullscreen
+                ></iframe>
+            </div>
+        )}
+
+        {embed.type === 'generic' && (
+            <div class="p-8 bg-gray-50 rounded-2xl border border-gray-100 text-center">
+                <p class="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">External Content</p>
+                <a href={url} target="_blank" class="text-blue-600 font-bold hover:underline break-all">{url}</a>
+            </div>
+        )}
+    </div>
+)}
