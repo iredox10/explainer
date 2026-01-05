@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Layout, FileText, Settings, PenTool, TrendingUp, Users, Clock, ArrowUpRight, Shield, Zap, Inbox, Loader2, BarChart3, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminSidebar from './AdminSidebar';

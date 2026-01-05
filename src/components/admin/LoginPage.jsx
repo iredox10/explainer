@@ -3,6 +3,11 @@ import { Shield, Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
 import { fetchSyncUser, loginWithEmail, acceptInvite, requestPasswordReset, completePasswordReset } from '../../lib/authStore';
 
 export default function LoginPage() {
+  // Defensive check for React context
+  if (!useState) {
+    console.error("[AUTH-CRITICAL] React useState is undefined. Dispatcher failure.");
+  }
+
   const [view, setView] = useState('login'); // 'login', 'forgot', 'reset', 'onboard', 'suspended'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

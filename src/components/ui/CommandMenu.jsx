@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, FileText, Hash, ArrowRight, Loader2, Plus, Users, Settings as SettingsIcon, LogOut } from 'lucide-react';
 import { storyService, categoryService } from '../../lib/services';

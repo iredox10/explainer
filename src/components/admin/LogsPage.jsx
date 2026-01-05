@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Shield, Clock, Terminal, Search, Filter, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import AdminSidebar from './AdminSidebar';
 import { getCurrentUser, ROLES } from '../../lib/authStore';

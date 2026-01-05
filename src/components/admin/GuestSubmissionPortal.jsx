@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Send, Upload, X, Loader2, CheckCircle, Image as ImageIcon, Type, Globe } from 'lucide-react';
 import { storyService } from '../../lib/services';
 

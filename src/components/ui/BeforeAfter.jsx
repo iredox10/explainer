@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Move } from 'lucide-react';
 
 const BeforeAfter = ({ leftImage, rightImage, leftLabel = "Before", rightLabel = "After", caption }) => {

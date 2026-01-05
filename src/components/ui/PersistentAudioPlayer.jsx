@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Play, Pause, RotateCcw, X, ChevronDown, Settings2, Headphones } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 

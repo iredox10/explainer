@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Inbox, CheckCircle, XCircle, Loader2, ExternalLink, Calendar, Mail, Clock, Search } from 'lucide-react';
 import AdminSidebar from './AdminSidebar';
 import { getCurrentUser } from '../../lib/authStore';

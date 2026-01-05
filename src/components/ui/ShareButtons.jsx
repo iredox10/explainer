@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Twitter, Facebook, Linkedin, Mail, Link as LinkIcon, Check, Share2 } from 'lucide-react';
 
 export default function ShareButtons({ title, url = null }) {

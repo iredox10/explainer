@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Shield, Trash2, Mail, X, Loader2, UserX, UserCheck, Settings, CheckSquare, Square } from 'lucide-react';
 import AdminSidebar from './AdminSidebar';
 import { getCurrentUser, ROLES } from '../../lib/authStore';

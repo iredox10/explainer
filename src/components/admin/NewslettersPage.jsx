@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Mail, Users, Send, Download, Search, Loader2, CheckCircle2, AlertCircle, Trash2 } from 'lucide-react';
 import { databases, DB_ID, COLLECTIONS } from '../../lib/appwrite';
 import { Query, ID } from 'appwrite';
