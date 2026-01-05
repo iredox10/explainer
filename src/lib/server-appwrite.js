@@ -74,11 +74,24 @@ export const serverAuthService = {
         if (!serverTeams || !serverUsers || !serverDatabases) throw new Error('Appwrite services not initialized');
         
         try {
+            let mId = membershipId;
+
+            // If membershipId is missing, try to find it
+            if (!mId) {
+                const memberships = await serverTeams.listMemberships(teamId);
+                const userMembership = memberships.memberships.find(m => m.userId === userId && m.confirm === false);
+                if (userMembership) {
+                    mId = userMembership.$id;
+                } else {
+                    throw new Error("Could not locate a pending membership for this user.");
+                }
+            }
+
             // 1. Accept the membership
-            await serverTeams.updateMembershipStatus(teamId, membershipId, userId, secret);
+            await serverTeams.updateMembershipStatus(teamId, mId, userId, secret);
             
             // 2. Fetch membership to get assigned roles (sections)
-            const membership = await serverTeams.getMembership(teamId, membershipId);
+            const membership = await serverTeams.getMembership(teamId, mId);
             const assignedCategorySlugs = membership.roles
                 .filter(r => r.startsWith('s_'))
                 .map(r => r.replace('s_', ''));

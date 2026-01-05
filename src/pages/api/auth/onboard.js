@@ -5,9 +5,9 @@ export const POST = async ({ request }) => {
         const body = await request.json();
         const { userId, teamId, membershipId, secret, password } = body;
 
-        if (!userId || !teamId || !membershipId || !secret || !password) {
+        if (!userId || !teamId || !secret || !password) {
             return new Response(JSON.stringify({
-                error: "Missing required fields"
+                error: "Missing required fields (userId, teamId, secret, or password)"
             }), { status: 400 });
         }
 
