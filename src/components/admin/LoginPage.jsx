@@ -19,8 +19,8 @@ export default function LoginPage() {
     const p = new URLSearchParams(window.location.search);
     const userId = p.get('userId');
     const secret = p.get('secret');
-    const teamId = p.get('teamId');
-    const membershipId = p.get('membershipId');
+    const teamId = p.get('teamId') || p.get('teamID');
+    const membershipId = p.get('membershipId') || p.get('membershipID');
 
     setParams({ userId, secret, teamId, membershipId });
 
@@ -29,15 +29,14 @@ export default function LoginPage() {
       return;
     }
 
-    if (membershipId && userId && secret && teamId) {
-      // New flow: Show password set screen instead of auto-accepting with no password
-      setView('onboard');
-      return;
-    }
-
-    // Password Reset Detection (userId + secret but NO teamId)
-    if (userId && secret && !teamId) {
-      setView('reset');
+    if (userId && secret) {
+      if (teamId) {
+        console.log("[AUTH] Invitation detected. Mode: Onboard");
+        setView('onboard');
+      } else {
+        console.log("[AUTH] Recovery detected. Mode: Reset");
+        setView('reset');
+      }
       return;
     }
 
