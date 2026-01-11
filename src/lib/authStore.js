@@ -18,6 +18,9 @@ export const fetchSyncUser = async () => {
 
         // 1. Fetch user's teams to verify membership
         const userTeams = await teams.list();
+        console.log("[DEBUG] Configured Team ID:", TEAM_ID);
+        console.log("[DEBUG] User's Teams:", userTeams.teams);
+        
         const editorialTeam = userTeams.teams.find(t => t.$id === TEAM_ID);
 
         if (!editorialTeam) {

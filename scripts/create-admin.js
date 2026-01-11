@@ -15,9 +15,9 @@ const databases = new Databases(client);
 const DB_ID = process.env.PUBLIC_APPWRITE_DATABASE_ID || 'vox_cms';
 
 // Configuration for the Superadmin
-const ADMIN_NAME = 'Super Admin';
-const ADMIN_EMAIL = 'idreesadam200@gmail.com'; // Change this
-const ADMIN_PASSWORD = 'password123';   // Change this
+const ADMIN_NAME = process.env.ADMIN_NAME || 'Super Admin';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'idreesadam200@gmail.com'; 
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'password123';
 const TEAM_NAME = 'Editorial Staff';
 
 async function createSuperAdmin() {
@@ -81,6 +81,8 @@ async function createSuperAdmin() {
         const profileId = ID.unique();
         await databases.createDocument(DB_ID, 'profiles', profileId, {
             userId: userId,
+            email: ADMIN_EMAIL,
+            name: ADMIN_NAME,
             role: 'superadmin',
             status: 'active'
         });

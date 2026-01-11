@@ -9,6 +9,7 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/check": "^0.9.6",
     "@astrojs/netlify": "^6.6.3",
     "@astrojs/react": "^4.4.2",
     "@tailwindcss/vite": "^4.1.17",
@@ -24,6 +25,7 @@
     "react-scrollama": "^2.4.2",
     "react-simple-maps": "^3.0.0",
     "tailwindcss": "^4.1.17",
-    "topojson-client": "^3.1.0"
+    "topojson-client": "^3.1.0",
+    "typescript": "^5.9.3"
   }
 }
