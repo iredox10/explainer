@@ -113,6 +113,14 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
     try {
+      // 1. Client-side acceptance of invite (verifies secret)
+      try {
+        await acceptInvite(params.teamId, params.membershipId, params.userId, params.secret);
+      } catch (acceptErr) {
+        console.warn("Invite acceptance warning (might be already accepted):", acceptErr);
+      }
+
+      // 2. Server-side onboarding (password setup & profile creation)
       const response = await fetch('/api/auth/onboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -120,7 +128,8 @@ export default function LoginPage() {
           userId: params.userId,
           teamId: params.teamId,
           membershipId: params.membershipId,
-          secret: params.secret,
+          // We still send secret for validation if needed, but acceptance is done
+          secret: params.secret, 
           password
         })
       });

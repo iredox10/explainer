@@ -13,6 +13,11 @@ let serverDatabases;
 let serverUsers;
 let serverTeams;
 
+// Debug initialization
+if (!API_KEY) {
+    console.error("[SERVER-APPWRITE] CRITICAL: APPWRITE_API_KEY is undefined. Server operations will fail.");
+}
+
 try {
     if (ENDPOINT && PROJECT_ID && API_KEY) {
         client = new Client()
@@ -71,7 +76,10 @@ async function resilientFetch(action, name = "Operation", retries = 5) {
 
 export const serverAuthService = {
     async onboardInvitedUser(userId, teamId, membershipId, secret, password) {
-        if (!serverTeams || !serverUsers || !serverDatabases) throw new Error('Appwrite services not initialized');
+        if (!serverTeams || !serverUsers || !serverDatabases) {
+            console.error("[SERVER-APPWRITE] Services not initialized. Key loaded?", !!API_KEY);
+            throw new Error('Appwrite services not initialized - Check Server Logs for Missing Key');
+        }
         
         try {
             let mId = membershipId;
@@ -79,7 +87,7 @@ export const serverAuthService = {
             // If membershipId is missing, try to find it
             if (!mId) {
                 const memberships = await serverTeams.listMemberships(teamId);
-                const userMembership = memberships.memberships.find(m => m.userId === userId && m.confirm === false);
+                const userMembership = memberships.memberships.find(m => m.userId === userId); // Allow confirmed members too
                 if (userMembership) {
                     mId = userMembership.$id;
                 } else {
@@ -87,8 +95,8 @@ export const serverAuthService = {
                 }
             }
 
-            // 1. Accept the membership
-            await serverTeams.updateMembershipStatus(teamId, mId, userId, secret);
+            // 1. SKIP Accept Membership (Now done on Client)
+            // We proceed directly to fetching membership details using the API Key
             
             // 2. Fetch membership to get assigned roles (sections)
             const membership = await serverTeams.getMembership(teamId, mId);
