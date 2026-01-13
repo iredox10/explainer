@@ -20,16 +20,17 @@ const stories = defineCollection({
       z.union([
         z.object({ type: z.literal('heading'), text: z.string() }),
         z.object({ type: z.literal('p'), text: z.string() }),
-        z.object({ type: z.literal('quote'), text: z.string(), author: z.string().optional() }),
-        z.object({ type: z.literal('callout'), title: z.string(), text: z.string() }),
-        z.object({ type: z.literal('image'), url: z.string(), caption: z.string().optional() }),
+        z.object({ type: z.literal('quote'), text: z.string(), author: z.string().optional(), layout: z.enum(['standard', 'full-width']).optional() }),
+        z.object({ type: z.literal('callout'), title: z.string(), text: z.string(), layout: z.enum(['standard', 'full-width']).optional() }),
+        z.object({ type: z.literal('image'), url: z.string(), caption: z.string().optional(), layout: z.enum(['standard', 'full-width']).optional() }),
         z.object({ 
             type: z.literal('beforeAfter'), 
             leftImage: z.string(), 
             rightImage: z.string(), 
             leftLabel: z.string().optional(), 
             rightLabel: z.string().optional(), 
-            caption: z.string().optional() 
+            caption: z.string().optional(),
+            layout: z.enum(['standard', 'full-width']).optional()
         }),
       ])
     ).optional(),

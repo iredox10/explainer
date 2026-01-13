@@ -1,5 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Type, X, AlertCircle, Loader2, Upload, Send, CheckSquare, Eye, Clock, History, Search, ChevronRight, ExternalLink, BookOpen, Zap, Settings2 } from 'lucide-react';
+import { Reorder } from 'framer-motion';
+import BlockWrapper from './BlockWrapper';
+import MapConfigurator from './editors/MapConfigurator';
+import ChartConfigurator from './editors/ChartConfigurator';
 import { getCurrentUser, ROLES } from '../../lib/authStore';
 import { storyService, categoryService } from '../../lib/services';
 
@@ -292,183 +296,22 @@ export default function StoryEditor({ storyId }) {
                             </header>
 
                             <div className="space-y-8">
-                                {content.map((block) => (
-                                    <div key={block.id} className="relative group min-h-[50px]">
-                                        {block.type === 'beforeAfter' && (
-                                            <div className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100 space-y-6">
-                                                <div className="flex items-center justify-between mb-4">
-                                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Visual Comparison Protocol</h4>
-                                                    <div className="flex gap-2">
-                                                        <input
-                                                            className="bg-white border border-gray-100 p-2 rounded-lg text-[9px] font-black uppercase w-20 text-center"
-                                                            value={block.leftLabel}
-                                                            placeholder="Left"
-                                                            onChange={(e) => updateContent(content.map(b => b.id === block.id ? { ...b, leftLabel: e.target.value } : b))}
-                                                        />
-                                                        <input
-                                                            className="bg-white border border-gray-100 p-2 rounded-lg text-[9px] font-black uppercase w-20 text-center"
-                                                            value={block.rightLabel}
-                                                            placeholder="Right"
-                                                            onChange={(e) => updateContent(content.map(b => b.id === block.id ? { ...b, rightLabel: e.target.value } : b))}
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="space-y-3">
-                                                        <div className="aspect-[4/3] bg-white rounded-2xl border-2 border-dashed border-gray-100 flex items-center justify-center overflow-hidden relative group/item">
-                                                            {block.leftImage ? (
-                                                                <img src={block.leftImage} className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                <Upload className="w-6 h-6 text-gray-200" />
-                                                            )}
-                                                            <button
-                                                                onClick={() => {
-                                                                    if (isLocked) return;
-                                                                    window._currentUploadTarget = `${block.id}_left`;
-                                                                    fileInputRef.current?.click();
-                                                                }}
-                                                                className="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-black uppercase tracking-widest"
-                                                            >
-                                                                {uploadingField === `${block.id}_left` ? <Loader2 className="animate-spin" /> : 'Choose Primary'}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <div className="space-y-3">
-                                                        <div className="aspect-[4/3] bg-white rounded-2xl border-2 border-dashed border-gray-100 flex items-center justify-center overflow-hidden relative group/item">
-                                                            {block.rightImage ? (
-                                                                <img src={block.rightImage} className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                <Upload className="w-6 h-6 text-gray-200" />
-                                                            )}
-                                                            <button
-                                                                onClick={() => {
-                                                                    if (isLocked) return;
-                                                                    window._currentUploadTarget = `${block.id}_right`;
-                                                                    fileInputRef.current?.click();
-                                                                }}
-                                                                className="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-black uppercase tracking-widest"
-                                                            >
-                                                                {uploadingField === `${block.id}_right` ? <Loader2 className="animate-spin" /> : 'Choose Secondary'}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <input
-                                                    className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-xs font-medium text-gray-500 italic"
-                                                    placeholder="Provide a caption for the comparison..."
-                                                    value={block.caption}
-                                                    onChange={(e) => updateContent(content.map(b => b.id === block.id ? { ...b, caption: e.target.value } : b))}
-                                                />
-                                            </div>
-                                        )}
-                                        {block.type === 'p' && (
-                                            <textarea
-                                                className="w-full text-xl font-serif leading-relaxed outline-none resize-none border-none placeholder:text-gray-400 bg-transparent"
-                                                placeholder="Start writing..."
-                                                rows="1"
-                                                style={{ height: 'auto', minHeight: '1em' }}
-                                                value={block.text}
-                                                onChange={(e) => {
-                                                    e.target.style.height = 'auto';
-                                                    e.target.style.height = e.target.scrollHeight + 'px';
-                                                    const updated = content.map(b => b.id === block.id ? { ...b, text: e.target.value } : b);
-                                                    updateContent(updated);
-                                                }}
-                                                disabled={isLocked}
-                                            />
-                                        )}
-                                        {block.type === 'heading' && (
-                                            <input
-                                                className="w-full text-4xl font-black outline-none border-none placeholder:text-gray-100 tracking-tighter bg-transparent"
-                                                placeholder="Section Subheading..."
-                                                value={block.text}
-                                                onChange={(e) => {
-                                                    const updated = content.map(b => b.id === block.id ? { ...b, text: e.target.value } : b);
-                                                    updateContent(updated);
-                                                }}
-                                                disabled={isLocked}
-                                            />
-                                        )}
-                                        {block.type === 'quote' && (
-                                            <div className="pl-6 border-l-4 border-[#FAFF00] space-y-2 py-2">
-                                                <textarea
-                                                    className="w-full text-2xl font-serif italic font-bold outline-none resize-none border-none placeholder:text-gray-200 bg-transparent"
-                                                    placeholder="The striking quote..."
-                                                    rows="1"
-                                                    value={block.text}
-                                                    onChange={(e) => {
-                                                        const updated = content.map(b => b.id === block.id ? { ...b, text: e.target.value } : b);
-                                                        updateContent(updated);
-                                                    }}
-                                                    disabled={isLocked}
-                                                />
-                                                <input
-                                                    className="w-full text-xs font-black uppercase tracking-widest outline-none border-none text-gray-400 bg-transparent"
-                                                    placeholder="— Source Attribution"
-                                                    value={block.author}
-                                                    onChange={(e) => {
-                                                        const updated = content.map(b => b.id === block.id ? { ...b, author: e.target.value } : b);
-                                                        updateContent(updated);
-                                                    }}
-                                                    disabled={isLocked}
-                                                />
-                                            </div>
-                                        )}
-                                        {block.type === 'callout' && (
-                                            <div className="bg-gray-50 p-8 rounded-3xl border border-gray-100 space-y-4">
-                                                <input
-                                                    className="w-full text-[10px] font-black uppercase tracking-[0.2em] outline-none border-none text-gray-400 bg-transparent"
-                                                    placeholder="Callout Title (e.g. CONTEXT)"
-                                                    value={block.title}
-                                                    onChange={(e) => {
-                                                        const updated = content.map(b => b.id === block.id ? { ...b, title: e.target.value } : b);
-                                                        updateContent(updated);
-                                                    }}
-                                                    disabled={isLocked}
-                                                />
-                                                <textarea
-                                                    className="w-full text-lg font-bold outline-none resize-none border-none placeholder:text-gray-200 bg-transparent"
-                                                    placeholder="Factual highlight or insight..."
-                                                    rows="1"
-                                                    value={block.text}
-                                                    onChange={(e) => {
-                                                        const updated = content.map(b => b.id === block.id ? { ...b, text: e.target.value } : b);
-                                                        updateContent(updated);
-                                                    }}
-                                                    disabled={isLocked}
-                                                />
-                                            </div>
-                                        )}
-                                        {block.type === 'image' && (
-                                            <div className="space-y-4">
-                                                {block.url ? (
-                                                    <div className="relative group/img aspect-video rounded-3xl overflow-hidden bg-gray-50 border border-gray-100">
-                                                        <img src={block.url} className="w-full h-full object-cover" />
-                                                        {!isLocked && (
-                                                            <button onClick={() => updateContent(content.map(b => b.id === block.id ? { ...b, url: '' } : b))} className="absolute top-4 right-4 bg-black/50 text-white p-3 rounded-full opacity-0 group-hover/img:opacity-100 transition-opacity">
-                                                                <X className="w-4 h-4" />
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => !isLocked && fileInputRef.current?.click()}
-                                                        className="w-full aspect-video rounded-3xl border-2 border-dashed border-gray-100 flex flex-col items-center justify-center gap-4 text-gray-300 hover:border-black hover:text-black transition-all"
-                                                    >
-                                                        {uploadingField === block.id ? <Loader2 className="animate-spin" /> : <Upload className="w-8 h-8" />}
-                                                        <span className="text-xs font-black uppercase tracking-widest">Upload Visual Content</span>
-                                                    </button>
-                                                )}
-                                            </div>
-                                        )}
-                                        {!isLocked && (
-                                            <button onClick={() => updateContent(content.filter(b => b.id !== block.id))} className="absolute -left-12 top-0 p-2 text-gray-100 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
+                                <Reorder.Group axis="y" values={content} onReorder={updateContent} className="space-y-8">
+                                    {content.map((block) => (
+                                        <BlockWrapper
+                                            key={block.id}
+                                            block={block}
+                                            onUpdate={(updatedBlock) => updateContent(content.map(b => b.id === block.id ? updatedBlock : b))}
+                                            onDelete={() => updateContent(content.filter(b => b.id !== block.id))}
+                                            isLocked={isLocked}
+                                            uploadingField={uploadingField}
+                                            onTriggerUpload={(targetId) => {
+                                                window._currentUploadTarget = targetId;
+                                                fileInputRef.current?.click();
+                                            }}
+                                        />
+                                    ))}
+                                </Reorder.Group>
 
                                 {story.layout === 'scrolly' && (
                                     <div className="mt-20 p-12 bg-black text-white rounded-[3rem] space-y-12">
@@ -512,131 +355,49 @@ export default function StoryEditor({ storyId }) {
                                                                 <option value="text">Narrative Break (Full Width)</option>
                                                             </select>
                                                             {step.type === 'map' && (
-                                                                <div className="grid grid-cols-2 gap-2">
-                                                                    <input
-                                                                        className="bg-black border border-white/20 text-white p-3 rounded-lg w-full text-xs font-mono"
-                                                                        placeholder="Center (Lon, Lat)"
-                                                                        value={step.center ? step.center.join(',') : ''}
-                                                                        onChange={(e) => {
-                                                                            const s = JSON.parse(story.scrollySections);
-                                                                            s[idx].center = e.target.value.split(',').map(Number);
-                                                                            handleChange('scrollySections', JSON.stringify(s));
-                                                                        }}
-                                                                    />
-                                                                    <input
-                                                                        className="bg-black border border-white/20 text-white p-3 rounded-lg w-full text-xs font-mono"
-                                                                        placeholder="Zoom (e.g. 8)"
-                                                                        value={step.zoom || ''}
-                                                                        onChange={(e) => {
-                                                                            const s = JSON.parse(story.scrollySections);
-                                                                            s[idx].zoom = Number(e.target.value);
-                                                                            handleChange('scrollySections', JSON.stringify(s));
-                                                                        }}
-                                                                    />
-                                                                </div>
+                                                                <MapConfigurator
+                                                                    value={step}
+                                                                    onChange={(newConfig) => {
+                                                                        const s = JSON.parse(story.scrollySections);
+                                                                        s[idx] = { ...s[idx], ...newConfig };
+                                                                        handleChange('scrollySections', JSON.stringify(s));
+                                                                    }}
+                                                                />
                                                             )}
                                                             {step.type === 'chart' && (
-                                                                <>
-                                                                    <div className="grid grid-cols-2 gap-2">
-                                                                        <select
-                                                                            className="bg-black border border-white/20 text-white p-3 rounded-lg w-full text-xs font-black uppercase tracking-widest"
-                                                                            value={step.chartType || 'line'}
-                                                                            onChange={(e) => {
-                                                                                const s = JSON.parse(story.scrollySections);
-                                                                                s[idx].chartType = e.target.value;
-                                                                                handleChange('scrollySections', JSON.stringify(s));
-                                                                            }}
-                                                                        >
-                                                                            <option value="line">Line Graph</option>
-                                                                            <option value="bar">Bar Chart</option>
-                                                                            <option value="pie">Pie Chart</option>
-                                                                        </select>
-                                                                        <input
-                                                                            className="bg-black border border-white/20 text-white p-3 rounded-lg w-full text-xs font-mono"
-                                                                            placeholder="Chart Data (e.g. 10,20,35,50)"
-                                                                            value={step.chartData ? step.chartData.join(',') : ''}
-                                                                            onChange={(e) => {
-                                                                                const s = JSON.parse(story.scrollySections);
-                                                                                s[idx].chartData = e.target.value.split(',').map(Number);
-                                                                                handleChange('scrollySections', JSON.stringify(s));
-                                                                            }}
-                                                                        />
-                                                                    </div>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <div
-                                                                            className="w-10 h-10 rounded-lg border border-white/20 cursor-pointer overflow-hidden shrink-0"
-                                                                            style={{ backgroundColor: step.accentColor || '#FAFF00' }}
-                                                                        >
-                                                                            <input
-                                                                                type="color"
-                                                                                className="opacity-0 w-full h-full cursor-pointer"
-                                                                                value={step.accentColor || '#FAFF00'}
-                                                                                onChange={(e) => {
-                                                                                    const s = JSON.parse(story.scrollySections);
-                                                                                    s[idx].accentColor = e.target.value;
-                                                                                    handleChange('scrollySections', JSON.stringify(s));
-                                                                                }}
-                                                                            />
-                                                                        </div>
-                                                                        <input
-                                                                            className="bg-black border border-white/20 text-white p-3 rounded-lg w-full text-xs font-mono"
-                                                                            placeholder="#FAFF00"
-                                                                            value={step.accentColor || ''}
-                                                                            onChange={(e) => {
-                                                                                const s = JSON.parse(story.scrollySections);
-                                                                                s[idx].accentColor = e.target.value;
-                                                                                handleChange('scrollySections', JSON.stringify(s));
-                                                                            }}
-                                                                        />
-                                                                    </div>
-
-                                                                    <div className="space-y-3 pt-4 border-t border-white/5">
-                                                                        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#FAFF00]">Segmentation Protocol</p>
-                                                                        <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
-                                                                            {(step.chartData || []).map((val, dIdx) => (
-                                                                                <div key={dIdx} className="flex items-center gap-2 p-2 bg-white/5 rounded-lg border border-white/10 group/seg">
-                                                                                    <div
-                                                                                        className="w-6 h-6 rounded border border-white/20 cursor-pointer overflow-hidden shrink-0"
-                                                                                        style={{ backgroundColor: (step.chartColors && step.chartColors[dIdx]) || step.accentColor || '#FAFF00' }}
-                                                                                    >
-                                                                                        <input
-                                                                                            type="color"
-                                                                                            className="opacity-0 w-full h-full cursor-pointer"
-                                                                                            value={(step.chartColors && step.chartColors[dIdx]) || step.accentColor || '#FAFF00'}
-                                                                                            onChange={(e) => {
-                                                                                                const s = JSON.parse(story.scrollySections);
-                                                                                                if (!s[idx].chartColors) s[idx].chartColors = [];
-                                                                                                s[idx].chartColors[dIdx] = e.target.value;
-                                                                                                handleChange('scrollySections', JSON.stringify(s));
-                                                                                            }}
-                                                                                        />
-                                                                                    </div>
-                                                                                    <input
-                                                                                        className="bg-transparent border-none text-white p-1 rounded w-full text-[10px] font-bold focus:ring-0 placeholder:text-gray-600"
-                                                                                        placeholder={`Point ${dIdx + 1} Label`}
-                                                                                        value={(step.chartLabels && step.chartLabels[dIdx]) || ''}
-                                                                                        onChange={(e) => {
-                                                                                            const s = JSON.parse(story.scrollySections);
-                                                                                            if (!s[idx].chartLabels) s[idx].chartLabels = [];
-                                                                                            s[idx].chartLabels[dIdx] = e.target.value;
-                                                                                            handleChange('scrollySections', JSON.stringify(s));
-                                                                                        }}
-                                                                                    />
-                                                                                    <span className="text-[10px] font-mono text-gray-500 bg-black/50 px-2 py-1 rounded shrink-0">{val}</span>
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    </div>
-                                                                </>
+                                                                <ChartConfigurator
+                                                                    value={{
+                                                                        type: step.chartType || 'line',
+                                                                        title: step.label || '',
+                                                                        accentColor: step.accentColor || '#FAFF00',
+                                                                        data: (step.chartData || []).map((val, i) => ({
+                                                                            value: val,
+                                                                            label: (step.chartLabels || [])[i] || '',
+                                                                            color: (step.chartColors || [])[i] || step.accentColor || '#FAFF00'
+                                                                        }))
+                                                                    }}
+                                                                    onChange={(newConfig) => {
+                                                                        const s = JSON.parse(story.scrollySections);
+                                                                        s[idx] = {
+                                                                            ...s[idx],
+                                                                            chartType: newConfig.type,
+                                                                            label: newConfig.title,
+                                                                            accentColor: newConfig.accentColor,
+                                                                            chartData: newConfig.data.map(d => Number(d.value)),
+                                                                            chartLabels: newConfig.data.map(d => d.label),
+                                                                            chartColors: newConfig.data.map(d => d.color)
+                                                                        };
+                                                                        handleChange('scrollySections', JSON.stringify(s));
+                                                                    }}
+                                                                />
                                                             )}
-                                                            {step.type !== 'text' && (
+                                                            {step.type !== 'text' && step.type !== 'map' && step.type !== 'chart' && (
                                                                 <input
                                                                     className="bg-black border border-white/20 text-white p-3 rounded-lg w-full text-xs"
-                                                                    placeholder={step.type === 'map' ? "Highlight ID (e.g. nigeria)" : "Label/Source"}
-                                                                    value={step.highlight || step.label}
+                                                                    placeholder="Label/Source"
+                                                                    value={step.label}
                                                                     onChange={(e) => {
                                                                         const s = JSON.parse(story.scrollySections);
-                                                                        if (step.type === 'map') s[idx].highlight = e.target.value;
                                                                         s[idx].label = e.target.value;
                                                                         handleChange('scrollySections', JSON.stringify(s));
                                                                     }}
