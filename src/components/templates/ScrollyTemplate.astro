@@ -2,13 +2,12 @@
 import MainLayout from "../../layouts/MainLayout.astro";
 import VoxNav from "../../components/ui/VoxNav.astro";
 import HeroLoop from "../../components/HeroLoop.astro";
-import Highlighter from "../../components/Highlighter.jsx";
 import ScrollyIsland from "../../components/ScrollyIsland.jsx";
 import ProgressBar from "../../components/ui/ProgressBar.jsx";
-
+import BeforeAfter from "../../components/ui/BeforeAfter.jsx";
 import ShareButtons from "../../components/ui/ShareButtons.jsx";
 import PersistentAudioPlayer from "../../components/ui/PersistentAudioPlayer.jsx";
-import { Bookmark, Clock, Calendar } from "lucide-react";
+import { Bookmark } from "lucide-react";
 
 const { story } = Astro.props;
 
@@ -25,7 +24,29 @@ const parseJSON = (data: any, fallback = []) => {
 };
 
 const blocks = parseJSON(story.content);
-const steps = parseJSON(story.scrollySections);
+
+// Pre-process blocks to group standard content vs scrolly content
+const contentGroups = [];
+let currentStandardBlocks: any[] = [];
+
+if (Array.isArray(blocks)) {
+  blocks.forEach((block: any) => {
+    if (block.type === "scrolly-group") {
+      if (currentStandardBlocks.length > 0) {
+        contentGroups.push({ type: "standard", blocks: currentStandardBlocks });
+        currentStandardBlocks = [];
+      }
+      contentGroups.push({ type: "scrolly", data: block });
+    } else {
+      currentStandardBlocks.push(block);
+    }
+  });
+}
+
+if (currentStandardBlocks.length > 0) {
+  contentGroups.push({ type: "standard", blocks: currentStandardBlocks });
+}
+
 const fullText = blocks
   .filter((b: any) => b.type === "p" || b.type === "heading")
   .map((b: any) => b.text)
@@ -33,7 +54,6 @@ const fullText = blocks
 
 import { serverStoryService } from "../../lib/server-appwrite.js";
 const readTime = serverStoryService.calculateReadTime(blocks);
-const displayReadTime = `${readTime} min read`;
 ---
 
 <MainLayout title={story.headline} showNav={false}>
@@ -45,90 +65,134 @@ const displayReadTime = `${readTime} min read`;
     videoUrl={story.videoUrl}
   />
 
-  <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12">
-    {/* Left Sidebar: Social Sticky */}
-    <aside class="hidden lg:block lg:col-span-2">
-      <div class="sticky top-32 flex flex-col gap-6 items-start py-12">
-        <span
-          class="text-[10px] font-black uppercase tracking-widest text-gray-400"
-          >Share</span
-        >
-        <ShareButtons client:load title={story.headline} />
-      </div>
-    </aside>
-
-    {/* Mobile Share Bar */}
-    <div class="lg:hidden flex items-center justify-between py-6 border-b border-gray-100">
-      <div class="flex items-center gap-3">
-        <span class="text-[9px] font-black uppercase tracking-widest text-gray-400">Share</span>
-        <ShareButtons client:load title={story.headline} />
-      </div>
-      <button class="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
-        <Bookmark className="w-3 h-3" />
-        Save
-      </button>
-    </div>
-
-    <section
-      class="lg:col-span-8 lg:col-start-3 py-12 md:py-24 text-xl md:text-2xl font-serif leading-relaxed text-gray-900"
-    >
-      {
-        blocks.map((block: any) => {
-          if (block.type === "p") {
-            return <p class="mb-8">{block.text}</p>;
-          }
-          if (block.type === "heading") {
-            return (
-              <h2 class="font-sans font-black text-3xl md:text-4xl text-black mt-16 mb-8 tracking-tight leading-none italic border-l-4 border-[#FAFF00] pl-6">
-                {block.text}
-              </h2>
-            );
-          }
-          if (block.type === "quote") {
-            return (
-              <blockquote class="my-12 border-l-4 border-gray-100 pl-8 font-serif text-3xl italic text-gray-500">
-                "{block.text}"
-                {block.author && (
-                  <cite class="block text-xs font-black uppercase tracking-widest text-gray-400 mt-4 not-italic">
-                    — {block.author}
-                  </cite>
-                )}
-              </blockquote>
-            );
-          }
-          if (block.type === "image") {
-            return (
-              <figure class="my-12">
-                <img
-                  src={block.url}
-                  class="w-full h-auto rounded-3xl shadow-xl"
-                />
-                {block.caption && (
-                  <figcaption class="mt-4 text-xs font-bold text-gray-400 text-center uppercase tracking-widest">
-                    {block.caption}
-                  </figcaption>
-                )}
-              </figure>
-            );
-          }
-          if (block.type === "callout") {
-            return (
-              <div class="bg-gray-50 p-8 rounded-3xl border border-gray-100 my-12">
-                <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-[#FAFF00] mb-3">
-                  {block.title || "Context"}
-                </h4>
-                <p class="text-xl font-bold text-black leading-tight">
-                  {block.text}
-                </p>
-              </div>
-            );
-          }
-          return null;
-        })
+  {
+    contentGroups.map((group: any, groupIndex: number) => {
+      if (group.type === "scrolly") {
+        return (
+          <ScrollyIsland
+            client:only="react"
+            steps={group.data.steps}
+            id={`scrolly-${groupIndex}`}
+          />
+        );
       }
-    </section>
-  </div>
 
-  <ScrollyIsland client:only="react" steps={steps} />
+      return (
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12">
+          {/* Left Sidebar: Social Sticky */}
+          <aside class="hidden lg:block lg:col-span-2">
+            <div class="sticky top-32 flex flex-col gap-6 items-start py-12">
+              <span class="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                Share
+              </span>
+              <ShareButtons client:load title={story.headline} />
+            </div>
+          </aside>
+
+          {/* Mobile Share Bar */}
+          <div class="lg:hidden flex items-center justify-between py-6 border-b border-gray-100">
+            <div class="flex items-center gap-3">
+              <span class="text-[9px] font-black uppercase tracking-widest text-gray-400">
+                Share
+              </span>
+              <ShareButtons client:load title={story.headline} />
+            </div>
+            <button class="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-gray-400 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+              <Bookmark className="w-3 h-3" />
+              Save
+            </button>
+          </div>
+
+          <section class="lg:col-span-8 lg:col-start-3 py-12 md:py-24 text-xl md:text-2xl font-serif leading-relaxed text-gray-900">
+            {group.blocks.map((block: any) => {
+              if (block.type === "p") {
+                return <p class="mb-8">{block.text}</p>;
+              }
+              if (block.type === "heading") {
+                return (
+                  <h2 class="font-sans font-black text-3xl md:text-4xl text-black mt-16 mb-8 tracking-tight leading-none italic border-l-4 border-[#FAFF00] pl-6">
+                    {block.text}
+                  </h2>
+                );
+              }
+              if (block.type === "quote") {
+                return (
+                  <blockquote class="my-12 border-l-4 border-gray-100 pl-8 font-serif text-3xl italic text-gray-500">
+                    "{block.text}"
+                    {block.author && (
+                      <cite class="block text-xs font-black uppercase tracking-widest text-gray-400 mt-4 not-italic">
+                        — {block.author}
+                      </cite>
+                    )}
+                  </blockquote>
+                );
+              }
+              if (block.type === "image") {
+                return (
+                  <figure class="my-12">
+                    <img
+                      src={block.url}
+                      class="w-full h-auto rounded-3xl shadow-xl"
+                    />
+                    {block.caption && (
+                      <figcaption class="mt-4 text-xs font-bold text-gray-400 text-center uppercase tracking-widest">
+                        {block.caption}
+                      </figcaption>
+                    )}
+                  </figure>
+                );
+              }
+              if (block.type === "video") {
+                return (
+                  <figure class="my-12">
+                    <video
+                      src={block.url}
+                      class="w-full h-auto rounded-3xl shadow-xl"
+                      controls={!block.autoplay}
+                      autoplay={block.autoplay}
+                      loop={block.loop}
+                      muted={block.muted}
+                      playsinline
+                    />
+                    {block.caption && (
+                      <figcaption class="mt-4 text-xs font-bold text-gray-400 text-center uppercase tracking-widest">
+                        {block.caption}
+                      </figcaption>
+                    )}
+                  </figure>
+                );
+              }
+              if (block.type === "beforeAfter") {
+                return (
+                  <BeforeAfter
+                    client:visible
+                    leftImage={block.leftImage}
+                    rightImage={block.rightImage}
+                    leftLabel={block.leftLabel}
+                    rightLabel={block.rightLabel}
+                    caption={block.caption}
+                  />
+                );
+              }
+              if (block.type === "callout") {
+                return (
+                  <div class="bg-gray-50 p-8 rounded-3xl border border-gray-100 my-12">
+                    <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-[#FAFF00] mb-3">
+                      {block.title || "Context"}
+                    </h4>
+                    <p class="text-xl font-bold text-black leading-tight">
+                      {block.text}
+                    </p>
+                  </div>
+                );
+              }
+              return null;
+            })}
+          </section>
+        </div>
+      );
+    })
+  }
+
   <PersistentAudioPlayer client:load text={fullText} title={story.headline} />
 </MainLayout>

@@ -7,7 +7,7 @@ import AnimatedMap from './ui/AnimatedMap';
 
 
 
-export default function ScrollyIsland({ steps, forcedStep = null }) {
+export default function ScrollyIsland({ steps, forcedStep = null, id = 'scrolly-island' }) {
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
     const onStepEnter = ({ data }) => {
@@ -16,12 +16,12 @@ export default function ScrollyIsland({ steps, forcedStep = null }) {
 
     useEffect(() => {
         if (forcedStep !== null && forcedStep !== undefined && steps[forcedStep]) {
-            const el = document.getElementById(`scrolly-step-${forcedStep}`);
+            const el = document.getElementById(`${id}-step-${forcedStep}`);
             if (el) {
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
-    }, [forcedStep]);
+    }, [forcedStep, id]);
 
     if (!steps || steps.length === 0) {
         return (
@@ -95,7 +95,7 @@ export default function ScrollyIsland({ steps, forcedStep = null }) {
                 <Scrollama onStepEnter={onStepEnter} offset={0.6}>
                     {steps.map((step, index) => (
                         <Step data={index} key={index}>
-                            <div id={`scrolly-step-${index}`} className={`flex items-center justify-center pointer-events-none px-6 ${step.type === 'text' ? 'min-h-screen py-32' : 'h-screen'}`}>
+                            <div id={`${id}-step-${index}`} className={`flex items-center justify-center pointer-events-none px-6 ${step.type === 'text' ? 'min-h-screen py-32' : 'h-screen'}`}>
                                 <motion.div
                                     initial={{ opacity: 0, y: 50 }}
                                     whileInView={{ opacity: 1, y: 0 }}

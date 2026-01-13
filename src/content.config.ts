@@ -32,6 +32,29 @@ const stories = defineCollection({
             caption: z.string().optional(),
             layout: z.enum(['standard', 'full-width']).optional()
         }),
+        z.object({
+            type: z.literal('video'),
+            url: z.string(),
+            caption: z.string().optional(),
+            autoplay: z.boolean().optional()
+        }),
+        z.object({
+            type: z.literal('scrolly-group'),
+            steps: z.array(
+              z.object({
+                type: z.enum(['map', 'chart', 'text']),
+                text: z.string(),
+                label: z.string().optional(),
+                viewBox: z.string().optional(),
+                highlight: z.union([z.string(), z.array(z.string())]).optional(),
+                chartData: z.array(z.number()).optional(),
+                accentColor: z.string().optional(),
+                markers: z.array(z.object({ lat: z.number(), lon: z.number(), label: z.string(), icon: z.string() })).optional(),
+                overlayIcons: z.array(z.object({ icon: z.string(), label: z.string() })).optional(),
+                annotations: z.array(z.object({ x: z.number(), y: z.number(), text: z.string() })).optional()
+              })
+            )
+        }),
       ])
     ).optional(),
     
@@ -42,9 +65,12 @@ const stories = defineCollection({
         text: z.string(),
         label: z.string(),
         viewBox: z.string().optional(),
-        highlight: z.string().optional(),
+        highlight: z.union([z.string(), z.array(z.string())]).optional(),
         chartData: z.array(z.number()).optional(),
-        accentColor: z.string().optional()
+        accentColor: z.string().optional(),
+        markers: z.array(z.object({ lat: z.number(), lon: z.number(), label: z.string(), icon: z.string() })).optional(),
+        overlayIcons: z.array(z.object({ icon: z.string(), label: z.string() })).optional(),
+        annotations: z.array(z.object({ x: z.number(), y: z.number(), text: z.string() })).optional()
       })
     ).optional(),
 

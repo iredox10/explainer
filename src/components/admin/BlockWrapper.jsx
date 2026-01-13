@@ -1,17 +1,54 @@
 import { Reorder, useDragControls } from 'framer-motion';
-import { Trash2, Upload, Loader2, X, GripVertical, Maximize2, Minimize2 } from 'lucide-react';
+import { Trash2, Upload, Loader2, X, GripVertical, Maximize2, Minimize2, Video, Map as MapIcon, BarChart3, AlignLeft, Layers } from 'lucide-react';
+import MapConfigurator from './editors/MapConfigurator';
+import ChartConfigurator from './editors/ChartConfigurator';
 
-export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uploadingField, onTriggerUpload }) {
+export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uploadingField, onTriggerUpload, isActive, onActivate }) {
     const dragControls = useDragControls();
     
     const isLayoutBlock = ['image', 'beforeAfter', 'callout', 'quote'].includes(block.type);
     const isFullWidth = block.layout === 'full-width';
+
+    const isVideo = (url) => {
+        if (!url) return false;
+        const ext = url.split('.').pop().toLowerCase();
+        return ['mp4', 'webm', 'mov', 'ogg'].includes(ext);
+    };
 
     const toggleLayout = () => {
         onUpdate({ 
             ...block, 
             layout: isFullWidth ? 'standard' : 'full-width' 
         });
+    };
+
+    const addScrollyStep = (type) => {
+        const currentSteps = block.steps || [];
+        let newStep = { type, text: '' };
+        
+        if (type === 'map') {
+            newStep = { ...newStep, center: [20, 0], zoom: 1, highlight: [], label: 'New Location' };
+        } else if (type === 'chart') {
+            newStep = { ...newStep, chartType: 'line', label: 'New Chart', accentColor: '#FAFF00', chartData: [], chartLabels: [], chartColors: [] };
+        } else if (type === 'text') {
+            newStep = { ...newStep, label: 'Narrative Break' };
+        }
+
+        onUpdate({
+            ...block,
+            steps: [...currentSteps, newStep]
+        });
+    };
+
+    const updateScrollyStep = (index, updates) => {
+        const newSteps = [...(block.steps || [])];
+        newSteps[index] = { ...newSteps[index], ...updates };
+        onUpdate({ ...block, steps: newSteps });
+    };
+
+    const removeScrollyStep = (index) => {
+        const newSteps = (block.steps || []).filter((_, i) => i !== index);
+        onUpdate({ ...block, steps: newSteps });
     };
 
     const contentClass = (isLayoutBlock && !isFullWidth) ? "max-w-2xl mx-auto" : "";
@@ -21,7 +58,11 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
             value={block}
             dragListener={!isLocked}
             dragControls={dragControls}
-            className="relative group min-h-[50px]"
+            className={`relative group min-h-[50px] p-2 rounded-xl transition-all ${isActive ? 'ring-2 ring-[#FAFF00] bg-gray-50' : 'hover:bg-gray-50/50'}`}
+            onClick={(e) => {
+                e.stopPropagation();
+                onActivate();
+            }}
         >
             {/* Control Bar - Floating Top Right */}
             {!isLocked && (
@@ -75,6 +116,7 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                                 value={block.leftLabel}
                                 placeholder="Left"
                                 onChange={(e) => onUpdate({ ...block, leftLabel: e.target.value })}
+                                onFocus={onActivate}
                                 disabled={isLocked}
                             />
                             <input
@@ -82,6 +124,7 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                                 value={block.rightLabel}
                                 placeholder="Right"
                                 onChange={(e) => onUpdate({ ...block, rightLabel: e.target.value })}
+                                onFocus={onActivate}
                                 disabled={isLocked}
                             />
                         </div>
@@ -91,7 +134,11 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                         <div className="space-y-3">
                             <div className="aspect-[4/3] bg-white rounded-2xl border-2 border-dashed border-gray-100 flex items-center justify-center overflow-hidden relative group/item">
                                 {block.leftImage ? (
-                                    <img src={block.leftImage} className="w-full h-full object-cover" />
+                                    isVideo(block.leftImage) ? (
+                                        <video src={block.leftImage} className="w-full h-full object-cover" autoPlay muted loop />
+                                    ) : (
+                                        <img src={block.leftImage} className="w-full h-full object-cover" />
+                                    )
                                 ) : (
                                     <Upload className="w-6 h-6 text-gray-200" />
                                 )}
@@ -109,7 +156,11 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                         <div className="space-y-3">
                             <div className="aspect-[4/3] bg-white rounded-2xl border-2 border-dashed border-gray-100 flex items-center justify-center overflow-hidden relative group/item">
                                 {block.rightImage ? (
-                                    <img src={block.rightImage} className="w-full h-full object-cover" />
+                                    isVideo(block.rightImage) ? (
+                                        <video src={block.rightImage} className="w-full h-full object-cover" autoPlay muted loop />
+                                    ) : (
+                                        <img src={block.rightImage} className="w-full h-full object-cover" />
+                                    )
                                 ) : (
                                     <Upload className="w-6 h-6 text-gray-200" />
                                 )}
@@ -130,6 +181,7 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                         placeholder="Provide a caption for the comparison..."
                         value={block.caption}
                         onChange={(e) => onUpdate({ ...block, caption: e.target.value })}
+                        onFocus={onActivate}
                         disabled={isLocked}
                     />
                 </div>
@@ -146,6 +198,7 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                         e.target.style.height = e.target.scrollHeight + 'px';
                         onUpdate({ ...block, text: e.target.value });
                     }}
+                    onFocus={onActivate}
                     onInput={(e) => {
                          e.target.style.height = 'auto';
                          e.target.style.height = e.target.scrollHeight + 'px';
@@ -159,6 +212,7 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                     placeholder="Section Subheading..."
                     value={block.text}
                     onChange={(e) => onUpdate({ ...block, text: e.target.value })}
+                    onFocus={onActivate}
                     disabled={isLocked}
                 />
             )}
@@ -170,6 +224,7 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                         rows="1"
                         value={block.text}
                         onChange={(e) => onUpdate({ ...block, text: e.target.value })}
+                        onFocus={onActivate}
                         disabled={isLocked}
                     />
                     <input
@@ -177,6 +232,7 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                         placeholder="— Source Attribution"
                         value={block.author}
                         onChange={(e) => onUpdate({ ...block, author: e.target.value })}
+                        onFocus={onActivate}
                         disabled={isLocked}
                     />
                 </div>
@@ -188,6 +244,7 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                         placeholder="Callout Title (e.g. CONTEXT)"
                         value={block.title}
                         onChange={(e) => onUpdate({ ...block, title: e.target.value })}
+                        onFocus={onActivate}
                         disabled={isLocked}
                     />
                     <textarea
@@ -196,6 +253,7 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                         rows="1"
                         value={block.text}
                         onChange={(e) => onUpdate({ ...block, text: e.target.value })}
+                        onFocus={onActivate}
                         disabled={isLocked}
                     />
                 </div>
@@ -225,6 +283,128 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                             <span className="text-xs font-black uppercase tracking-widest">Upload Visual Content</span>
                         </button>
                     )}
+                </div>
+            )}
+            {block.type === 'video' && (
+                <div className="space-y-4">
+                    <div className="flex gap-2">
+                        <input
+                            className="flex-1 bg-white border border-gray-100 p-3 rounded-xl text-xs font-medium"
+                            placeholder="Video URL (Vimeo/YouTube/MP4)..."
+                            value={block.url}
+                            onChange={(e) => onUpdate({ ...block, url: e.target.value })}
+                            onFocus={onActivate}
+                            disabled={isLocked}
+                        />
+                        <button
+                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border ${block.autoplay ? 'bg-black text-white border-black' : 'bg-white text-gray-400 border-gray-100'}`}
+                            onClick={() => !isLocked && onUpdate({ ...block, autoplay: !block.autoplay })}
+                        >
+                            Autoplay
+                        </button>
+                    </div>
+                    {block.url && (
+                        <div className="aspect-video bg-black rounded-2xl overflow-hidden flex items-center justify-center relative border border-gray-100">
+                            <Video className="w-12 h-12 text-white/50" />
+                        </div>
+                    )}
+                    <input
+                        className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-xs font-medium text-gray-500 italic"
+                        placeholder="Video caption..."
+                        value={block.caption}
+                        onChange={(e) => onUpdate({ ...block, caption: e.target.value })}
+                        onFocus={onActivate}
+                        disabled={isLocked}
+                    />
+                </div>
+            )}
+            {block.type === 'scrolly-group' && (
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                        <div className="flex items-center gap-2">
+                            <Layers className="w-4 h-4 text-gray-400" />
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Scrollytelling Sequence</h4>
+                        </div>
+                        <div className="flex gap-2">
+                            <button onClick={() => !isLocked && addScrollyStep('map')} className="text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 bg-gray-100 hover:bg-black hover:text-white rounded-lg transition-colors flex items-center gap-1"><MapIcon className="w-3 h-3" /> Map</button>
+                            <button onClick={() => !isLocked && addScrollyStep('chart')} className="text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 bg-gray-100 hover:bg-black hover:text-white rounded-lg transition-colors flex items-center gap-1"><BarChart3 className="w-3 h-3" /> Chart</button>
+                            <button onClick={() => !isLocked && addScrollyStep('text')} className="text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 bg-gray-100 hover:bg-black hover:text-white rounded-lg transition-colors flex items-center gap-1"><AlignLeft className="w-3 h-3" /> Text</button>
+                        </div>
+                    </div>
+                    
+                    <div className="space-y-6">
+                        {(block.steps || []).map((step, idx) => (
+                            <div key={idx} className="bg-white border border-gray-100 p-6 rounded-2xl space-y-4 shadow-sm relative group/step">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-bold">{idx + 1}</div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{step.type} Step</span>
+                                    </div>
+                                    <button onClick={() => !isLocked && removeScrollyStep(idx)} className="text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover/step:opacity-100">
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-4">
+                                        {step.type === 'map' && (
+                                            <MapConfigurator
+                                                value={step}
+                                                onChange={(newConfig) => updateScrollyStep(idx, newConfig)}
+                                            />
+                                        )}
+                                        {step.type === 'chart' && (
+                                            <ChartConfigurator
+                                                value={{
+                                                    type: step.chartType || 'line',
+                                                    title: step.label || '',
+                                                    accentColor: step.accentColor || '#FAFF00',
+                                                    data: (step.chartData || []).map((val, i) => ({
+                                                        value: val,
+                                                        label: (step.chartLabels || [])[i] || '',
+                                                        color: (step.chartColors || [])[i] || step.accentColor || '#FAFF00'
+                                                    }))
+                                                }}
+                                                onChange={(newConfig) => {
+                                                    updateScrollyStep(idx, {
+                                                        ...step,
+                                                        chartType: newConfig.type,
+                                                        label: newConfig.title,
+                                                        accentColor: newConfig.accentColor,
+                                                        chartData: newConfig.data.map(d => Number(d.value)),
+                                                        chartLabels: newConfig.data.map(d => d.label),
+                                                        chartColors: newConfig.data.map(d => d.color)
+                                                    });
+                                                }}
+                                            />
+                                        )}
+                                        {step.type === 'text' && (
+                                            <input
+                                                className="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl text-xs font-bold"
+                                                placeholder="Section Label (Optional)"
+                                                value={step.label || ''}
+                                                onChange={(e) => updateScrollyStep(idx, { label: e.target.value })}
+                                                disabled={isLocked}
+                                            />
+                                        )}
+                                    </div>
+                                    <textarea
+                                        className="w-full bg-gray-50 border border-gray-100 p-4 rounded-xl text-xs h-full min-h-[150px] font-medium leading-relaxed"
+                                        placeholder="Narrative text for this step..."
+                                        value={step.text || ''}
+                                        onChange={(e) => updateScrollyStep(idx, { text: e.target.value })}
+                                        disabled={isLocked}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                        {(block.steps || []).length === 0 && (
+                            <div className="text-center py-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">Empty Sequence</p>
+                                <p className="text-xs text-gray-400 mt-1">Add a visual step to begin</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
             </div>

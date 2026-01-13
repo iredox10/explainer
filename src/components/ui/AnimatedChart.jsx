@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 
-export default function AnimatedChart({ type = 'line', data = [10, 20, 30], labels = [], colors = [], accentColor, label }) {
+export default function AnimatedChart({ type = 'line', data = [10, 20, 30], labels = [], colors = [], accentColor, label, annotations = [] }) {
     const maxVal = Math.max(...data, 1);
     const chartHeight = 200;
     const chartWidth = 300;
@@ -33,8 +33,25 @@ export default function AnimatedChart({ type = 'line', data = [10, 20, 30], labe
     };
 
     return (
-        <div className="flex h-full w-full flex-col justify-center p-4 md:p-8">
+        <div className="relative flex h-full w-full flex-col justify-center p-4 md:p-8">
             <h3 className="mb-4 text-center text-lg md:text-2xl font-bold text-black font-serif-display leading-tight">{label}</h3>
+
+            {/* Annotations Layer */}
+            {annotations.map((ann, i) => (
+                <motion.div
+                    key={i}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.5 + (i * 0.1), duration: 0.5 }}
+                    className="absolute z-40 px-3 py-1 bg-[#FAFF00] text-black text-xs font-bold shadow-md border border-black pointer-events-none transform -translate-x-1/2 -translate-y-1/2"
+                    style={{
+                        left: `${ann.x}%`,
+                        top: `${ann.y}%`,
+                    }}
+                >
+                    {ann.text}
+                </motion.div>
+            ))}
 
             <div className="w-full max-w-5xl flex-1 flex items-center justify-center min-h-0">
                 <svg

@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Type, X, AlertCircle, Loader2, Upload, Send, CheckSquare, Eye, Clock, History, Search, ChevronRight, ExternalLink, BookOpen, Zap, Settings2 } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Type, X, AlertCircle, Loader2, Upload, Send, CheckSquare, Eye, Clock, History, Search, ChevronRight, ExternalLink, BookOpen, Zap, Settings2, Video, Layers } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import BlockWrapper from './BlockWrapper';
-import MapConfigurator from './editors/MapConfigurator';
-import ChartConfigurator from './editors/ChartConfigurator';
 import { getCurrentUser, ROLES } from '../../lib/authStore';
 import { storyService, categoryService } from '../../lib/services';
 
@@ -17,6 +15,7 @@ export default function StoryEditor({ storyId }) {
     const [showMeta, setShowMeta] = useState(true);
     const [showGhostPreview, setShowGhostPreview] = useState(false);
     const [focusedStepIndex, setFocusedStepIndex] = useState(null);
+    const [activeBlockId, setActiveBlockId] = useState(null);
     const [categories, setCategories] = useState([]);
 
     const fileInputRef = useRef(null);
@@ -76,9 +75,7 @@ export default function StoryEditor({ storyId }) {
                 videoUrl: "",
                 isFeatured: false,
                 content: JSON.stringify([{ id: 1, type: "p", text: "" }]),
-                scrollySections: JSON.stringify([
-                    { type: 'map', center: [20, 0], zoom: 1, highlight: '', label: 'The African Continent', text: 'The story begins here.' }
-                ]),
+                scrollySections: JSON.stringify([]),
                 heroImage: "",
                 version_log: JSON.stringify([{ action: "Dispatch Created", user: currentUser.name, timestamp: new Date().toISOString() }])
             });
@@ -91,6 +88,22 @@ export default function StoryEditor({ storyId }) {
                     window.location.href = '/admin/stories';
                     return;
                 }
+                
+                // Migration: Move legacy scrollySections to a content block
+                const legacySections = typeof data.scrollySections === 'string' ? JSON.parse(data.scrollySections || '[]') : (data.scrollySections || []);
+                let content = typeof data.content === 'string' ? JSON.parse(data.content) : (data.content || []);
+                const hasScrollyGroup = content.some(b => b.type === 'scrolly-group');
+
+                if (legacySections.length > 0 && !hasScrollyGroup) {
+                    content.push({
+                        id: Date.now(),
+                        type: 'scrolly-group',
+                        steps: legacySections
+                    });
+                    data.content = JSON.stringify(content);
+                    data.scrollySections = '[]';
+                }
+
                 setStory(data);
             }
         }
@@ -116,6 +129,55 @@ export default function StoryEditor({ storyId }) {
     };
 
     const updateContent = (newContent) => { handleChange('content', JSON.stringify(newContent)); };
+
+    const handleInsertBlock = (type) => {
+        const newId = Date.now() + Math.random();
+        let newBlock = { id: newId, type };
+
+        switch (type) {
+            case 'p':
+                newBlock = { ...newBlock, text: '' };
+                break;
+            case 'heading':
+                newBlock = { ...newBlock, text: '' };
+                break;
+            case 'image':
+                newBlock = { ...newBlock, url: '' };
+                break;
+            case 'video':
+                newBlock = { ...newBlock, url: '', caption: '', autoplay: false };
+                break;
+            case 'quote':
+                newBlock = { ...newBlock, text: '', author: '' };
+                break;
+            case 'callout':
+                newBlock = { ...newBlock, title: 'Context', text: '' };
+                break;
+            case 'beforeAfter':
+                newBlock = { ...newBlock, leftImage: '', rightImage: '', leftLabel: 'Before', rightLabel: 'After', caption: '' };
+                break;
+            case 'scrolly-group':
+                newBlock = { 
+                    ...newBlock, 
+                    steps: [{ type: 'map', center: [20, 0], zoom: 1, highlight: [], label: 'New Sequence', text: '' }] 
+                };
+                break;
+            default:
+                break;
+        }
+
+        const currentContent = [...content];
+        const activeIndex = activeBlockId ? currentContent.findIndex(b => b.id === activeBlockId) : -1;
+
+        if (activeIndex !== -1) {
+            currentContent.splice(activeIndex + 1, 0, newBlock);
+        } else {
+            currentContent.push(newBlock);
+        }
+
+        updateContent(currentContent);
+        setActiveBlockId(newId);
+    };
 
     const handleFileUpload = async (e, target) => {
         const file = e.target.files[0];
@@ -301,6 +363,8 @@ export default function StoryEditor({ storyId }) {
                                         <BlockWrapper
                                             key={block.id}
                                             block={block}
+                                            isActive={activeBlockId === block.id}
+                                            onActivate={() => setActiveBlockId(block.id)}
                                             onUpdate={(updatedBlock) => updateContent(content.map(b => b.id === block.id ? updatedBlock : b))}
                                             onDelete={() => updateContent(content.filter(b => b.id !== block.id))}
                                             isLocked={isLocked}
@@ -313,141 +377,30 @@ export default function StoryEditor({ storyId }) {
                                     ))}
                                 </Reorder.Group>
 
-                                {story.layout === 'scrolly' && (
-                                    <div className="mt-20 p-12 bg-black text-white rounded-[3rem] space-y-12">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <h2 className="text-3xl font-black uppercase tracking-tighter text-[#FAFF00]">Scrollytelling Protocol</h2>
-                                                <p className="text-gray-400 text-sm font-bold uppercase tracking-widest mt-2">Sequential Visual Discovery</p>
-                                            </div>
-                                            <button
-                                                onClick={() => {
-                                                    const current = JSON.parse(story.scrollySections || '[]');
-                                                    handleChange('scrollySections', JSON.stringify([...current, { type: 'map', center: [20, 0], zoom: 1, highlight: '', label: 'New Step', text: 'Detail explanation here.' }]));
-                                                }}
-                                                className="bg-[#FAFF00] text-black px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform"
-                                            >
-                                                Add Step
-                                            </button>
-                                        </div>
-
-                                        <div className="space-y-6">
-                                        {JSON.parse(story.scrollySections || '[]').map((step, idx) => (
-                                            <div key={idx} 
-                                                onFocus={() => setFocusedStepIndex(idx)}
-                                                onClick={() => setFocusedStepIndex(idx)}
-                                                className={`bg-white/5 border p-6 rounded-2xl flex items-start gap-6 group transition-colors ${focusedStepIndex === idx ? 'border-[#FAFF00] bg-white/10' : 'border-white/10 hover:border-[#FAFF00]/50'}`}>
-                                                <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center font-black text-[#FAFF00] shrink-0">{idx + 1}</div>
-
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 w-full">
-                                                        <div className="space-y-4">
-                                                            <select
-                                                                className="bg-black border border-white/20 text-white p-3 rounded-lg w-full text-xs font-black uppercase tracking-widest"
-                                                                value={step.type}
-                                                                onChange={(e) => {
-                                                                    const s = JSON.parse(story.scrollySections);
-                                                                    s[idx].type = e.target.value;
-                                                                    handleChange('scrollySections', JSON.stringify(s));
-                                                                }}
-                                                            >
-                                                                <option value="map">Map Coordinate</option>
-                                                                <option value="chart">Data Visualization</option>
-                                                                <option value="text">Narrative Break (Full Width)</option>
-                                                            </select>
-                                                            {step.type === 'map' && (
-                                                                <MapConfigurator
-                                                                    value={step}
-                                                                    onChange={(newConfig) => {
-                                                                        const s = JSON.parse(story.scrollySections);
-                                                                        s[idx] = { ...s[idx], ...newConfig };
-                                                                        handleChange('scrollySections', JSON.stringify(s));
-                                                                    }}
-                                                                />
-                                                            )}
-                                                            {step.type === 'chart' && (
-                                                                <ChartConfigurator
-                                                                    value={{
-                                                                        type: step.chartType || 'line',
-                                                                        title: step.label || '',
-                                                                        accentColor: step.accentColor || '#FAFF00',
-                                                                        data: (step.chartData || []).map((val, i) => ({
-                                                                            value: val,
-                                                                            label: (step.chartLabels || [])[i] || '',
-                                                                            color: (step.chartColors || [])[i] || step.accentColor || '#FAFF00'
-                                                                        }))
-                                                                    }}
-                                                                    onChange={(newConfig) => {
-                                                                        const s = JSON.parse(story.scrollySections);
-                                                                        s[idx] = {
-                                                                            ...s[idx],
-                                                                            chartType: newConfig.type,
-                                                                            label: newConfig.title,
-                                                                            accentColor: newConfig.accentColor,
-                                                                            chartData: newConfig.data.map(d => Number(d.value)),
-                                                                            chartLabels: newConfig.data.map(d => d.label),
-                                                                            chartColors: newConfig.data.map(d => d.color)
-                                                                        };
-                                                                        handleChange('scrollySections', JSON.stringify(s));
-                                                                    }}
-                                                                />
-                                                            )}
-                                                            {step.type !== 'text' && step.type !== 'map' && step.type !== 'chart' && (
-                                                                <input
-                                                                    className="bg-black border border-white/20 text-white p-3 rounded-lg w-full text-xs"
-                                                                    placeholder="Label/Source"
-                                                                    value={step.label}
-                                                                    onChange={(e) => {
-                                                                        const s = JSON.parse(story.scrollySections);
-                                                                        s[idx].label = e.target.value;
-                                                                        handleChange('scrollySections', JSON.stringify(s));
-                                                                    }}
-                                                                />
-                                                            )}
-                                                        </div>
-                                                        <textarea
-                                                            className="bg-black border border-white/20 text-white p-3 rounded-lg w-full text-xs h-full"
-                                                            placeholder="Narrative text for this step..."
-                                                            value={step.text}
-                                                            onChange={(e) => {
-                                                                const s = JSON.parse(story.scrollySections);
-                                                                s[idx].text = e.target.value;
-                                                                handleChange('scrollySections', JSON.stringify(s));
-                                                            }}
-                                                        />
-                                                    </div>
-                                                    <button
-                                                        onClick={() => {
-                                                            const s = JSON.parse(story.scrollySections);
-                                                            handleChange('scrollySections', JSON.stringify(s.filter((_, i) => i !== idx)));
-                                                        }}
-                                                        className="opacity-0 group-hover:opacity-100 p-2 text-red-500 transition-opacity"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
                                 {!isLocked && (
                                     <div className="flex flex-wrap items-center gap-4 pt-12 border-t border-gray-50">
-                                        <button onClick={() => updateContent([...content, { id: Date.now(), type: 'p', text: '' }])} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
+                                        <button onClick={() => handleInsertBlock('scrolly-group')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
+                                            <Layers className="w-4 h-4" /> Scrolly Group
+                                        </button>
+                                        <button onClick={() => handleInsertBlock('p')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
                                             <Type className="w-4 h-4" /> Paragraph
                                         </button>
-                                        <button onClick={() => updateContent([...content, { id: Date.now(), type: 'heading', text: '' }])} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
+                                        <button onClick={() => handleInsertBlock('heading')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
                                             <ArrowLeft className="w-4 h-4 rotate-90" /> Heading
                                         </button>
-                                        <button onClick={() => updateContent([...content, { id: Date.now(), type: 'image', url: '' }])} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
+                                        <button onClick={() => handleInsertBlock('image')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
                                             <ImageIcon className="w-4 h-4" /> Image
                                         </button>
-                                        <button onClick={() => updateContent([...content, { id: Date.now(), type: 'quote', text: '', author: '' }])} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
+                                        <button onClick={() => handleInsertBlock('video')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
+                                            <Video className="w-4 h-4" /> Video
+                                        </button>
+                                        <button onClick={() => handleInsertBlock('quote')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
                                             <History className="w-4 h-4" /> Quote
                                         </button>
-                                        <button onClick={() => updateContent([...content, { id: Date.now(), type: 'callout', title: 'Context', text: '' }])} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
+                                        <button onClick={() => handleInsertBlock('callout')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
                                             <AlertCircle className="w-4 h-4" /> Callout
                                         </button>
-                                        <button onClick={() => updateContent([...content, { id: Date.now(), type: 'beforeAfter', leftImage: '', rightImage: '', leftLabel: 'Before', rightLabel: 'After', caption: '' }])} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
+                                        <button onClick={() => handleInsertBlock('beforeAfter')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
                                             <Plus className="w-4 h-4" /> Before/After
                                         </button>
                                     </div>
@@ -617,7 +570,7 @@ export default function StoryEditor({ storyId }) {
                         </section>
                     </div>
 
-                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
+                    <input ref={fileInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={(e) => {
                         const target = window._currentUploadTarget || 'hero';
                         handleFileUpload(e, target);
                     }} />

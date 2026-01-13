@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Plus, Trash2, BarChart2, PieChart, Activity } from 'lucide-react';
 import AnimatedChart from '../../ui/AnimatedChart';
 
@@ -17,10 +17,39 @@ export default function ChartConfigurator({ value, onChange }) {
 
     // Merge provided value with defaults to ensure structure exists
     const config = { ...defaultConfig, ...(value || {}) };
+    
+    // Ensure annotations exist
+    if (!config.annotations) config.annotations = [];
+
+    const [isAnnotating, setIsAnnotating] = useState(false);
 
     // Update helper
     const updateConfig = (updates) => {
         onChange({ ...config, ...updates });
+    };
+
+    const handleChartClick = (e) => {
+        if (!isAnnotating) return;
+        
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = parseFloat(((e.clientX - rect.left) / rect.width * 100).toFixed(2));
+        const y = parseFloat(((e.clientY - rect.top) / rect.height * 100).toFixed(2));
+        
+        updateConfig({
+            annotations: [...config.annotations, { x, y, text: 'New Label' }]
+        });
+        setIsAnnotating(false);
+    };
+
+    const updateAnnotation = (index, text) => {
+        const updated = [...config.annotations];
+        updated[index] = { ...updated[index], text };
+        updateConfig({ annotations: updated });
+    };
+
+    const removeAnnotation = (index) => {
+        const updated = config.annotations.filter((_, i) => i !== index);
+        updateConfig({ annotations: updated });
     };
 
     // Data row helpers
@@ -82,7 +111,17 @@ export default function ChartConfigurator({ value, onChange }) {
                 <div className="absolute top-4 right-4 z-10 bg-black/5 backdrop-blur px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-gray-500 border border-white/20">
                     Live Preview
                 </div>
-                <div className="h-[300px] w-full">
+                {isAnnotating && (
+                    <div className="absolute inset-0 z-50 cursor-crosshair bg-black/5 flex items-center justify-center pointer-events-none">
+                        <div className="bg-black text-white px-3 py-1 text-xs font-bold rounded shadow-lg animate-pulse">
+                            Click to place label
+                        </div>
+                    </div>
+                )}
+                <div 
+                    className={`h-[300px] w-full ${isAnnotating ? 'cursor-crosshair' : ''}`}
+                    onClick={handleChartClick}
+                >
                     {/* We wrap AnimatedChart to constrain its size as it takes full width/height */}
                     <AnimatedChart 
                         type={config.type}
@@ -91,6 +130,7 @@ export default function ChartConfigurator({ value, onChange }) {
                         colors={chartColors}
                         accentColor={config.accentColor}
                         label={config.title}
+                        annotations={config.annotations}
                     />
                 </div>
             </div>
@@ -129,6 +169,45 @@ export default function ChartConfigurator({ value, onChange }) {
                                 placeholder="#000000"
                             />
                         </div>
+                    </div>
+
+                    {/* Annotations Section */}
+                    <div className="space-y-2 border-t border-gray-100 pt-4">
+                         <div className="flex items-center justify-between">
+                            <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Annotations</label>
+                            <button
+                                onClick={() => setIsAnnotating(!isAnnotating)}
+                                className={`text-[9px] px-2 py-1 rounded border flex items-center gap-1 font-black uppercase tracking-widest transition-all ${isAnnotating ? 'bg-black text-white border-black' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                            >
+                                <Plus className="w-3 h-3" />
+                                Add Label
+                            </button>
+                        </div>
+
+                        {config.annotations.length > 0 ? (
+                            <div className="space-y-2">
+                                {config.annotations.map((ann, i) => (
+                                    <div key={i} className="flex items-center gap-2 bg-white border border-gray-200 p-2 rounded-lg text-sm shadow-sm">
+                                        <input
+                                            type="text"
+                                            value={ann.text}
+                                            onChange={(e) => updateAnnotation(i, e.target.value)}
+                                            className="flex-1 bg-transparent border-none p-0 text-xs font-bold focus:ring-0"
+                                        />
+                                        <button 
+                                            onClick={() => removeAnnotation(i)}
+                                            className="text-gray-300 hover:text-red-500 p-1"
+                                        >
+                                            <Trash2 className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-[9px] text-gray-400 italic text-center py-2">
+                                No annotations added.
+                            </div>
+                        )}
                     </div>
                 </div>
 

@@ -6,6 +6,28 @@ const BeforeAfter = ({ leftImage, rightImage, leftLabel = "Before", rightLabel =
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef(null);
 
+  const isVideo = (url) => {
+    if (!url) return false;
+    const ext = url.split('.').pop().toLowerCase();
+    return ['mp4', 'webm', 'mov', 'ogg'].includes(ext);
+  };
+
+  const renderMedia = (src, alt) => {
+    if (isVideo(src)) {
+      return (
+        <video 
+          src={src} 
+          className="w-full h-full object-cover" 
+          autoPlay 
+          muted 
+          loop 
+          playsInline 
+        />
+      );
+    }
+    return <img src={src} alt={alt} className="w-full h-full object-cover" />;
+  };
+
   const handleMove = (clientX) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
@@ -54,7 +76,7 @@ const BeforeAfter = ({ leftImage, rightImage, leftLabel = "Before", rightLabel =
         <div ref={containerRef} className="relative w-full aspect-[16/9] overflow-hidden select-none cursor-ew-resize border border-gray-200 shadow-sm">
             {/* Right Image (Bottom Layer) */}
             <div className="absolute inset-0 w-full h-full">
-                <img src={rightImage} alt="After" className="w-full h-full object-cover" />
+                {renderMedia(rightImage, "After")}
                 <div className="absolute top-2 right-2 px-2 py-1 bg-black/50 text-white text-[10px] font-bold uppercase tracking-wider rounded-sm">{rightLabel}</div>
             </div>
 
@@ -63,7 +85,7 @@ const BeforeAfter = ({ leftImage, rightImage, leftLabel = "Before", rightLabel =
                 className="absolute inset-0 w-full h-full overflow-hidden" 
                 style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
             >
-                <img src={leftImage} alt="Before" className="w-full h-full object-cover" />
+                {renderMedia(leftImage, "Before")}
                 <div className="absolute top-2 left-2 px-2 py-1 bg-black/50 text-white text-[10px] font-bold uppercase tracking-wider rounded-sm">{leftLabel}</div>
             </div>
             

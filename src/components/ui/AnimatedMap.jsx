@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useSpring, useMotionValue } from 'framer-motion';
-import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
+import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from "react-simple-maps";
+import { MapPin } from 'lucide-react';
 
 const AFRICA_URL = "https://cdn.jsdelivr.net/npm/@highcharts/map-collection/custom/africa.topo.json";
 const NIGERIA_URL = "https://raw.githubusercontent.com/deldersveld/topojson/master/countries/nigeria/nigeria-states.json";
 
 const MotionGeography = motion(Geography);
 
-export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, label, scope = 'africa' }) {
+export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, label, scope = 'africa', markers = [], annotations = [] }) {
     const springConfig = { damping: 20, stiffness: 100, mass: 1 };
 
     // Motion values for our coordinates
@@ -73,9 +74,17 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
                         {({ geographies }) =>
                             geographies.map((geo) => {
                                 const isHighlighted = highlight && (
-                                    geo.properties.name?.toLowerCase() === highlight.toLowerCase() ||
-                                    geo.id === highlight ||
-                                    geo.properties.NAME_1?.toLowerCase() === highlight.toLowerCase() // Handle Nigeria TopoJSON properties
+                                    Array.isArray(highlight)
+                                        ? highlight.some(h => 
+                                            geo.properties.name?.toLowerCase() === h.toLowerCase() ||
+                                            geo.id === h ||
+                                            geo.properties.NAME_1?.toLowerCase() === h.toLowerCase()
+                                        )
+                                        : (
+                                            geo.properties.name?.toLowerCase() === highlight.toLowerCase() ||
+                                            geo.id === highlight ||
+                                            geo.properties.NAME_1?.toLowerCase() === highlight.toLowerCase() // Handle Nigeria TopoJSON properties
+                                        )
                                 );
                                 return (
                                     <MotionGeography
@@ -104,6 +113,22 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
                             })
                         }
                     </Geographies>
+                    {markers.map((marker, i) => (
+                        <Marker key={i} coordinates={marker.coordinates}>
+                            <g
+                                onMouseEnter={() => setHoveredGeo(marker.label)}
+                                onMouseLeave={() => setHoveredGeo(null)}
+                                style={{ cursor: 'pointer' }}
+                            >
+                                <MapPin 
+                                    size={24} 
+                                    className="text-black fill-[#FAFF00]" 
+                                    strokeWidth={1.5}
+                                    transform="translate(-12, -24)"
+                                />
+                            </g>
+                        </Marker>
+                    ))}
                 </ZoomableGroup>
             </ComposableMap>
 
@@ -128,6 +153,23 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Annotations Layer */}
+            {annotations.map((ann, i) => (
+                <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 + (i * 0.1), duration: 0.5 }}
+                    className="absolute z-40 px-3 py-1.5 bg-[#FAFF00] text-black text-xs md:text-sm font-bold shadow-lg border-2 border-black transform -translate-x-1/2 -translate-y-1/2 pointer-events-none whitespace-nowrap"
+                    style={{
+                        left: `${ann.x}%`,
+                        top: `${ann.y}%`,
+                    }}
+                >
+                    {ann.text}
+                </motion.div>
+            ))}
 
             <AnimatePresence mode="wait">
                 <motion.div
