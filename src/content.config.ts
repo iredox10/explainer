@@ -39,6 +39,30 @@ const stories = defineCollection({
             autoplay: z.boolean().optional()
         }),
         z.object({
+            type: z.literal('map'),
+            text: z.string().optional(),
+            label: z.string().optional(),
+            center: z.array(z.number()).optional(),
+            zoom: z.number().optional(),
+            viewBox: z.string().optional(),
+            highlight: z.union([z.string(), z.array(z.string())]).optional(),
+            markers: z.array(z.object({ lat: z.number(), lon: z.number(), label: z.string(), icon: z.string() })).optional(),
+            overlayIcons: z.array(z.object({ icon: z.string(), label: z.string() })).optional(),
+            annotations: z.array(z.object({ x: z.number(), y: z.number(), text: z.string() })).optional(),
+            layout: z.enum(['standard', 'full-width']).optional()
+        }),
+        z.object({
+            type: z.literal('chart'),
+            text: z.string().optional(),
+            label: z.string().optional(),
+            chartType: z.string().optional(),
+            chartData: z.array(z.number()).optional(),
+            chartLabels: z.array(z.string()).optional(),
+            chartColors: z.array(z.string()).optional(),
+            accentColor: z.string().optional(),
+            layout: z.enum(['standard', 'full-width']).optional()
+        }),
+        z.object({
             type: z.literal('scrolly-group'),
             steps: z.array(
               z.object({

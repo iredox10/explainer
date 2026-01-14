@@ -3,6 +3,8 @@ import MainLayout from "../../layouts/MainLayout.astro";
 import VoxNav from "../../components/ui/VoxNav.astro";
 import ProgressBar from "../../components/ui/ProgressBar.jsx";
 import BeforeAfter from "../../components/ui/BeforeAfter.jsx";
+import AnimatedMap from "../../components/ui/AnimatedMap.jsx";
+import AnimatedChart from "../../components/ui/AnimatedChart.jsx";
 import ShareButtons from "../../components/ui/ShareButtons.jsx";
 import PersistentAudioPlayer from "../../components/ui/PersistentAudioPlayer.jsx";
 import { Bookmark, Clock, Calendar } from "lucide-react";
@@ -253,6 +255,40 @@ const displayReadTime = `${readTime} min read`;
                         </figcaption>
                       )}
                     </figure>
+                  );
+                }
+
+                if (block.type === "map") {
+                  return (
+                    <div class={`my-16 ${block.layout === "full-width" ? "-mx-6 md:-mx-12 lg:-mx-24" : ""} aspect-square md:aspect-[16/9] border border-gray-200 bg-gray-50 rounded-sm overflow-hidden relative shadow-sm`}>
+                      <AnimatedMap
+                        client:visible
+                        center={block.center}
+                        zoom={block.zoom}
+                        highlight={block.highlight}
+                        label={block.label}
+                        scope={block.scope}
+                        markers={block.markers}
+                        annotations={block.annotations}
+                      />
+                    </div>
+                  );
+                }
+
+                if (block.type === "chart") {
+                  return (
+                    <div class={`my-16 ${block.layout === "full-width" ? "-mx-6 md:-mx-12 lg:-mx-24" : ""} bg-gray-50 border border-gray-200 rounded-sm p-6 shadow-sm min-h-[400px]`}>
+                      <AnimatedChart
+                        client:visible
+                        type={block.chartType}
+                        data={block.chartData}
+                        labels={block.chartLabels}
+                        colors={block.chartColors}
+                        accentColor={block.accentColor}
+                        label={block.title || block.label}
+                        annotations={block.annotations}
+                      />
+                    </div>
                   );
                 }
 

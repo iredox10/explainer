@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Type, X, AlertCircle, Loader2, Upload, Send, CheckSquare, Eye, Clock, History, Search, ChevronRight, ExternalLink, BookOpen, Zap, Settings2, Video, Layers } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Type, X, AlertCircle, Loader2, Upload, Send, CheckSquare, Eye, Clock, History, Search, ChevronRight, ExternalLink, BookOpen, Zap, Settings2, Video, Layers, Map as MapIcon, BarChart3 } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import BlockWrapper from './BlockWrapper';
 import { getCurrentUser, ROLES } from '../../lib/authStore';
@@ -146,6 +146,31 @@ export default function StoryEditor({ storyId }) {
                 break;
             case 'video':
                 newBlock = { ...newBlock, url: '', caption: '', autoplay: false };
+                break;
+            case 'map':
+                newBlock = { 
+                    ...newBlock, 
+                    center: [20, 0], 
+                    zoom: 1, 
+                    highlight: [], 
+                    label: 'New Map', 
+                    text: '',
+                    markers: [],
+                    overlayIcons: [],
+                    annotations: []
+                };
+                break;
+            case 'chart':
+                newBlock = { 
+                    ...newBlock, 
+                    chartType: 'line', 
+                    label: 'New Chart', 
+                    accentColor: '#FAFF00', 
+                    chartData: [], 
+                    chartLabels: [], 
+                    chartColors: [], 
+                    text: '' 
+                };
                 break;
             case 'quote':
                 newBlock = { ...newBlock, text: '', author: '' };
@@ -393,6 +418,12 @@ export default function StoryEditor({ storyId }) {
                                         </button>
                                         <button onClick={() => handleInsertBlock('video')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
                                             <Video className="w-4 h-4" /> Video
+                                        </button>
+                                        <button onClick={() => handleInsertBlock('map')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
+                                            <MapIcon className="w-4 h-4" /> Map
+                                        </button>
+                                        <button onClick={() => handleInsertBlock('chart')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
+                                            <BarChart3 className="w-4 h-4" /> Chart
                                         </button>
                                         <button onClick={() => handleInsertBlock('quote')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
                                             <History className="w-4 h-4" /> Quote
