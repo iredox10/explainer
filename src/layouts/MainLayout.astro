@@ -7,9 +7,18 @@ import CommandMenu from "../components/ui/CommandMenu.jsx";
 interface Props {
     title: string;
     showNav?: boolean;
+    description?: string;
+    image?: string;
 }
 
-const { title, showNav = true } = Astro.props;
+const { 
+    title, 
+    showNav = true,
+    description = "A Vox-style visual journalism platform",
+    image = "/social-preview.jpg" 
+} = Astro.props;
+
+const canonicalURL = Astro.url.href;
 ---
 
 <!doctype html>
@@ -18,11 +27,26 @@ const { title, showNav = true } = Astro.props;
         <meta charset="UTF-8" />
         <meta
             name="description"
-            content="A Vox-style visual journalism platform"
+            content={description}
         />
         <meta name="viewport" content="width=device-width" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <meta name="generator" content={Astro.generator} />
+
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={canonicalURL} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content={image} />
+
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content={canonicalURL} />
+        <meta property="twitter:title" content={title} />
+        <meta property="twitter:description" content={description} />
+        <meta property="twitter:image" content={image} />
+
         <title>{title}</title>
     </head>
     <body class="bg-white text-gray-900 font-sans antialiased">

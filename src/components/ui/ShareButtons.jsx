@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Twitter, Facebook, Linkedin, Mail, Link as LinkIcon, Check, Share2 } from 'lucide-react';
+import { Twitter, Facebook, Linkedin, Mail, Link as LinkIcon, Check, Share2, MessageCircle, Send } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ShareButtons({ title, url = null }) {
     const [copied, setCopied] = useState(false);
@@ -54,6 +55,18 @@ export default function ShareButtons({ title, url = null }) {
             color: 'hover:bg-[#1877F2]',
         },
         {
+            name: 'WhatsApp',
+            icon: MessageCircle,
+            href: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`,
+            color: 'hover:bg-[#25D366]',
+        },
+        {
+            name: 'Telegram',
+            icon: Send,
+            href: `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`,
+            color: 'hover:bg-[#0088cc]',
+        },
+        {
             name: 'LinkedIn',
             icon: Linkedin,
             href: `https://www.linkedin.com/shareArticle?mini=true&url=${encodedUrl}&title=${encodedTitle}`,
@@ -68,7 +81,7 @@ export default function ShareButtons({ title, url = null }) {
     ];
 
     return (
-        <div className="flex flex-row lg:flex-col gap-1.5 md:gap-3">
+        <div className="flex flex-row lg:flex-col gap-1.5 md:gap-3 relative">
             {/* Desktop Platforms (Hidden on mobile) */}
             <div className="hidden md:flex flex-row lg:flex-col gap-1.5 md:gap-3">
                 {socialPlatforms.map((platform) => (
@@ -100,6 +113,21 @@ export default function ShareButtons({ title, url = null }) {
             >
                 <Share2 className="w-3 h-3" />
             </button>
+
+            <AnimatePresence>
+                {copied && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                        className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-xl flex items-center gap-2 z-50 whitespace-nowrap"
+                    >
+                        <Check className="w-4 h-4 text-[#FAFF00]" />
+                        <span className="text-sm font-medium">Link copied!</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
+
