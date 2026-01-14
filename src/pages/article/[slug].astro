@@ -11,6 +11,7 @@ let story;
 
 try {
   story = await serverStoryService.getStoryBySlug(slug);
+  console.log(`[ARTICLE DEBUG] Slug: ${slug}, Story ID: ${story?.$id}, Hero: ${story?.heroImage ? 'Found' : 'Missing'}`);
 } catch (e) {
   console.error(`[ARTICLE] Failed to fetch story for slug ${slug}:`, e);
 }

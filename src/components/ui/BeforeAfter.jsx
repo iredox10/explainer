@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Move } from 'lucide-react';
 
-const BeforeAfter = ({ leftImage, rightImage, leftLabel = "Before", rightLabel = "After", caption }) => {
+const BeforeAfter = ({ leftImage, rightImage, leftLabel = "Before", rightLabel = "After", caption, displayMode = 'slider' }) => {
   const [sliderPos, setSliderPos] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef(null);
@@ -27,6 +27,28 @@ const BeforeAfter = ({ leftImage, rightImage, leftLabel = "Before", rightLabel =
     }
     return <img src={src} alt={alt} className="w-full h-full object-cover" />;
   };
+
+  if (displayMode === 'split') {
+    return (
+        <figure className="my-16 -mx-6 md:-mx-12 lg:-mx-24 group">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="relative w-full aspect-[4/3] overflow-hidden rounded-sm border border-gray-200">
+                    {renderMedia(leftImage, leftLabel)}
+                    <div className="absolute top-2 left-2 px-2 py-1 bg-black/50 text-white text-[10px] font-bold uppercase tracking-wider rounded-sm">{leftLabel}</div>
+                </div>
+                <div className="relative w-full aspect-[4/3] overflow-hidden rounded-sm border border-gray-200">
+                    {renderMedia(rightImage, rightLabel)}
+                    <div className="absolute top-2 left-2 px-2 py-1 bg-black/50 text-white text-[10px] font-bold uppercase tracking-wider rounded-sm">{rightLabel}</div>
+                </div>
+            </div>
+            {caption && (
+                <figcaption className="mt-3 px-6 md:px-0 text-xs text-gray-500 font-mono font-medium text-center uppercase tracking-wider">
+                    {caption}
+                </figcaption>
+            )}
+        </figure>
+    );
+  }
 
   const handleMove = (clientX) => {
     if (!containerRef.current) return;

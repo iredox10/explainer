@@ -209,6 +209,7 @@ export default function StoryEditor({ storyId }) {
         if (!file) return;
 
         const actualTarget = window._currentUploadTarget || target;
+        console.log('StoryEditor: handleFileUpload', { actualTarget, file: file.name });
 
         setUploadingField(actualTarget);
         try {
@@ -216,10 +217,10 @@ export default function StoryEditor({ storyId }) {
             if (actualTarget === 'hero') handleChange('heroImage', url);
             else if (actualTarget.includes('_left')) {
                 const id = actualTarget.split('_')[0];
-                updateContent(content.map(b => b.id == id ? { ...b, leftImage: url } : b));
+                updateContent(content.map(b => String(b.id) === id ? { ...b, leftImage: url } : b));
             } else if (actualTarget.includes('_right')) {
                 const id = actualTarget.split('_')[0];
-                updateContent(content.map(b => b.id == id ? { ...b, rightImage: url } : b));
+                updateContent(content.map(b => String(b.id) === id ? { ...b, rightImage: url } : b));
             }
             else updateContent(content.map(b => b.id === actualTarget ? { ...b, url } : b));
         } catch (err) { alert("Upload failed: " + err.message); }
@@ -331,6 +332,7 @@ export default function StoryEditor({ storyId }) {
 
                         {isEditor && (
                             <div className="flex items-center gap-2 shrink-0">
+                                {/* Editor can approve/kick pending reviews */}
                                 {story.workflow_status === 'pending_review' && (
                                     <>
                                         <button onClick={() => performSave('draft')} className="bg-red-50 text-red-600 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 border border-red-100 hover:bg-red-100 transition-all">
@@ -341,7 +343,9 @@ export default function StoryEditor({ storyId }) {
                                         </button>
                                     </>
                                 )}
-                                {(story.workflow_status === 'approved' || story.workflow_status === 'published') && (
+                                
+                                {/* Editor can publish Drafts, Approved, or update Published */}
+                                {(story.workflow_status === 'draft' || story.workflow_status === 'approved' || story.workflow_status === 'published') && (
                                     <button onClick={() => performSave('published')} className="bg-[#FAFF00] text-black px-4 md:px-6 py-2.5 md:py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 md:gap-3 hover:bg-black hover:text-white transition-all shadow-[0_10px_20px_rgba(250,255,0,0.3)] shrink-0">
                                         <CheckSquare className="w-4 h-4" /> <span className="hidden sm:inline">{story.workflow_status === 'published' ? 'Update' : 'Publish'}</span>
                                     </button>
@@ -600,13 +604,14 @@ export default function StoryEditor({ storyId }) {
                             )}
                         </section>
                     </div>
-
-                    <input ref={fileInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={(e) => {
-                        const target = window._currentUploadTarget || 'hero';
-                        handleFileUpload(e, target);
-                    }} />
                 </aside>
             )}
+            
+            {/* Global File Input - Moved outside conditional rendering to ensure it works even when meta panel is closed */}
+            <input ref={fileInputRef} type="file" accept="image/*,video/*" className="hidden" onClick={(e) => { e.target.value = null; }} onChange={(e) => {
+                const target = window._currentUploadTarget || 'hero';
+                handleFileUpload(e, target);
+            }} />
         </div>
     );
 }

@@ -1,12 +1,12 @@
 import { Reorder, useDragControls } from 'framer-motion';
-import { Trash2, Upload, Loader2, X, GripVertical, Maximize2, Minimize2, Video, Map as MapIcon, BarChart3, AlignLeft, Layers } from 'lucide-react';
+import { Trash2, Upload, Loader2, X, GripVertical, Maximize2, Minimize2, Video, Map as MapIcon, BarChart3, AlignLeft, Layers, Columns, MoveHorizontal } from 'lucide-react';
 import MapConfigurator from './editors/MapConfigurator';
 import ChartConfigurator from './editors/ChartConfigurator';
 
 export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uploadingField, onTriggerUpload, isActive, onActivate }) {
     const dragControls = useDragControls();
     
-    const isLayoutBlock = ['image', 'beforeAfter', 'callout', 'quote'].includes(block.type);
+    const isLayoutBlock = ['image', 'beforeAfter', 'callout', 'quote', 'map', 'chart'].includes(block.type);
     const isFullWidth = block.layout === 'full-width';
 
     const isVideo = (url) => {
@@ -111,6 +111,14 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                     <div className="flex items-center justify-between mb-4">
                         <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Visual Comparison Protocol</h4>
                         <div className="flex gap-2">
+                             <button
+                                onClick={() => !isLocked && onUpdate({ ...block, displayMode: block.displayMode === 'split' ? 'slider' : 'split' })}
+                                className="bg-white border border-gray-100 p-2 rounded-lg text-[9px] font-black uppercase flex items-center gap-2 hover:bg-gray-50 text-gray-500 hover:text-black transition-colors"
+                                title="Toggle Display Mode"
+                            >
+                                {block.displayMode === 'split' ? <Columns className="w-3 h-3" /> : <MoveHorizontal className="w-3 h-3" />}
+                                {block.displayMode === 'split' ? 'Split' : 'Slider'}
+                            </button>
                             <input
                                 className="bg-white border border-gray-100 p-2 rounded-lg text-[9px] font-black uppercase w-20 text-center"
                                 value={block.leftLabel}
@@ -145,6 +153,7 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                                 <button
                                     onClick={() => {
                                         if (isLocked) return;
+                                        console.log('BlockWrapper: Upload triggered for', `${block.id}_left`);
                                         onTriggerUpload(`${block.id}_left`);
                                     }}
                                     className="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-black uppercase tracking-widest"
@@ -167,6 +176,7 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                                 <button
                                     onClick={() => {
                                         if (isLocked) return;
+                                        console.log('BlockWrapper: Upload triggered for', `${block.id}_right`);
                                         onTriggerUpload(`${block.id}_right`);
                                     }}
                                     className="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-black uppercase tracking-widest"
@@ -312,6 +322,63 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                         className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-xs font-medium text-gray-500 italic"
                         placeholder="Video caption..."
                         value={block.caption}
+                        onChange={(e) => onUpdate({ ...block, caption: e.target.value })}
+                        onFocus={onActivate}
+                        disabled={isLocked}
+                    />
+                </div>
+            )}
+            {block.type === 'map' && (
+                <div className="bg-white border border-gray-100 p-4 rounded-3xl space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
+                         <MapIcon className="w-4 h-4 text-gray-400" />
+                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Interactive Map</span>
+                    </div>
+                    <MapConfigurator
+                        value={block}
+                        onChange={(newConfig) => onUpdate({ ...block, ...newConfig })}
+                    />
+                     <input
+                        className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-xs font-medium text-gray-500 italic"
+                        placeholder="Map caption..."
+                        value={block.caption || ''}
+                        onChange={(e) => onUpdate({ ...block, caption: e.target.value })}
+                        onFocus={onActivate}
+                        disabled={isLocked}
+                    />
+                </div>
+            )}
+            {block.type === 'chart' && (
+                <div className="space-y-4">
+                    <ChartConfigurator
+                         value={{
+                            type: block.chartType || 'line',
+                            title: block.label || '',
+                            accentColor: block.accentColor || '#FAFF00',
+                            data: (block.chartData || []).map((val, i) => ({
+                                value: val,
+                                label: (block.chartLabels || [])[i] || '',
+                                color: (block.chartColors || [])[i] || block.accentColor || '#FAFF00'
+                            })),
+                            annotations: block.annotations || []
+                        }}
+                        onChange={(newConfig) => {
+                             onUpdate({
+                                ...block,
+                                chartType: newConfig.type,
+                                label: newConfig.title,
+                                accentColor: newConfig.accentColor,
+                                chartData: newConfig.data.map(d => Number(d.value)),
+                                chartLabels: newConfig.data.map(d => d.label),
+                                chartColors: newConfig.data.map(d => d.color),
+                                annotations: newConfig.annotations
+                            });
+                        }}
+                    />
+                     <input
+                        className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-xs font-medium text-gray-500 italic"
+                        placeholder="Chart caption..."
+                        value={block.caption || ''}
                         onChange={(e) => onUpdate({ ...block, caption: e.target.value })}
                         onFocus={onActivate}
                         disabled={isLocked}

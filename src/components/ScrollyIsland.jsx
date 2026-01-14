@@ -56,6 +56,9 @@ export default function ScrollyIsland({ steps, forcedStep = null, id = 'scrolly-
                                     highlight={currentStep.highlight}
                                     label={currentStep.label}
                                     scope={currentStep.scope || 'africa'}
+                                    markers={currentStep.markers}
+                                    annotations={currentStep.annotations}
+                                    overlayIcons={currentStep.overlayIcons}
                                 />
                             </motion.div>
                         )}
@@ -74,6 +77,7 @@ export default function ScrollyIsland({ steps, forcedStep = null, id = 'scrolly-
                                     colors={currentStep.chartColors}
                                     accentColor={currentStep.accentColor || "#000"}
                                     label={currentStep.label}
+                                    annotations={currentStep.annotations}
                                 />
                             </motion.div>
                         )}

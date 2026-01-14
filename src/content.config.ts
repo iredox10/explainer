@@ -30,7 +30,8 @@ const stories = defineCollection({
             leftLabel: z.string().optional(), 
             rightLabel: z.string().optional(), 
             caption: z.string().optional(),
-            layout: z.enum(['standard', 'full-width']).optional()
+            layout: z.enum(['standard', 'full-width']).optional(),
+            displayMode: z.enum(['slider', 'split']).default('slider')
         }),
         z.object({
             type: z.literal('video'),

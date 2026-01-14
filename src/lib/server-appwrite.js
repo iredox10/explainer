@@ -184,6 +184,7 @@ export const serverStoryService = {
         return resilientFetch(async () => {
             const response = await serverDatabases.listDocuments(DB_ID, COLLECTIONS.STORIES, [
                 Query.equal('slug', slug),
+                Query.orderDesc('$updatedAt'), // Prioritize most recent version if duplicates exist
                 Query.limit(1)
             ]);
             return response.documents[0] || null;
