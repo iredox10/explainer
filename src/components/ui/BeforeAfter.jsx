@@ -31,7 +31,7 @@ const BeforeAfter = ({ leftImage, rightImage, leftLabel = "Before", rightLabel =
   if (displayMode === 'split') {
     return (
         <figure className="my-16 -mx-6 md:-mx-12 lg:-mx-24 group">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-2 md:gap-4">
                 <div className="relative w-full aspect-[4/3] overflow-hidden rounded-sm border border-gray-200">
                     {renderMedia(leftImage, leftLabel)}
                     <div className="absolute top-2 left-2 px-2 py-1 bg-black/50 text-white text-[10px] font-bold uppercase tracking-wider rounded-sm">{leftLabel}</div>
