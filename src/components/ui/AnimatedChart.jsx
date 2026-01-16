@@ -90,21 +90,33 @@ export default function AnimatedChart({ type = 'line', data = [10, 20, 30], labe
                         <g>
                             <line x1="0" y1={chartHeight} x2={chartWidth} y2={chartHeight} stroke="#e5e7eb" strokeWidth="1" />
                             {data.map((val, i) => {
-                                const h = (val / maxVal) * (chartHeight - 20);
-                                const w = (chartWidth / data.length) * 0.8;
-                                const x = (i * (chartWidth / data.length)) + (chartWidth / data.length - w) / 2;
+                                // Support multi-series if data[i] is an object { values: [v1, v2] }
+                                const isMulti = typeof val === 'object' && val.values;
+                                const values = isMulti ? val.values : [val];
+                                const groupW = (chartWidth / data.length) * 0.8;
+                                const groupX = (i * (chartWidth / data.length)) + (chartWidth / data.length - groupW) / 2;
+
                                 return (
-                                    <motion.rect
-                                        key={i}
-                                        x={x}
-                                        y={chartHeight}
-                                        width={w}
-                                        initial={{ height: 0, y: chartHeight }}
-                                        animate={{ height: h, y: chartHeight - h }}
-                                        fill={getSegmentColor(i)}
-                                        transition={{ duration: 1, delay: i * 0.1, ease: "circOut" }}
-                                        rx="4"
-                                    />
+                                    <g key={i}>
+                                        {values.map((v, seriesIdx) => {
+                                            const h = (v / maxVal) * (chartHeight - 20);
+                                            const w = groupW / values.length;
+                                            const x = groupX + (seriesIdx * w);
+                                            return (
+                                                <motion.rect
+                                                    key={seriesIdx}
+                                                    x={x}
+                                                    y={chartHeight}
+                                                    width={w * 0.9} // Slight gap between bars in group
+                                                    initial={{ height: 0, y: chartHeight }}
+                                                    animate={{ height: h, y: chartHeight - h }}
+                                                    fill={isMulti ? (val.colors?.[seriesIdx] || getSegmentColor(seriesIdx)) : getSegmentColor(i)}
+                                                    transition={{ duration: 1, delay: (i * 0.1) + (seriesIdx * 0.05), ease: "circOut" }}
+                                                    rx="2"
+                                                />
+                                            );
+                                        })}
+                                    </g>
                                 );
                             })}
                         </g>

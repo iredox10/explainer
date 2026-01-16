@@ -13,16 +13,57 @@ export default function PersistentAudioPlayer({ text, title }) {
   const utteranceRef = useRef(null);
   const [isActuallyPaused, setIsActuallyPaused] = useState(false);
   const [lastCharIndex, setLastCharIndex] = useState(0);
+  const [voices, setVoices] = useState([]);
 
   useEffect(() => {
+    // If no text is provided, do not initialize speech synthesis logic
+    // This prevents empty/placeholder players (like in MainLayout) from interfering
+    // with active players by cancelling speech on unmount/re-render.
+    if (!text) {
+      console.warn("PersistentAudioPlayer: No text received");
+      return;
+    }
+
+    // Reset playback state when text changes
+    setIsPlaying(false);
+    setIsActuallyPaused(false);
+    setLastCharIndex(0);
+    setProgress(0);
+    window.speechSynthesis.cancel();
+
+    console.log("PersistentAudioPlayer: Text received, length:", text.length);
+
     const synth = window.speechSynthesis;
+    
+    // Load voices
+    const loadVoices = () => {
+      const vs = synth.getVoices();
+      setVoices(vs);
+      if (vs.length > 0) {
+        console.log("PersistentAudioPlayer: Voices loaded", vs.length);
+      }
+    };
+
+    loadVoices();
+    
+    // Chrome requires this event listener
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
     return () => {
       synth.cancel();
+      if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = null;
+      }
     };
-  }, []);
+  }, [text]);
 
   const togglePlay = () => {
-    if (!text) return;
+    if (!text) {
+        console.warn("PersistentAudioPlayer: Cannot play, text is empty");
+        return;
+    }
 
     if (isPlaying) {
       window.speechSynthesis.pause();
@@ -42,14 +83,31 @@ export default function PersistentAudioPlayer({ text, title }) {
   const playNarration = (startIndex = 0) => {
     window.speechSynthesis.cancel();
 
+    if (!text) return;
+
     const cleanText = text.replace(/\[.*?\]/g, '');
     const remainingText = cleanText.substring(startIndex);
+    
+    if (!remainingText.trim()) {
+        console.warn("PersistentAudioPlayer: No text remaining to play");
+        return;
+    }
+
     const utterance = new SpeechSynthesisUtterance(remainingText);
 
-    const allVoices = window.speechSynthesis.getVoices();
-    const voice = allVoices.find(v => v.lang.startsWith('en-US') && v.name.includes('Google')) || allVoices.find(v => v.lang.startsWith('en'));
+    // Robust voice selection
+    const allVoices = voices.length > 0 ? voices : window.speechSynthesis.getVoices();
+    const voice = allVoices.find(v => v.lang.startsWith('en-US') && v.name.includes('Google')) || 
+                  allVoices.find(v => v.lang.startsWith('en')) ||
+                  allVoices[0]; // Fallback to any voice if English isn't found
 
-    if (voice) utterance.voice = voice;
+    if (voice) {
+        utterance.voice = voice;
+        console.log("PersistentAudioPlayer: Using voice", voice.name);
+    } else {
+        console.warn("PersistentAudioPlayer: No suitable voice found - using default");
+    }
+
     utterance.rate = playbackSpeed;
 
     utterance.onboundary = (event) => {
@@ -60,11 +118,15 @@ export default function PersistentAudioPlayer({ text, title }) {
     };
 
     utterance.onstart = () => {
+      console.log("PersistentAudioPlayer: Playback started");
       setIsPlaying(true);
       setIsActuallyPaused(false);
     };
 
     utterance.onend = () => {
+      console.log("PersistentAudioPlayer: Playback ended");
+      // Don't reset if we just paused it (though usually onend fires only on finish)
+      // Some browsers might fire onend on cancel, so we verify isActuallyPaused
       if (!isActuallyPaused) {
         setIsPlaying(false);
         setIsActuallyPaused(false);
@@ -74,13 +136,34 @@ export default function PersistentAudioPlayer({ text, title }) {
       }
     };
 
+    utterance.onerror = (e) => {
+        // Ignore 'interrupted' and 'canceled' errors as they are expected behavior
+        // when restarting or unmounting
+        if (e.error === 'interrupted' || e.error === 'canceled') {
+            console.log("PersistentAudioPlayer: Playback interrupted/canceled");
+            return;
+        }
+        console.error("PersistentAudioPlayer: Speech error", e);
+        setIsPlaying(false);
+    };
+
     utteranceRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
+    
+    // Small delay to allow cancel() to fully clear the queue and avoid race conditions
+    setTimeout(() => {
+        console.log("PersistentAudioPlayer: Calling speak()");
+        window.speechSynthesis.speak(utterance);
+    }, 10);
   };
 
   const closePlayer = () => {
+    console.log("PersistentAudioPlayer: Closing (Stopping & Minimizing)");
     window.speechSynthesis.cancel();
-    setIsVisible(false);
+    setIsPlaying(false);
+    setIsActuallyPaused(false);
+    setIsMinimized(true);
+    // Do not hide completely, so user can restart if desired
+    // setIsVisible(false);
   };
 
   if (!isVisible || !text) return null;

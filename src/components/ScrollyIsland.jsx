@@ -4,8 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import AnimatedChart from './ui/AnimatedChart';
 import AnimatedMap from './ui/AnimatedMap';
-
-
+import TacticalVisual from './ui/TacticalVisual';
+import Timeline from './ui/Timeline';
+import MediaVisual from './ui/MediaVisual';
 
 export default function ScrollyIsland({ steps, forcedStep = null, id = 'scrolly-island' }) {
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -78,6 +79,52 @@ export default function ScrollyIsland({ steps, forcedStep = null, id = 'scrolly-
                                     accentColor={currentStep.accentColor || "#000"}
                                     label={currentStep.label}
                                     annotations={currentStep.annotations}
+                                />
+                            </motion.div>
+                        )}
+                        {currentStep.type === 'tactical' && (
+                            <motion.div
+                                key="tactical-layer"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="h-full w-full"
+                            >
+                                <TacticalVisual
+                                    label={currentStep.label}
+                                    center={currentStep.center}
+                                    annotations={currentStep.annotations}
+                                    heatmap={currentStep.heatmap}
+                                />
+                            </motion.div>
+                        )}
+                        {currentStep.type === 'timeline' && (
+                            <motion.div
+                                key="timeline-layer"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="h-full w-full"
+                            >
+                                <Timeline
+                                    label={currentStep.label}
+                                    highlight={currentStep.highlight}
+                                    steps={currentStep.timelineSteps}
+                                />
+                            </motion.div>
+                        )}
+                        {currentStep.type === 'media' && (
+                            <motion.div
+                                key="media-layer"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="h-full w-full"
+                            >
+                                <MediaVisual
+                                    url={currentStep.url}
+                                    type={currentStep.mediaType}
+                                    label={currentStep.label}
                                 />
                             </motion.div>
                         )}

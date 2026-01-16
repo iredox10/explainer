@@ -5,7 +5,7 @@ import ChartConfigurator from './editors/ChartConfigurator';
 
 export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uploadingField, onTriggerUpload, isActive, onActivate }) {
     const dragControls = useDragControls();
-    
+
     const isLayoutBlock = ['image', 'beforeAfter', 'callout', 'quote', 'map', 'chart'].includes(block.type);
     const isFullWidth = block.layout === 'full-width';
 
@@ -16,22 +16,28 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
     };
 
     const toggleLayout = () => {
-        onUpdate({ 
-            ...block, 
-            layout: isFullWidth ? 'standard' : 'full-width' 
+        onUpdate({
+            ...block,
+            layout: isFullWidth ? 'standard' : 'full-width'
         });
     };
 
     const addScrollyStep = (type) => {
         const currentSteps = block.steps || [];
         let newStep = { type, text: '' };
-        
+
         if (type === 'map') {
-            newStep = { ...newStep, center: [20, 0], zoom: 1, highlight: [], label: 'New Location' };
+            newStep = { ...newStep, center: [20, 0], zoom: 1, highlight: {}, label: 'New Location' };
         } else if (type === 'chart') {
             newStep = { ...newStep, chartType: 'line', label: 'New Chart', accentColor: '#FAFF00', chartData: [], chartLabels: [], chartColors: [] };
         } else if (type === 'text') {
             newStep = { ...newStep, label: 'Narrative Break' };
+        } else if (type === 'tactical') {
+            newStep = { ...newStep, label: 'Tactical Analysis', center: [50, 50], annotations: [] };
+        } else if (type === 'timeline') {
+            newStep = { ...newStep, label: 'Historical Timeline', highlightedYear: 2024, steps: [] };
+        } else if (type === 'media') {
+            newStep = { ...newStep, label: 'Media Backdrop', url: '', mediaType: 'image' };
         }
 
         onUpdate({
@@ -68,7 +74,7 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
             {!isLocked && (
                 <div className="absolute -top-3 right-4 z-50 flex items-center gap-1 bg-white shadow-sm border border-gray-200 rounded-lg p-1 opacity-0 group-hover:opacity-100 transition-all">
                     {/* Drag Handle */}
-                    <div 
+                    <div
                         className="p-1.5 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded"
                         onPointerDown={(e) => dragControls.start(e)}
                         title="Drag to reorder"
@@ -95,8 +101,8 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                     <div className="w-px h-4 bg-gray-200 mx-0.5" />
 
                     {/* Delete */}
-                    <button 
-                        onClick={onDelete} 
+                    <button
+                        onClick={onDelete}
                         className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                         title="Delete block"
                     >
@@ -107,373 +113,376 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
 
             <div className={contentClass}>
                 {block.type === 'beforeAfter' && (
-                <div className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100 space-y-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Visual Comparison Protocol</h4>
-                        <div className="flex gap-2">
-                             <button
-                                onClick={() => !isLocked && onUpdate({ ...block, displayMode: block.displayMode === 'split' ? 'slider' : 'split' })}
-                                className="bg-white border border-gray-100 p-2 rounded-lg text-[9px] font-black uppercase flex items-center gap-2 hover:bg-gray-50 text-gray-500 hover:text-black transition-colors"
-                                title="Toggle Display Mode"
-                            >
-                                {block.displayMode === 'split' ? <Columns className="w-3 h-3" /> : <MoveHorizontal className="w-3 h-3" />}
-                                {block.displayMode === 'split' ? 'Split' : 'Slider'}
-                            </button>
-                            <input
-                                className="bg-white border border-gray-100 p-2 rounded-lg text-[9px] font-black uppercase w-20 text-center"
-                                value={block.leftLabel}
-                                placeholder="Left"
-                                onChange={(e) => onUpdate({ ...block, leftLabel: e.target.value })}
-                                onFocus={onActivate}
-                                disabled={isLocked}
-                            />
-                            <input
-                                className="bg-white border border-gray-100 p-2 rounded-lg text-[9px] font-black uppercase w-20 text-center"
-                                value={block.rightLabel}
-                                placeholder="Right"
-                                onChange={(e) => onUpdate({ ...block, rightLabel: e.target.value })}
-                                onFocus={onActivate}
-                                disabled={isLocked}
-                            />
+                    <div className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100 space-y-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Visual Comparison Protocol</h4>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => !isLocked && onUpdate({ ...block, displayMode: block.displayMode === 'split' ? 'slider' : 'split' })}
+                                    className="bg-white border border-gray-100 p-2 rounded-lg text-[9px] font-black uppercase flex items-center gap-2 hover:bg-gray-50 text-gray-500 hover:text-black transition-colors"
+                                    title="Toggle Display Mode"
+                                >
+                                    {block.displayMode === 'split' ? <Columns className="w-3 h-3" /> : <MoveHorizontal className="w-3 h-3" />}
+                                    {block.displayMode === 'split' ? 'Split' : 'Slider'}
+                                </button>
+                                <input
+                                    className="bg-white border border-gray-100 p-2 rounded-lg text-[9px] font-black uppercase w-20 text-center"
+                                    value={block.leftLabel}
+                                    placeholder="Left"
+                                    onChange={(e) => onUpdate({ ...block, leftLabel: e.target.value })}
+                                    onFocus={onActivate}
+                                    disabled={isLocked}
+                                />
+                                <input
+                                    className="bg-white border border-gray-100 p-2 rounded-lg text-[9px] font-black uppercase w-20 text-center"
+                                    value={block.rightLabel}
+                                    placeholder="Right"
+                                    onChange={(e) => onUpdate({ ...block, rightLabel: e.target.value })}
+                                    onFocus={onActivate}
+                                    disabled={isLocked}
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-3">
-                            <div className="aspect-[4/3] bg-white rounded-2xl border-2 border-dashed border-gray-100 flex items-center justify-center overflow-hidden relative group/item">
-                                {block.leftImage ? (
-                                    isVideo(block.leftImage) ? (
-                                        <video src={block.leftImage} className="w-full h-full object-cover" autoPlay muted loop />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-3">
+                                <div className="aspect-[4/3] bg-white rounded-2xl border-2 border-dashed border-gray-100 flex items-center justify-center overflow-hidden relative group/item">
+                                    {block.leftImage ? (
+                                        isVideo(block.leftImage) ? (
+                                            <video src={block.leftImage} className="w-full h-full object-cover" autoPlay muted loop />
+                                        ) : (
+                                            <img src={block.leftImage} className="w-full h-full object-cover" />
+                                        )
                                     ) : (
-                                        <img src={block.leftImage} className="w-full h-full object-cover" />
-                                    )
-                                ) : (
-                                    <Upload className="w-6 h-6 text-gray-200" />
-                                )}
-                                <button
-                                    onClick={() => {
-                                        if (isLocked) return;
-                                        console.log('BlockWrapper: Upload triggered for', `${block.id}_left`);
-                                        onTriggerUpload(`${block.id}_left`);
-                                    }}
-                                    className="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-black uppercase tracking-widest"
-                                >
-                                    {uploadingField === `${block.id}_left` ? <Loader2 className="animate-spin" /> : 'Choose Primary'}
-                                </button>
+                                        <Upload className="w-6 h-6 text-gray-200" />
+                                    )}
+                                    <button
+                                        onClick={() => {
+                                            if (isLocked) return;
+                                            console.log('BlockWrapper: Upload triggered for', `${block.id}_left`);
+                                            onTriggerUpload(`${block.id}_left`);
+                                        }}
+                                        className="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-black uppercase tracking-widest"
+                                    >
+                                        {uploadingField === `${block.id}_left` ? <Loader2 className="animate-spin" /> : 'Choose Primary'}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                <div className="aspect-[4/3] bg-white rounded-2xl border-2 border-dashed border-gray-100 flex items-center justify-center overflow-hidden relative group/item">
+                                    {block.rightImage ? (
+                                        isVideo(block.rightImage) ? (
+                                            <video src={block.rightImage} className="w-full h-full object-cover" autoPlay muted loop />
+                                        ) : (
+                                            <img src={block.rightImage} className="w-full h-full object-cover" />
+                                        )
+                                    ) : (
+                                        <Upload className="w-6 h-6 text-gray-200" />
+                                    )}
+                                    <button
+                                        onClick={() => {
+                                            if (isLocked) return;
+                                            console.log('BlockWrapper: Upload triggered for', `${block.id}_right`);
+                                            onTriggerUpload(`${block.id}_right`);
+                                        }}
+                                        className="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-black uppercase tracking-widest"
+                                    >
+                                        {uploadingField === `${block.id}_right` ? <Loader2 className="animate-spin" /> : 'Choose Secondary'}
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <div className="space-y-3">
-                            <div className="aspect-[4/3] bg-white rounded-2xl border-2 border-dashed border-gray-100 flex items-center justify-center overflow-hidden relative group/item">
-                                {block.rightImage ? (
-                                    isVideo(block.rightImage) ? (
-                                        <video src={block.rightImage} className="w-full h-full object-cover" autoPlay muted loop />
-                                    ) : (
-                                        <img src={block.rightImage} className="w-full h-full object-cover" />
-                                    )
-                                ) : (
-                                    <Upload className="w-6 h-6 text-gray-200" />
-                                )}
-                                <button
-                                    onClick={() => {
-                                        if (isLocked) return;
-                                        console.log('BlockWrapper: Upload triggered for', `${block.id}_right`);
-                                        onTriggerUpload(`${block.id}_right`);
-                                    }}
-                                    className="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-black uppercase tracking-widest"
-                                >
-                                    {uploadingField === `${block.id}_right` ? <Loader2 className="animate-spin" /> : 'Choose Secondary'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <input
-                        className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-xs font-medium text-gray-500 italic"
-                        placeholder="Provide a caption for the comparison..."
-                        value={block.caption}
-                        onChange={(e) => onUpdate({ ...block, caption: e.target.value })}
-                        onFocus={onActivate}
-                        disabled={isLocked}
-                    />
-                </div>
-            )}
-            {block.type === 'p' && (
-                <textarea
-                    className="w-full text-xl font-serif leading-relaxed outline-none resize-none border-none placeholder:text-gray-400 bg-transparent"
-                    placeholder="Start writing..."
-                    rows="1"
-                    style={{ height: 'auto', minHeight: '1em' }}
-                    value={block.text}
-                    onChange={(e) => {
-                        e.target.style.height = 'auto';
-                        e.target.style.height = e.target.scrollHeight + 'px';
-                        onUpdate({ ...block, text: e.target.value });
-                    }}
-                    onFocus={onActivate}
-                    onInput={(e) => {
-                         e.target.style.height = 'auto';
-                         e.target.style.height = e.target.scrollHeight + 'px';
-                    }}
-                    disabled={isLocked}
-                />
-            )}
-            {block.type === 'heading' && (
-                <input
-                    className="w-full text-4xl font-black outline-none border-none placeholder:text-gray-100 tracking-tighter bg-transparent"
-                    placeholder="Section Subheading..."
-                    value={block.text}
-                    onChange={(e) => onUpdate({ ...block, text: e.target.value })}
-                    onFocus={onActivate}
-                    disabled={isLocked}
-                />
-            )}
-            {block.type === 'quote' && (
-                <div className="pl-6 border-l-4 border-[#FAFF00] space-y-2 py-2">
-                    <textarea
-                        className="w-full text-2xl font-serif italic font-bold outline-none resize-none border-none placeholder:text-gray-200 bg-transparent"
-                        placeholder="The striking quote..."
-                        rows="1"
-                        value={block.text}
-                        onChange={(e) => onUpdate({ ...block, text: e.target.value })}
-                        onFocus={onActivate}
-                        disabled={isLocked}
-                    />
-                    <input
-                        className="w-full text-xs font-black uppercase tracking-widest outline-none border-none text-gray-400 bg-transparent"
-                        placeholder="— Source Attribution"
-                        value={block.author}
-                        onChange={(e) => onUpdate({ ...block, author: e.target.value })}
-                        onFocus={onActivate}
-                        disabled={isLocked}
-                    />
-                </div>
-            )}
-            {block.type === 'callout' && (
-                <div className="bg-gray-50 p-8 rounded-3xl border border-gray-100 space-y-4">
-                    <input
-                        className="w-full text-[10px] font-black uppercase tracking-[0.2em] outline-none border-none text-gray-400 bg-transparent"
-                        placeholder="Callout Title (e.g. CONTEXT)"
-                        value={block.title}
-                        onChange={(e) => onUpdate({ ...block, title: e.target.value })}
-                        onFocus={onActivate}
-                        disabled={isLocked}
-                    />
-                    <textarea
-                        className="w-full text-lg font-bold outline-none resize-none border-none placeholder:text-gray-200 bg-transparent"
-                        placeholder="Factual highlight or insight..."
-                        rows="1"
-                        value={block.text}
-                        onChange={(e) => onUpdate({ ...block, text: e.target.value })}
-                        onFocus={onActivate}
-                        disabled={isLocked}
-                    />
-                </div>
-            )}
-            {block.type === 'image' && (
-                <div className="space-y-4">
-                    {block.url ? (
-                        <div className="relative group/img aspect-video rounded-3xl overflow-hidden bg-gray-50 border border-gray-100">
-                            <img src={block.url} className="w-full h-full object-cover" />
-                            {!isLocked && (
-                                <button 
-                                    onClick={() => onUpdate({ ...block, url: '' })} 
-                                    className="absolute top-4 right-4 bg-black/50 text-white p-3 rounded-full opacity-0 group-hover/img:opacity-100 transition-opacity"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                            )}
-                        </div>
-                    ) : (
-                        <button
-                            onClick={() => {
-                                if (!isLocked) onTriggerUpload(block.id);
-                            }}
-                            className="w-full aspect-video rounded-3xl border-2 border-dashed border-gray-100 flex flex-col items-center justify-center gap-4 text-gray-300 hover:border-black hover:text-black transition-all"
-                        >
-                            {uploadingField === block.id ? <Loader2 className="animate-spin" /> : <Upload className="w-8 h-8" />}
-                            <span className="text-xs font-black uppercase tracking-widest">Upload Visual Content</span>
-                        </button>
-                    )}
-                </div>
-            )}
-            {block.type === 'video' && (
-                <div className="space-y-4">
-                    <div className="flex gap-2">
                         <input
-                            className="flex-1 bg-white border border-gray-100 p-3 rounded-xl text-xs font-medium"
-                            placeholder="Video URL (Vimeo/YouTube/MP4)..."
-                            value={block.url}
-                            onChange={(e) => onUpdate({ ...block, url: e.target.value })}
+                            className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-xs font-medium text-gray-500 italic"
+                            placeholder="Provide a caption for the comparison..."
+                            value={block.caption}
+                            onChange={(e) => onUpdate({ ...block, caption: e.target.value })}
                             onFocus={onActivate}
                             disabled={isLocked}
                         />
-                        <button
-                            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border ${block.autoplay ? 'bg-black text-white border-black' : 'bg-white text-gray-400 border-gray-100'}`}
-                            onClick={() => !isLocked && onUpdate({ ...block, autoplay: !block.autoplay })}
-                        >
-                            Autoplay
-                        </button>
                     </div>
-                    {block.url && (
-                        <div className="aspect-video bg-black rounded-2xl overflow-hidden flex items-center justify-center relative border border-gray-100">
-                            <Video className="w-12 h-12 text-white/50" />
-                        </div>
-                    )}
+                )}
+                {block.type === 'p' && (
+                    <textarea
+                        className="w-full text-xl font-serif leading-relaxed outline-none resize-none border-none placeholder:text-gray-400 bg-transparent"
+                        placeholder="Start writing..."
+                        rows="1"
+                        style={{ height: 'auto', minHeight: '1em' }}
+                        value={block.text}
+                        onChange={(e) => {
+                            e.target.style.height = 'auto';
+                            e.target.style.height = e.target.scrollHeight + 'px';
+                            onUpdate({ ...block, text: e.target.value });
+                        }}
+                        onFocus={onActivate}
+                        onInput={(e) => {
+                            e.target.style.height = 'auto';
+                            e.target.style.height = e.target.scrollHeight + 'px';
+                        }}
+                        disabled={isLocked}
+                    />
+                )}
+                {block.type === 'heading' && (
                     <input
-                        className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-xs font-medium text-gray-500 italic"
-                        placeholder="Video caption..."
-                        value={block.caption}
-                        onChange={(e) => onUpdate({ ...block, caption: e.target.value })}
+                        className="w-full text-4xl font-black outline-none border-none placeholder:text-gray-100 tracking-tighter bg-transparent"
+                        placeholder="Section Subheading..."
+                        value={block.text}
+                        onChange={(e) => onUpdate({ ...block, text: e.target.value })}
                         onFocus={onActivate}
                         disabled={isLocked}
                     />
-                </div>
-            )}
-            {block.type === 'map' && (
-                <div className="bg-white border border-gray-100 p-4 rounded-3xl space-y-4">
-                    <div className="flex items-center gap-2 mb-2">
-                         <MapIcon className="w-4 h-4 text-gray-400" />
-                         <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Interactive Map</span>
+                )}
+                {block.type === 'quote' && (
+                    <div className="pl-6 border-l-4 border-[#FAFF00] space-y-2 py-2">
+                        <textarea
+                            className="w-full text-2xl font-serif italic font-bold outline-none resize-none border-none placeholder:text-gray-200 bg-transparent"
+                            placeholder="The striking quote..."
+                            rows="1"
+                            value={block.text}
+                            onChange={(e) => onUpdate({ ...block, text: e.target.value })}
+                            onFocus={onActivate}
+                            disabled={isLocked}
+                        />
+                        <input
+                            className="w-full text-xs font-black uppercase tracking-widest outline-none border-none text-gray-400 bg-transparent"
+                            placeholder="— Source Attribution"
+                            value={block.author}
+                            onChange={(e) => onUpdate({ ...block, author: e.target.value })}
+                            onFocus={onActivate}
+                            disabled={isLocked}
+                        />
                     </div>
-                    <MapConfigurator
-                        value={block}
-                        onChange={(newConfig) => onUpdate({ ...block, ...newConfig })}
-                    />
-                     <input
-                        className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-xs font-medium text-gray-500 italic"
-                        placeholder="Map caption..."
-                        value={block.caption || ''}
-                        onChange={(e) => onUpdate({ ...block, caption: e.target.value })}
-                        onFocus={onActivate}
-                        disabled={isLocked}
-                    />
-                </div>
-            )}
-            {block.type === 'chart' && (
-                <div className="space-y-4">
-                    <ChartConfigurator
-                         value={{
-                            type: block.chartType || 'line',
-                            title: block.label || '',
-                            accentColor: block.accentColor || '#FAFF00',
-                            data: (block.chartData || []).map((val, i) => ({
-                                value: val,
-                                label: (block.chartLabels || [])[i] || '',
-                                color: (block.chartColors || [])[i] || block.accentColor || '#FAFF00'
-                            })),
-                            annotations: block.annotations || []
-                        }}
-                        onChange={(newConfig) => {
-                             onUpdate({
-                                ...block,
-                                chartType: newConfig.type,
-                                label: newConfig.title,
-                                accentColor: newConfig.accentColor,
-                                chartData: newConfig.data.map(d => Number(d.value)),
-                                chartLabels: newConfig.data.map(d => d.label),
-                                chartColors: newConfig.data.map(d => d.color),
-                                annotations: newConfig.annotations
-                            });
-                        }}
-                    />
-                     <input
-                        className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-xs font-medium text-gray-500 italic"
-                        placeholder="Chart caption..."
-                        value={block.caption || ''}
-                        onChange={(e) => onUpdate({ ...block, caption: e.target.value })}
-                        onFocus={onActivate}
-                        disabled={isLocked}
-                    />
-                </div>
-            )}
-            {block.type === 'scrolly-group' && (
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-                        <div className="flex items-center gap-2">
-                            <Layers className="w-4 h-4 text-gray-400" />
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Scrollytelling Sequence</h4>
-                        </div>
-                        <div className="flex gap-2">
-                            <button onClick={() => !isLocked && addScrollyStep('map')} className="text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 bg-gray-100 hover:bg-black hover:text-white rounded-lg transition-colors flex items-center gap-1"><MapIcon className="w-3 h-3" /> Map</button>
-                            <button onClick={() => !isLocked && addScrollyStep('chart')} className="text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 bg-gray-100 hover:bg-black hover:text-white rounded-lg transition-colors flex items-center gap-1"><BarChart3 className="w-3 h-3" /> Chart</button>
-                            <button onClick={() => !isLocked && addScrollyStep('text')} className="text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 bg-gray-100 hover:bg-black hover:text-white rounded-lg transition-colors flex items-center gap-1"><AlignLeft className="w-3 h-3" /> Text</button>
-                        </div>
+                )}
+                {block.type === 'callout' && (
+                    <div className="bg-gray-50 p-8 rounded-3xl border border-gray-100 space-y-4">
+                        <input
+                            className="w-full text-[10px] font-black uppercase tracking-[0.2em] outline-none border-none text-gray-400 bg-transparent"
+                            placeholder="Callout Title (e.g. CONTEXT)"
+                            value={block.title}
+                            onChange={(e) => onUpdate({ ...block, title: e.target.value })}
+                            onFocus={onActivate}
+                            disabled={isLocked}
+                        />
+                        <textarea
+                            className="w-full text-lg font-bold outline-none resize-none border-none placeholder:text-gray-200 bg-transparent"
+                            placeholder="Factual highlight or insight..."
+                            rows="1"
+                            value={block.text}
+                            onChange={(e) => onUpdate({ ...block, text: e.target.value })}
+                            onFocus={onActivate}
+                            disabled={isLocked}
+                        />
                     </div>
-                    
-                    <div className="space-y-6">
-                        {(block.steps || []).map((step, idx) => (
-                            <div key={idx} className="bg-white border border-gray-100 p-6 rounded-2xl space-y-4 shadow-sm relative group/step">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-bold">{idx + 1}</div>
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{step.type} Step</span>
-                                    </div>
-                                    <button onClick={() => !isLocked && removeScrollyStep(idx)} className="text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover/step:opacity-100">
-                                        <Trash2 className="w-4 h-4" />
+                )}
+                {block.type === 'image' && (
+                    <div className="space-y-4">
+                        {block.url ? (
+                            <div className="relative group/img aspect-video rounded-3xl overflow-hidden bg-gray-50 border border-gray-100">
+                                <img src={block.url} className="w-full h-full object-cover" />
+                                {!isLocked && (
+                                    <button
+                                        onClick={() => onUpdate({ ...block, url: '' })}
+                                        className="absolute top-4 right-4 bg-black/50 text-white p-3 rounded-full opacity-0 group-hover/img:opacity-100 transition-opacity"
+                                    >
+                                        <X className="w-4 h-4" />
                                     </button>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-4">
-                                        {step.type === 'map' && (
-                                            <MapConfigurator
-                                                value={step}
-                                                onChange={(newConfig) => updateScrollyStep(idx, newConfig)}
-                                            />
-                                        )}
-                                        {step.type === 'chart' && (
-                                            <ChartConfigurator
-                                                value={{
-                                                    type: step.chartType || 'line',
-                                                    title: step.label || '',
-                                                    accentColor: step.accentColor || '#FAFF00',
-                                                    data: (step.chartData || []).map((val, i) => ({
-                                                        value: val,
-                                                        label: (step.chartLabels || [])[i] || '',
-                                                        color: (step.chartColors || [])[i] || step.accentColor || '#FAFF00'
-                                                    }))
-                                                }}
-                                                onChange={(newConfig) => {
-                                                    updateScrollyStep(idx, {
-                                                        ...step,
-                                                        chartType: newConfig.type,
-                                                        label: newConfig.title,
-                                                        accentColor: newConfig.accentColor,
-                                                        chartData: newConfig.data.map(d => Number(d.value)),
-                                                        chartLabels: newConfig.data.map(d => d.label),
-                                                        chartColors: newConfig.data.map(d => d.color)
-                                                    });
-                                                }}
-                                            />
-                                        )}
-                                        {step.type === 'text' && (
-                                            <input
-                                                className="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl text-xs font-bold"
-                                                placeholder="Section Label (Optional)"
-                                                value={step.label || ''}
-                                                onChange={(e) => updateScrollyStep(idx, { label: e.target.value })}
-                                                disabled={isLocked}
-                                            />
-                                        )}
-                                    </div>
-                                    <textarea
-                                        className="w-full bg-gray-50 border border-gray-100 p-4 rounded-xl text-xs h-full min-h-[150px] font-medium leading-relaxed"
-                                        placeholder="Narrative text for this step..."
-                                        value={step.text || ''}
-                                        onChange={(e) => updateScrollyStep(idx, { text: e.target.value })}
-                                        disabled={isLocked}
-                                    />
-                                </div>
+                                )}
                             </div>
-                        ))}
-                        {(block.steps || []).length === 0 && (
-                            <div className="text-center py-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">Empty Sequence</p>
-                                <p className="text-xs text-gray-400 mt-1">Add a visual step to begin</p>
-                            </div>
+                        ) : (
+                            <button
+                                onClick={() => {
+                                    if (!isLocked) onTriggerUpload(block.id);
+                                }}
+                                className="w-full aspect-video rounded-3xl border-2 border-dashed border-gray-100 flex flex-col items-center justify-center gap-4 text-gray-300 hover:border-black hover:text-black transition-all"
+                            >
+                                {uploadingField === block.id ? <Loader2 className="animate-spin" /> : <Upload className="w-8 h-8" />}
+                                <span className="text-xs font-black uppercase tracking-widest">Upload Visual Content</span>
+                            </button>
                         )}
                     </div>
-                </div>
-            )}
+                )}
+                {block.type === 'video' && (
+                    <div className="space-y-4">
+                        <div className="flex gap-2">
+                            <input
+                                className="flex-1 bg-white border border-gray-100 p-3 rounded-xl text-xs font-medium"
+                                placeholder="Video URL (Vimeo/YouTube/MP4)..."
+                                value={block.url}
+                                onChange={(e) => onUpdate({ ...block, url: e.target.value })}
+                                onFocus={onActivate}
+                                disabled={isLocked}
+                            />
+                            <button
+                                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border ${block.autoplay ? 'bg-black text-white border-black' : 'bg-white text-gray-400 border-gray-100'}`}
+                                onClick={() => !isLocked && onUpdate({ ...block, autoplay: !block.autoplay })}
+                            >
+                                Autoplay
+                            </button>
+                        </div>
+                        {block.url && (
+                            <div className="aspect-video bg-black rounded-2xl overflow-hidden flex items-center justify-center relative border border-gray-100">
+                                <Video className="w-12 h-12 text-white/50" />
+                            </div>
+                        )}
+                        <input
+                            className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-xs font-medium text-gray-500 italic"
+                            placeholder="Video caption..."
+                            value={block.caption}
+                            onChange={(e) => onUpdate({ ...block, caption: e.target.value })}
+                            onFocus={onActivate}
+                            disabled={isLocked}
+                        />
+                    </div>
+                )}
+                {block.type === 'map' && (
+                    <div className="bg-white border border-gray-100 p-4 rounded-3xl space-y-4">
+                        <div className="flex items-center gap-2 mb-2">
+                            <MapIcon className="w-4 h-4 text-gray-400" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Interactive Map</span>
+                        </div>
+                        <MapConfigurator
+                            value={block}
+                            onChange={(newConfig) => onUpdate({ ...block, ...newConfig })}
+                        />
+                        <input
+                            className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-xs font-medium text-gray-500 italic"
+                            placeholder="Map caption..."
+                            value={block.caption || ''}
+                            onChange={(e) => onUpdate({ ...block, caption: e.target.value })}
+                            onFocus={onActivate}
+                            disabled={isLocked}
+                        />
+                    </div>
+                )}
+                {block.type === 'chart' && (
+                    <div className="space-y-4">
+                        <ChartConfigurator
+                            value={{
+                                type: block.chartType || 'line',
+                                title: block.label || '',
+                                accentColor: block.accentColor || '#FAFF00',
+                                data: (block.chartData || []).map((val, i) => ({
+                                    value: val,
+                                    label: (block.chartLabels || [])[i] || '',
+                                    color: (block.chartColors || [])[i] || block.accentColor || '#FAFF00'
+                                })),
+                                annotations: block.annotations || []
+                            }}
+                            onChange={(newConfig) => {
+                                onUpdate({
+                                    ...block,
+                                    chartType: newConfig.type,
+                                    label: newConfig.title,
+                                    accentColor: newConfig.accentColor,
+                                    chartData: newConfig.data.map(d => Number(d.value)),
+                                    chartLabels: newConfig.data.map(d => d.label),
+                                    chartColors: newConfig.data.map(d => d.color),
+                                    annotations: newConfig.annotations
+                                });
+                            }}
+                        />
+                        <input
+                            className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-xs font-medium text-gray-500 italic"
+                            placeholder="Chart caption..."
+                            value={block.caption || ''}
+                            onChange={(e) => onUpdate({ ...block, caption: e.target.value })}
+                            onFocus={onActivate}
+                            disabled={isLocked}
+                        />
+                    </div>
+                )}
+                {block.type === 'scrolly-group' && (
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                            <div className="flex items-center gap-2">
+                                <Layers className="w-4 h-4 text-gray-400" />
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Scrollytelling Sequence</h4>
+                            </div>
+                            <div className="flex gap-2">
+                                <button onClick={() => !isLocked && addScrollyStep('map')} className="text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 bg-gray-100 hover:bg-black hover:text-white rounded-lg transition-colors flex items-center gap-1"><MapIcon className="w-3 h-3" /> Map</button>
+                                <button onClick={() => !isLocked && addScrollyStep('chart')} className="text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 bg-gray-100 hover:bg-black hover:text-white rounded-lg transition-colors flex items-center gap-1"><BarChart3 className="w-3 h-3" /> Chart</button>
+                                <button onClick={() => !isLocked && addScrollyStep('media')} className="text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 bg-gray-100 hover:bg-black hover:text-white rounded-lg transition-colors flex items-center gap-1"><Video className="w-3 h-3" /> Media</button>
+                                <button onClick={() => !isLocked && addScrollyStep('tactical')} className="text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 bg-gray-100 hover:bg-black hover:text-white rounded-lg transition-colors flex items-center gap-1"><Crosshair className="w-3 h-3" /> Tactics</button>
+                                <button onClick={() => !isLocked && addScrollyStep('timeline')} className="text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 bg-gray-100 hover:bg-black hover:text-white rounded-lg transition-colors flex items-center gap-1"><ArrowLeft className="w-3 h-3" /> History</button>
+                                <button onClick={() => !isLocked && addScrollyStep('text')} className="text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 bg-gray-100 hover:bg-black hover:text-white rounded-lg transition-colors flex items-center gap-1"><AlignLeft className="w-3 h-3" /> Text</button>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            {(block.steps || []).map((step, idx) => (
+                                <div key={idx} className="bg-white border border-gray-100 p-6 rounded-2xl space-y-4 shadow-sm relative group/step">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-bold">{idx + 1}</div>
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{step.type} Step</span>
+                                        </div>
+                                        <button onClick={() => !isLocked && removeScrollyStep(idx)} className="text-gray-300 hover:text-red-500 transition-colors opacity-0 group-hover/step:opacity-100">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-4">
+                                            {step.type === 'map' && (
+                                                <MapConfigurator
+                                                    value={step}
+                                                    onChange={(newConfig) => updateScrollyStep(idx, newConfig)}
+                                                />
+                                            )}
+                                            {step.type === 'chart' && (
+                                                <ChartConfigurator
+                                                    value={{
+                                                        type: step.chartType || 'line',
+                                                        title: step.label || '',
+                                                        accentColor: step.accentColor || '#FAFF00',
+                                                        data: (step.chartData || []).map((val, i) => ({
+                                                            value: val,
+                                                            label: (step.chartLabels || [])[i] || '',
+                                                            color: (step.chartColors || [])[i] || step.accentColor || '#FAFF00'
+                                                        }))
+                                                    }}
+                                                    onChange={(newConfig) => {
+                                                        updateScrollyStep(idx, {
+                                                            ...step,
+                                                            chartType: newConfig.type,
+                                                            label: newConfig.title,
+                                                            accentColor: newConfig.accentColor,
+                                                            chartData: newConfig.data.map(d => Number(d.value)),
+                                                            chartLabels: newConfig.data.map(d => d.label),
+                                                            chartColors: newConfig.data.map(d => d.color)
+                                                        });
+                                                    }}
+                                                />
+                                            )}
+                                            {step.type === 'text' && (
+                                                <input
+                                                    className="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl text-xs font-bold"
+                                                    placeholder="Section Label (Optional)"
+                                                    value={step.label || ''}
+                                                    onChange={(e) => updateScrollyStep(idx, { label: e.target.value })}
+                                                    disabled={isLocked}
+                                                />
+                                            )}
+                                        </div>
+                                        <textarea
+                                            className="w-full bg-gray-50 border border-gray-100 p-4 rounded-xl text-xs h-full min-h-[150px] font-medium leading-relaxed"
+                                            placeholder="Narrative text for this step..."
+                                            value={step.text || ''}
+                                            onChange={(e) => updateScrollyStep(idx, { text: e.target.value })}
+                                            disabled={isLocked}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                            {(block.steps || []).length === 0 && (
+                                <div className="text-center py-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-100">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-300">Empty Sequence</p>
+                                    <p className="text-xs text-gray-400 mt-1">Add a visual step to begin</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
         </Reorder.Item>
     );
