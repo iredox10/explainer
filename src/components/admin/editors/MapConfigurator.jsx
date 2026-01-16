@@ -1,20 +1,62 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from "react-simple-maps";
 import { Move, ZoomIn, MapPin, Globe, Plus, Trash2, Crosshair, MessageSquare, Palette } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
-import { geoMercator } from "d3-geo";
+import { geoMercator, geoCentroid, geoPath } from "d3-geo";
+import * as topojson from "topojson-client";
 
 const AFRICA_URL = "https://cdn.jsdelivr.net/npm/@highcharts/map-collection/custom/africa.topo.json";
 const NIGERIA_URL = "https://raw.githubusercontent.com/BolajiBI/topojson-maps/master/countries/nigeria/nigeria-states.json";
-const NIGERIA_LGA_URL = "https://raw.githubusercontent.com/NileshYAtDure/Nigeria_shape_File/main/lga.topojson";
+// GRID3 Nigeria LGA GeoJSON - clean, properly formatted data
+const NIGERIA_LGA_URL = "/data/grid3-lga.geojson";
 
 const NIGERIA_STATES = [
     "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno",
-    "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "FCT", "Gombe", "Imo",
+    "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "Fct", "Gombe", "Imo",
     "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa",
     "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba",
     "Yobe", "Zamfara"
 ];
+
+const STATE_COORDINATES = {
+    "Abia": [7.4860, 5.5320],
+    "Adamawa": [13.2700, 10.2703],
+    "Akwa Ibom": [7.8500, 5.0080],
+    "Anambra": [7.0700, 6.2104],
+    "Bauchi": [10.1900, 11.6804],
+    "Bayelsa": [6.0600, 4.7700],
+    "Benue": [8.1300, 7.1904],
+    "Borno": [12.1900, 10.6204],
+    "Cross River": [8.3300, 4.9604],
+    "Delta": [5.6800, 5.8904],
+    "Ebonyi": [8.0100, 6.2600],
+    "Edo": [5.6200, 6.3405],
+    "Ekiti": [5.2200, 7.6304],
+    "Enugu": [7.3833, 6.8670],
+    "Federal Capital Territory": [7.5333, 9.0833],
+    "Gombe": [11.1700, 10.2904],
+    "Imo": [7.0260, 5.4930],
+    "Jigawa": [9.3503, 11.7992],
+    "Kaduna": [7.7100, 11.0800],
+    "Kano": [8.5200, 12.0000],
+    "Katsina": [7.6207, 12.5631],
+    "Kebbi": [4.1075, 11.4168],
+    "Kogi": [6.7400, 7.8004],
+    "Kwara": [4.5500, 8.4900],
+    "Lagos": [3.5774, 6.5269],
+    "Nassarawa": [8.2383, 8.4388],
+    "Niger": [5.4700, 10.4004],
+    "Ogun": [3.4389, 6.9789],
+    "Ondo": [5.2000, 7.2504],
+    "Osun": [4.1800, 7.6300],
+    "Oyo": [3.5643, 8.2151],
+    "Plateau": [9.6826, 9.0583],
+    "Rivers": [7.0100, 4.8100],
+    "Sokoto": [5.3152, 13.0611],
+    "Taraba": [10.7376, 8.0141],
+    "Yobe": [11.9660, 11.7490],
+    "Zamfara": [6.6600, 12.1704]
+};
 
 const DEFAULT_HIGHLIGHT_COLOR = "#FAFF00";
 
@@ -40,39 +82,107 @@ export default function MapConfigurator({ value, onChange }) {
     const [isAnnotating, setIsAnnotating] = useState(false);
     const [newMarker, setNewMarker] = useState({ lat: "", lon: "", label: "" });
     const [activeColor, setActiveColor] = useState(DEFAULT_HIGHLIGHT_COLOR);
+    const [lgaData, setLgaData] = useState(null); // For state-level maps
     const mapRef = useRef(null);
 
     const mouseX = useMotionValue(0);
     const mouseY = useMotionValue(0);
 
-    const isNigeria = config.scope === 'nigeria';
-    const isState = NIGERIA_STATES.some(s => s.toLowerCase() === config.scope.toLowerCase());
+    const isNigeria = config.scope?.toLowerCase() === 'nigeria';
+    const isState = NIGERIA_STATES.some(s => s.toLowerCase() === config.scope?.toLowerCase());
 
-    let mapUrl = AFRICA_URL;
-    if (isNigeria) mapUrl = NIGERIA_URL;
-    if (isState) mapUrl = NIGERIA_LGA_URL;
+    // Fetch LGA data when a state is selected
+    useEffect(() => {
+        if (isState) {
+            fetch(NIGERIA_LGA_URL)
+                .then(res => res.json())
+                .then(data => {
+                    // GRID3 GeoJSON - features are directly in data.features
+                    const features = data.features || [];
+                    // Filter for the selected state using 'statename' property
+                    const stateFeatures = features.filter(f => {
+                        const stateName = (f.properties.statename || "").toLowerCase();
+                        return stateName === config.scope.toLowerCase();
+                    });
+                    console.log(`Loaded ${stateFeatures.length} LGAs for ${config.scope}`);
+                    setLgaData(stateFeatures);
+                })
+                .catch(err => console.error('Failed to load LGA data:', err));
+        } else {
+            setLgaData(null);
+        }
+    }, [isState, config.scope]);
 
-    const projectionCenter = isNigeria ? [8.6753, 9.0820] : (isState ? config.center : [20, 0]);
-    const projectionScale = isNigeria ? 2500 : (isState ? 5000 : 150);
+
+    const mapUrl = isState ? NIGERIA_LGA_URL : (isNigeria ? NIGERIA_URL : AFRICA_URL);
+
+    // Use a simpler projection setup - fixed center at Nigeria and let ZoomableGroup handle positioning
+    const projectionCenter = [8.6753, 9.0820]; // Always centered on Nigeria
+    const projectionScale = 2500; // Fixed scale - ZoomableGroup will handle zoom
 
     // Map dimensions
     const width = 800;
     const height = 600;
 
-    const projection = useMemo(() => {
-        return geoMercator()
-            .center(projectionCenter)
-            .scale(projectionScale)
-            .translate([width / 2, height / 2]);
-    }, [projectionCenter, projectionScale]);
+    // For state-level maps, we need the projection centered on the state
+    const projectionConfig = useMemo(() => {
+        if (isState) {
+            const stateCoords = STATE_COORDINATES[config.scope] || [8.6753, 9.0820];
+            return {
+                center: stateCoords,
+                scale: 15000 // High zoom for state-level
+            };
+        } else if (isNigeria) {
+            return {
+                center: [8.6753, 9.0820],
+                scale: 2500
+            };
+        }
+        return {
+            center: [20, 0],
+            scale: 150
+        };
+    }, [isState, isNigeria, config.scope]);
+
+    // Create a d3 projection that uses fitSize for automatic centering and scaling
+    const stateProjection = useMemo(() => {
+        if (isState && lgaData && lgaData.length > 0) {
+            // Create a FeatureCollection from the LGA data
+            const featureCollection = {
+                type: "FeatureCollection",
+                features: lgaData
+            };
+            // Use fitSize to automatically center and scale the projection
+            // IMPORTANT: disable clipExtent to prevent the bounding rectangle from appearing
+            return geoMercator()
+                .fitSize([width, height], featureCollection)
+                .clipExtent(null);
+        }
+        return null;
+    }, [isState, lgaData, width, height]);
+
+    const pathGenerator = useMemo(() => {
+        if (stateProjection) {
+            return geoPath().projection(stateProjection);
+        }
+        return null;
+    }, [stateProjection]);
 
     const handleScopeChange = (newScope) => {
-        const isNowNigeria = newScope === 'nigeria';
         const isNowState = NIGERIA_STATES.some(s => s.toLowerCase() === newScope.toLowerCase());
 
-        // Find state center if switching to state view
-        let newCenter = isNowNigeria ? [8.6753, 9.0820] : [20, 0];
+        let newCenter = [20, 0];
         let newZoom = 1;
+
+        if (newScope === 'nigeria') {
+            newCenter = [8.6753, 9.0820];
+            newZoom = 1;
+        } else if (isNowState) {
+            // For state-level maps, use state coordinates as center
+            // The projectionConfig handles the scale, so zoom stays at 1
+            newCenter = STATE_COORDINATES[newScope] || [8.6753, 9.0820];
+            newZoom = 1;
+        }
 
         onChange({
             ...config,
@@ -98,7 +208,7 @@ export default function MapConfigurator({ value, onChange }) {
     const handleGeoClick = (geo) => {
         if (isDroppingPin || isAnnotating) return;
 
-        const name = geo.properties.name || geo.properties.NAME_1 || geo.properties.admin2Name;
+        const name = isState ? (geo.properties.admin2Name || geo.properties.admin2) : (geo.properties.NAME_1 || geo.properties.name);
         const currentHighlights = { ...config.highlight };
 
         if (currentHighlights[name]) {
@@ -204,6 +314,11 @@ export default function MapConfigurator({ value, onChange }) {
                 }}
                 onClick={handleMapClick}
             >
+                {/* Debug info - helpful for user to see if filtering is working */}
+                <div className="absolute top-2 right-2 bg-black/80 text-white text-[8px] px-2 py-1 rounded-md z-20 font-mono">
+                    Scope: {config.scope} | JSON: {mapUrl.split('/').pop()}
+                </div>
+
                 {/* Annotations Preview */}
                 {config.annotations.map((ann, i) => (
                     <div
@@ -215,85 +330,181 @@ export default function MapConfigurator({ value, onChange }) {
                     </div>
                 ))}
 
-                <ComposableMap
-                    projection={projection}
-                    width={width}
-                    height={height}
-                    className="w-full h-full"
-                    style={{ pointerEvents: isDroppingPin ? 'none' : 'auto' }}
-                >
-                    <ZoomableGroup
-                        center={config.center}
-                        zoom={config.zoom}
-                        onMoveEnd={handleMoveEnd}
-                        minZoom={1}
-                        maxZoom={10}
-                        filterZoomEvent={isDroppingPin || isAnnotating ? () => false : undefined}
+                {/* State-level map using direct d3-geo rendering */}
+                {isState && lgaData && pathGenerator ? (
+                    <svg
+                        viewBox={`0 0 ${width} ${height}`}
+                        className="w-full h-full"
+                        style={{ background: '#F5F5F3' }}
                     >
-                        <Geographies geography={mapUrl} key={mapUrl}>
-                            {({ geographies }) => {
-                                const filteredGeos = isState
-                                    ? geographies.filter(geo => geo.properties.admin1Name?.toLowerCase() === config.scope.toLowerCase())
-                                    : geographies;
+                        <g>
+                            {lgaData.map((geo, i) => {
+                                // GRID3 GeoJSON uses 'lganame' property
+                                const name = geo.properties.lganame || geo.properties.admin2Name || `LGA-${i}`;
+                                const fillColor = config.highlight[name] || "#E0E0E0";
+                                const isHighlighted = !!config.highlight[name];
+                                const pathD = pathGenerator(geo);
+                                const centroid = stateProjection(geoCentroid(geo));
 
-                                return filteredGeos.map((geo) => {
-                                    const name = geo.properties.name || geo.properties.NAME_1 || geo.properties.admin2Name;
-                                    const fillColor = config.highlight[name] || "#D6D6DA";
-                                    const isHighlighted = !!config.highlight[name];
-
-                                    return (
-                                        <Geography
-                                            key={geo.rsmKey}
-                                            geography={geo}
+                                return (
+                                    <g key={name}>
+                                        <path
+                                            d={pathD}
+                                            fill={fillColor}
+                                            stroke="#FFFFFF"
+                                            strokeWidth={0.5}
+                                            style={{ cursor: 'pointer', transition: 'fill 250ms' }}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 handleGeoClick(geo);
                                             }}
                                             onMouseEnter={() => setHoveredGeo(name)}
                                             onMouseLeave={() => setHoveredGeo(null)}
-                                            style={{
-                                                default: {
-                                                    fill: fillColor,
-                                                    stroke: "#FFFFFF",
-                                                    strokeWidth: 0.5,
-                                                    outline: "none",
-                                                    cursor: isDroppingPin || isAnnotating ? "crosshair" : "pointer",
-                                                    transition: "all 250ms"
-                                                },
-                                                hover: {
-                                                    fill: isHighlighted ? fillColor : "#9ca3af",
-                                                    stroke: "#FFFFFF",
-                                                    strokeWidth: 0.5,
-                                                    outline: "none",
-                                                },
-                                                pressed: {
-                                                    fill: activeColor,
-                                                    stroke: "#FFFFFF",
-                                                    strokeWidth: 0.5,
-                                                    outline: "none"
-                                                },
-                                            }}
                                         />
-                                    );
-                                });
-                            }}
-                        </Geographies>
+                                        {isHighlighted && centroid && (
+                                            <g transform={`translate(${centroid[0]}, ${centroid[1] + 5})`}>
+                                                <rect x="-30" y="-12" width="60" height="24" rx="4" fill="black" fillOpacity={0.7} />
+                                                <text textAnchor="middle" y="4" fill="white" style={{ fontSize: '8px', fontWeight: 'bold' }}>
+                                                    {name.toUpperCase()}
+                                                </text>
+                                            </g>
+                                        )}
+                                    </g>
+                                );
+                            })}
+                        </g>
+                        {/* Debug counter */}
+                        <text x={width - 10} y={20} textAnchor="end" fill="#999" style={{ fontSize: '10px' }}>
+                            {lgaData.length} LGAs loaded
+                        </text>
+                    </svg>
+                ) : (
 
-                        {config.markers.map((marker, i) => (
-                            <Marker key={i} coordinates={[marker.lon, marker.lat]}>
-                                <circle r={4 / config.zoom} fill="#000" stroke="#fff" strokeWidth={1} />
-                                <text
-                                    textAnchor="middle"
-                                    y={-10 / config.zoom}
-                                    className="font-black uppercase tracking-tighter"
-                                    style={{ fill: "#000", fontSize: `${10 / config.zoom}px` }}
-                                >
-                                    {marker.label}
-                                </text>
-                            </Marker>
-                        ))}
-                    </ZoomableGroup>
-                </ComposableMap>
+                    <ComposableMap
+                        projection="geoMercator"
+                        projectionConfig={projectionConfig}
+                        width={width}
+                        height={height}
+                        className="w-full h-full"
+                        style={{ pointerEvents: isDroppingPin ? 'none' : 'auto' }}
+                    >
+                        <ZoomableGroup
+                            center={isState ? projectionConfig.center : config.center}
+                            zoom={isState ? 1 : config.zoom}
+                            onMoveEnd={isState ? undefined : handleMoveEnd}
+                            minZoom={0.5}
+                            maxZoom={20}
+                            filterZoomEvent={isDroppingPin || isAnnotating ? () => false : undefined}
+                        >
+                            <Geographies
+                                geography={mapUrl}
+                                key={`${mapUrl}-${config.scope}`} // Force re-render when scope changes
+                                parseGeographies={(geos) => {
+                                    if (geos.objects) {
+                                        // Robust key detection
+                                        const key = geos.objects.lga ? "lga" : (geos.objects.NGA_adm1 ? "NGA_adm1" : Object.keys(geos.objects)[0]);
+                                        return topojson.feature(geos, geos.objects[key]).features;
+                                    }
+                                    return geos;
+                                }}
+                            >
+                                {({ geographies }) => {
+                                    // Robust filtering for LGAs
+                                    const filteredGeos = isState
+                                        ? geographies.filter(geo => {
+                                            const p = geo.properties;
+                                            const admin1 = (p.admin1Name || p.admin1 || p.NAME_1 || p.State || p.state || "").trim().toLowerCase();
+                                            const scope = config.scope.toLowerCase().trim();
+                                            // Match both "Kano" and "Kano State"
+                                            return admin1 === scope || admin1 === `${scope} state` || admin1.includes(scope);
+                                        })
+                                        : geographies;
+
+                                    return (
+                                        <>
+                                            {/* Internal counter for debugging matches */}
+                                            <Marker coordinates={isState ? (STATE_COORDINATES[config.scope] || [8, 10]) : [20, 0]}>
+                                                <text y={-230} textAnchor="middle" fill="#999" style={{ fontSize: '8px', pointerEvents: 'none', fontWeight: 'bold' }}>
+                                                    {isState ? `Showing ${filteredGeos.length} LGAs for ${config.scope}` : `Showing all ${geographies.length} regions`}
+                                                </text>
+                                            </Marker>
+
+                                            {filteredGeos.map((geo) => {
+                                                // Robust name detection: for LGA it's admin2Name, for States it's NAME_1
+                                                const name = isState ? (geo.properties.admin2Name || geo.properties.admin2 || geo.properties.NAME_2) : (geo.properties.NAME_1 || geo.properties.name);
+                                                const fillColor = config.highlight[name] || "#E0E0E0";
+                                                const isHighlighted = !!config.highlight[name];
+
+                                                // Use explicit centroid calculation for better accuracy
+                                                const centroid = geo.properties.centroid || geoCentroid(geo);
+
+                                                return (
+                                                    <React.Fragment key={geo.rsmKey || name}>
+                                                        <Geography
+                                                            geography={geo}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleGeoClick(geo);
+                                                            }}
+                                                            onMouseEnter={() => setHoveredGeo(name)}
+                                                            onMouseLeave={() => setHoveredGeo(null)}
+                                                            style={{
+                                                                default: {
+                                                                    fill: fillColor,
+                                                                    stroke: isState ? "#FFFFFF" : "#607D8B",
+                                                                    strokeWidth: isState ? 0.3 : 0.5,
+                                                                    outline: "none",
+                                                                    cursor: isDroppingPin || isAnnotating ? "crosshair" : "pointer",
+                                                                    transition: "all 250ms"
+                                                                },
+                                                                hover: {
+                                                                    fill: isHighlighted ? fillColor : "#9ca3af",
+                                                                    stroke: "#FFFFFF",
+                                                                    strokeWidth: 0.5,
+                                                                    outline: "none",
+                                                                },
+                                                                pressed: {
+                                                                    fill: activeColor,
+                                                                    stroke: "#FFFFFF",
+                                                                    strokeWidth: 0.5,
+                                                                    outline: "none"
+                                                                },
+                                                            }}
+                                                        />
+                                                        {isHighlighted && (
+                                                            <Marker coordinates={centroid}>
+                                                                <g transform="translate(0, 5)">
+                                                                    <rect x="-30" y="-12" width="60" height="24" rx="4" fill="black" fillOpacity={0.7} />
+                                                                    <text textAnchor="middle" y="4" fill="white" style={{ fontSize: '8px', fontWeight: 'bold' }}>
+                                                                        {name.toUpperCase()}
+                                                                    </text>
+                                                                </g>
+                                                            </Marker>
+                                                        )}
+                                                    </React.Fragment>
+                                                );
+                                            })}
+                                        </>
+                                    );
+                                }}
+                            </Geographies>
+
+                            {config.markers.map((marker, i) => (
+                                <Marker key={i} coordinates={[marker.lon, marker.lat]}>
+                                    <circle r={4 / config.zoom} fill="#000" stroke="#fff" strokeWidth={1} />
+                                    <text
+                                        textAnchor="middle"
+                                        y={-10 / config.zoom}
+                                        className="font-black uppercase tracking-tighter"
+                                        style={{ fill: "#000", fontSize: `${10 / config.zoom}px` }}
+                                    >
+                                        {marker.label}
+                                    </text>
+                                </Marker>
+                            ))}
+                        </ZoomableGroup>
+                    </ComposableMap>
+                )}
 
                 {/* Config Overlay */}
                 <div className="absolute top-4 left-4 bg-white/90 backdrop-blur border border-gray-100 p-4 rounded-xl shadow-xl space-y-3 z-10 pointer-events-auto">
@@ -343,7 +554,7 @@ export default function MapConfigurator({ value, onChange }) {
                 </div>
 
                 <div className="absolute bottom-4 left-0 w-full text-center text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 pointer-events-none">
-                    {isDroppingPin ? "Click to drop pin" : isAnnotating ? "Click to add label" : "Drag to pan • Click to paint states"}
+                    {isDroppingPin ? "Click to drop pin" : isAnnotating ? "Click to add label" : "Drag to pan • Click to paint LGAs"}
                 </div>
 
                 <AnimatePresence>
@@ -381,7 +592,7 @@ export default function MapConfigurator({ value, onChange }) {
                         ))}
                     </div>
                 ) : (
-                    <p className="text-[10px] font-bold text-gray-300 italic">No states highlighted yet. Click the map to start painting.</p>
+                    <p className="text-[10px] font-bold text-gray-300 italic">No regions highlighted yet. Click the map to start painting.</p>
                 )}
             </div>
 
