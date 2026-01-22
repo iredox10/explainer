@@ -205,10 +205,36 @@ export default function MapConfigurator({ value, onChange }) {
         });
     };
 
+    const clampZoom = (value) => Math.min(20, Math.max(0.5, value));
+
+    const handleZoomChange = (delta) => {
+        if (isState) return;
+        const nextZoom = clampZoom((config.zoom || 1) + delta);
+        onChange({
+            ...config,
+            zoom: nextZoom
+        });
+    };
+
+    const handleWheelZoom = (e) => {
+        if (isState || isDroppingPin || isAnnotating) return;
+        e.preventDefault();
+        const direction = e.deltaY > 0 ? -0.3 : 0.3;
+        handleZoomChange(direction);
+    };
+
+    const getGeoName = (geo, stateMode) => {
+        if (!geo?.properties) return 'Unknown';
+        if (stateMode) {
+            return (geo.properties.lganame || geo.properties.admin2Name || geo.properties.admin2 || geo.properties.NAME_2 || 'Unknown').trim();
+        }
+        return (geo.properties.NAME_1 || geo.properties.name || geo.properties.admin1Name || geo.properties.admin1 || geo.properties.State || geo.properties.state || 'Unknown').trim();
+    };
+
     const handleGeoClick = (geo) => {
         if (isDroppingPin || isAnnotating) return;
 
-        const name = isState ? (geo.properties.admin2Name || geo.properties.admin2) : (geo.properties.NAME_1 || geo.properties.name);
+        const name = getGeoName(geo, isState);
         const currentHighlights = { ...config.highlight };
 
         if (currentHighlights[name]) {
@@ -313,6 +339,7 @@ export default function MapConfigurator({ value, onChange }) {
                     mouseY.set(e.clientY + 10);
                 }}
                 onClick={handleMapClick}
+                onWheel={handleWheelZoom}
             >
                 {/* Debug info - helpful for user to see if filtering is working */}
                 <div className="absolute top-2 right-2 bg-black/80 text-white text-[8px] px-2 py-1 rounded-md z-20 font-mono">
@@ -339,8 +366,7 @@ export default function MapConfigurator({ value, onChange }) {
                     >
                         <g>
                             {lgaData.map((geo, i) => {
-                                // GRID3 GeoJSON uses 'lganame' property
-                                const name = geo.properties.lganame || geo.properties.admin2Name || `LGA-${i}`;
+                                const name = getGeoName(geo, true) || `LGA-${i}`;
                                 const fillColor = config.highlight[name] || "#E0E0E0";
                                 const isHighlighted = !!config.highlight[name];
                                 const pathD = pathGenerator(geo);
@@ -431,7 +457,7 @@ export default function MapConfigurator({ value, onChange }) {
 
                                             {filteredGeos.map((geo) => {
                                                 // Robust name detection: for LGA it's admin2Name, for States it's NAME_1
-                                                const name = isState ? (geo.properties.admin2Name || geo.properties.admin2 || geo.properties.NAME_2) : (geo.properties.NAME_1 || geo.properties.name);
+                                                const name = getGeoName(geo, isState);
                                                 const fillColor = config.highlight[name] || "#E0E0E0";
                                                 const isHighlighted = !!config.highlight[name];
 
@@ -552,6 +578,25 @@ export default function MapConfigurator({ value, onChange }) {
                         </div>
                     </div>
                 </div>
+
+                {!isState && (
+                    <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
+                        <button
+                            onClick={() => handleZoomChange(0.5)}
+                            className="w-9 h-9 bg-white/90 backdrop-blur border border-gray-100 rounded-full shadow-lg text-black flex items-center justify-center hover:bg-white"
+                            title="Zoom in"
+                        >
+                            <Plus className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={() => handleZoomChange(-0.5)}
+                            className="w-9 h-9 bg-white/90 backdrop-blur border border-gray-100 rounded-full shadow-lg text-black flex items-center justify-center hover:bg-white"
+                            title="Zoom out"
+                        >
+                            <Move className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
 
                 <div className="absolute bottom-4 left-0 w-full text-center text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 pointer-events-none">
                     {isDroppingPin ? "Click to drop pin" : isAnnotating ? "Click to add label" : "Drag to pan • Click to paint LGAs"}
