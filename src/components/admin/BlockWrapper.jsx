@@ -64,6 +64,10 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
             value={block}
             dragListener={!isLocked}
             dragControls={dragControls}
+            onPointerDown={(e) => {
+                if (e.target?.closest?.('[data-no-dnd="true"]')) return;
+                if (!isLocked) dragControls.start(e);
+            }}
             className={`relative group min-h-[50px] p-2 rounded-xl transition-all ${isActive ? 'ring-2 ring-[#FAFF00] bg-gray-50' : 'hover:bg-gray-50/50'}`}
             onClick={(e) => {
                 e.stopPropagation();

@@ -267,19 +267,28 @@ const displayReadTime = `${readTime} min read`;
 
                 if (block.type === "map") {
                   return (
-                    <div class={`my-16 ${block.layout === "full-width" ? "-mx-6 md:-mx-12 lg:-mx-24" : ""} h-[420px] md:h-[520px] border border-gray-200 bg-gray-50 rounded-sm overflow-hidden relative shadow-sm`}>
-                      <AnimatedMap
-                        client:visible
-                        center={block.center}
-                        zoom={block.zoom}
-                        highlight={block.highlight}
-                        label={block.label}
-                        scope={block.scope}
-                        markers={block.markers}
-                        annotations={block.annotations}
-                        overlayIcons={block.overlayIcons}
-                      />
-                    </div>
+                    <figure class={`my-16 ${block.layout === "full-width" ? "-mx-6 md:-mx-12 lg:-mx-24" : ""}`}>
+                      <div class="border border-gray-200 bg-gray-50 rounded-sm overflow-hidden relative shadow-sm">
+                        <AnimatedMap
+                          client:visible
+                          center={block.center}
+                          zoom={block.zoom}
+                          highlight={block.highlight}
+                          label={block.label}
+                          scope={block.scope}
+                          markers={block.markers}
+                          annotations={block.annotations}
+                          overlayIcons={block.overlayIcons}
+                          showRecenter={true}
+                        />
+                      </div>
+                      {block.caption && (
+                        <figcaption class="mt-3 px-2 text-xs text-gray-500 font-mono font-medium text-center uppercase tracking-wider flex items-center justify-center gap-2">
+                          <span class="w-1.5 h-1.5 bg-yellow-400 rounded-full" />
+                          {block.caption}
+                        </figcaption>
+                      )}
+                    </figure>
                   );
                 }
 

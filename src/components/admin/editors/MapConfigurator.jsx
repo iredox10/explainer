@@ -205,6 +205,19 @@ export default function MapConfigurator({ value, onChange }) {
         });
     };
 
+    const handleRecenter = () => {
+        const nextCenter = isState
+            ? (STATE_COORDINATES[config.scope] || [8.6753, 9.0820])
+            : (isNigeria ? [8.6753, 9.0820] : [20, 0]);
+        const nextZoom = isState ? 1 : (isNigeria ? 1 : 1);
+
+        onChange({
+            ...config,
+            center: nextCenter,
+            zoom: nextZoom
+        });
+    };
+
     const clampZoom = (value) => Math.min(20, Math.max(0.5, value));
 
     const handleZoomChange = (delta) => {
@@ -342,7 +355,7 @@ export default function MapConfigurator({ value, onChange }) {
                 onWheel={handleWheelZoom}
             >
                 {/* Debug info - helpful for user to see if filtering is working */}
-                <div className="absolute top-2 right-2 bg-black/80 text-white text-[8px] px-2 py-1 rounded-md z-20 font-mono">
+                <div className="absolute top-2 right-2 bg-black/80 text-white text-[8px] px-2 py-1 rounded-md z-20 font-mono" data-no-dnd="true">
                     Scope: {config.scope} | JSON: {mapUrl.split('/').pop()}
                 </div>
 
@@ -533,7 +546,7 @@ export default function MapConfigurator({ value, onChange }) {
                 )}
 
                 {/* Config Overlay */}
-                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur border border-gray-100 p-4 rounded-xl shadow-xl space-y-3 z-10 pointer-events-auto">
+                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur border border-gray-100 p-4 rounded-xl shadow-xl space-y-3 z-10 pointer-events-auto" data-no-dnd="true">
                     <div className="flex flex-col gap-3 pb-3 border-b border-gray-50">
                         <div className="flex items-center gap-3">
                             <Globe className="w-4 h-4 text-gray-400" />
@@ -580,13 +593,20 @@ export default function MapConfigurator({ value, onChange }) {
                 </div>
 
                 {!isState && (
-                    <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
+                    <div className="absolute top-4 right-4 flex flex-col gap-2 z-10" data-no-dnd="true">
                         <button
                             onClick={() => handleZoomChange(0.5)}
                             className="w-9 h-9 bg-white/90 backdrop-blur border border-gray-100 rounded-full shadow-lg text-black flex items-center justify-center hover:bg-white"
                             title="Zoom in"
                         >
                             <Plus className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={handleRecenter}
+                            className="w-9 h-9 bg-white/90 backdrop-blur border border-gray-100 rounded-full shadow-lg text-black flex items-center justify-center hover:bg-white"
+                            title="Recenter map"
+                        >
+                            <Crosshair className="w-4 h-4" />
                         </button>
                         <button
                             onClick={() => handleZoomChange(-0.5)}

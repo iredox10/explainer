@@ -60,7 +60,7 @@ const STATE_COORDINATES = {
 
 const MotionGeography = motion(Geography);
 
-export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, label, scope = 'africa', markers = [], annotations = [], overlayIcons = [] }) {
+export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, label, scope = 'africa', markers = [], annotations = [], overlayIcons = [], showRecenter = false }) {
     const springConfig = { damping: 20, stiffness: 100, mass: 1 };
 
     // Motion values for our coordinates
@@ -84,6 +84,19 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
         lat.set(center[1]);
         z.set(zoom);
     }, [center, zoom, lon, lat, z]);
+
+    const handleRecenter = () => {
+        lon.set(defaultCenter[0]);
+        lat.set(defaultCenter[1]);
+        z.set(defaultZoom);
+    };
+
+    const handleUserMoveEnd = ({ coordinates, zoom: nextZoom }) => {
+        if (!showRecenter) return;
+        lon.set(coordinates[0]);
+        lat.set(coordinates[1]);
+        z.set(nextZoom);
+    };
 
     // Internal state to force re-render for ZoomableGroup (since it needs raw numbers)
     const [renderCenter, setRenderCenter] = useState(center);
@@ -111,6 +124,7 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
     }
 
     const defaultCenter = isNigeria ? [8.6753, 9.0820] : (isState ? STATE_COORDINATES[scope] || center : [20, 0]);
+    const defaultZoom = isState ? 1 : (isNigeria ? 1 : 1);
 
     // Dynamic projection config based on scope
     const projectionConfig = useMemo(() => {
@@ -232,6 +246,7 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
                     <ZoomableGroup
                         center={renderCenter}
                         zoom={renderZoom}
+                        onMoveEnd={showRecenter ? handleUserMoveEnd : undefined}
                     >
                         <Geographies
                             geography={mapUrl}
@@ -420,18 +435,15 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
                 </motion.div>
             ))}
 
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={label}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="absolute bottom-6 right-6 md:bottom-10 md:right-10 bg-white/10 backdrop-blur-md border-l-4 border-[#FAFF00] px-4 py-3 md:px-8 md:py-6 shadow-2xl"
+            {showRecenter && (
+                <button
+                    onClick={handleRecenter}
+                    className="absolute top-4 right-4 w-9 h-9 bg-white/90 backdrop-blur border border-gray-100 rounded-full shadow-lg text-black flex items-center justify-center hover:bg-white z-10"
+                    title="Recenter map"
                 >
-                    <span className="block text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mb-1 md:mb-2">Operational Sector</span>
-                    <span className="block text-lg md:text-2xl font-bold text-black font-serif-display leading-none">{label}</span>
-                </motion.div>
-            </AnimatePresence>
+                    <MapPin className="w-4 h-4" />
+                </button>
+            )}
 
         </div>
     );
