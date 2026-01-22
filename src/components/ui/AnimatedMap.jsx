@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Fragment } from 'react';
 import { geoCentroid, geoMercator, geoPath } from "d3-geo";
 import * as topojson from "topojson-client";
 import { motion, AnimatePresence, useSpring, useMotionValue } from 'framer-motion';
@@ -258,6 +258,7 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
                                 return filteredGeos.map((geo) => {
                                     // Calculate color based on highlight type
                                     let fillColor = "#F5F5F3"; // Default off-white
+                                    let highlightKey = null;
 
                                     // Normalize names across different TopoJSON structures
                                     const geoName = isState ? (geo.properties.admin2Name || geo.properties.admin2) : (geo.properties.NAME_1 || geo.properties.name);
@@ -269,10 +270,13 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
                                         if (typeof highlight === 'string') {
                                             if (normalizedGeoName === highlight.toLowerCase() || geoId === highlight.toLowerCase() || geoRegion === highlight.toLowerCase()) {
                                                 fillColor = "#FAFF00";
+                                                highlightKey = highlight;
                                             }
                                         } else if (Array.isArray(highlight)) {
-                                            if (highlight.some(h => normalizedGeoName === h.toLowerCase() || geoId === h.toLowerCase() || geoRegion === h.toLowerCase())) {
+                                            const match = highlight.find(h => normalizedGeoName === h.toLowerCase() || geoId === h.toLowerCase() || geoRegion === h.toLowerCase());
+                                            if (match) {
                                                 fillColor = "#FAFF00";
+                                                highlightKey = match;
                                             }
                                         } else if (typeof highlight === 'object') {
                                             const key = Object.keys(highlight).find(k =>
@@ -282,12 +286,13 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
                                             );
                                             if (key) {
                                                 fillColor = highlight[key];
+                                                highlightKey = key;
                                             }
                                         }
                                     }
 
                                     return (
-                                        <React.Fragment key={geo.rsmKey || geoName}>
+                                        <Fragment key={geo.rsmKey || geoName}>
                                             <MotionGeography
                                                 geography={geo}
                                                 onMouseEnter={() => {
@@ -309,7 +314,17 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
                                                     pressed: { outline: "none" },
                                                 }}
                                             />
-                                        </React.Fragment>
+                                            {highlightKey && (
+                                                <Marker coordinates={geoCentroid(geo)}>
+                                                    <g transform="translate(0, 5)">
+                                                        <rect x="-30" y="-12" width="60" height="24" rx="4" fill="black" fillOpacity={0.7} />
+                                                        <text textAnchor="middle" y="4" fill="white" style={{ fontSize: '8px', fontWeight: 'bold' }}>
+                                                            {geoName?.toUpperCase() || highlightKey.toUpperCase()}
+                                                        </text>
+                                                    </g>
+                                                </Marker>
+                                            )}
+                                        </Fragment>
                                     );
                                 });
                             }}
