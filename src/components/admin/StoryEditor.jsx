@@ -21,6 +21,34 @@ export default function StoryEditor({ storyId }) {
     const fileInputRef = useRef(null);
     const previewIframeRef = useRef(null);
 
+    const parseJSONField = (value, fallback) => {
+        if (!value) return fallback;
+        if (typeof value !== 'string') return value;
+        try {
+            return JSON.parse(value);
+        } catch (err) {
+            return fallback;
+        }
+    };
+
+    const normalizeStory = (data) => {
+        if (!data) return data;
+        return {
+            ...data,
+            tags: parseJSONField(data.tags, []),
+            sources: parseJSONField(data.sources, []),
+            footnotes: parseJSONField(data.footnotes, []),
+            seo: parseJSONField(data.seo, {
+                ogTitle: '',
+                ogDescription: '',
+                ogImage: '',
+                canonicalUrl: '',
+                keywords: []
+            }),
+            revisionSnapshots: parseJSONField(data.revisionSnapshots, [])
+        };
+    };
+
     useEffect(() => {
         if (showGhostPreview && previewIframeRef.current && story) {
             previewIframeRef.current.contentWindow?.postMessage({
@@ -74,6 +102,18 @@ export default function StoryEditor({ storyId }) {
                 layout: "standard",
                 videoUrl: "",
                 isFeatured: false,
+                tags: [],
+                sources: [],
+                footnotes: [],
+                scheduledAt: null,
+                seo: {
+                    ogTitle: "",
+                    ogDescription: "",
+                    ogImage: "",
+                    canonicalUrl: "",
+                    keywords: []
+                },
+                revisionSnapshots: [],
                 content: JSON.stringify([{ id: 1, type: "p", text: "" }]),
                 scrollySections: JSON.stringify([]),
                 heroImage: "",
@@ -104,7 +144,7 @@ export default function StoryEditor({ storyId }) {
                     data.scrollySections = '[]';
                 }
 
-                setStory(data);
+                setStory(normalizeStory(data));
             }
         }
         setIsLoading(false);
@@ -230,12 +270,59 @@ export default function StoryEditor({ storyId }) {
     const performSave = async (newStatus) => {
         setSaveStatus('saving');
         try {
+            const serializedContent = typeof story.content === 'string' ? story.content : JSON.stringify(story.content || []);
+            const serializedScrolly = typeof story.scrollySections === 'string' ? story.scrollySections : JSON.stringify(story.scrollySections || []);
+            const serializedSources = JSON.stringify(story.sources || []);
+            const serializedFootnotes = JSON.stringify(story.footnotes || []);
+            const serializedSeo = JSON.stringify(story.seo || {});
+
+            const snapshotEntry = {
+                id: String(Date.now()),
+                createdAt: new Date().toISOString(),
+                user: user?.name,
+                story: {
+                    headline: story.headline,
+                    subhead: story.subhead,
+                    category: story.category,
+                    author: story.author,
+                    author_id: story.author_id,
+                    workflow_status: story.workflow_status,
+                    status: story.status,
+                    layout: story.layout,
+                    videoUrl: story.videoUrl,
+                    isFeatured: story.isFeatured,
+                    tags: story.tags || [],
+                    sources: story.sources || [],
+                    footnotes: story.footnotes || [],
+                    scheduledAt: story.scheduledAt || null,
+                    seo: story.seo || {},
+                    content: serializedContent,
+                    scrollySections: serializedScrolly,
+                    heroImage: story.heroImage
+                }
+            };
+
+            const currentSnapshots = Array.isArray(story.revisionSnapshots)
+                ? story.revisionSnapshots
+                : (() => {
+                    try {
+                        return JSON.parse(story.revisionSnapshots || '[]');
+                    } catch (err) {
+                        return [];
+                    }
+                })();
+
             const payload = {
                 ...story,
                 workflow_status: newStatus,
                 status: newStatus === 'published' ? 'Published' : (newStatus === 'pending_review' ? 'Pending Review' : 'Draft'),
-                content: typeof story.content === 'string' ? story.content : JSON.stringify(story.content || []),
-                scrollySections: typeof story.scrollySections === 'string' ? story.scrollySections : JSON.stringify(story.scrollySections || []),
+                content: serializedContent,
+                scrollySections: serializedScrolly,
+                sources: serializedSources,
+                footnotes: serializedFootnotes,
+                seo: serializedSeo,
+                scheduledAt: story.scheduledAt || null,
+                revisionSnapshots: JSON.stringify([...currentSnapshots, snapshotEntry].slice(-20)),
                 version_log: (() => {
                     const currentLogs = JSON.parse(story.version_log || '[]');
                     const newLog = { action: `Status changed to ${newStatus}`, user: user.name, timestamp: new Date().toISOString() };
@@ -249,7 +336,7 @@ export default function StoryEditor({ storyId }) {
             const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...dataToSave } = payload;
 
             const result = await storyService.saveStory(storyId, dataToSave);
-            setStory(result);
+            setStory(normalizeStory(result));
             setIsDirty(false);
             setSaveStatus('saved');
             setTimeout(() => setSaveStatus('idle'), 3000);
@@ -260,6 +347,21 @@ export default function StoryEditor({ storyId }) {
             alert("Action failed: " + e.message);
             throw e;
         }
+    };
+
+    const restoreSnapshot = (snapshotId) => {
+        const snapshots = Array.isArray(story.revisionSnapshots) ? story.revisionSnapshots : [];
+        const selected = snapshots.find(s => s.id === snapshotId);
+        if (!selected?.story) return;
+        const restored = normalizeStory({
+            ...story,
+            ...selected.story,
+            content: selected.story.content,
+            scrollySections: selected.story.scrollySections
+        });
+        setStory(restored);
+        setIsDirty(true);
+        setSaveStatus('idle');
     };
 
     const handlePreview = async () => {
@@ -524,6 +626,15 @@ export default function StoryEditor({ storyId }) {
                                         <div className={`w-4 h-4 rounded-full shadow-sm transform transition-transform ${story.isFeatured ? 'translate-x-4 bg-[#FAFF00]' : 'bg-white'}`} />
                                     </div>
                                 </div>
+                                <div>
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Scheduled Publish</label>
+                                    <input
+                                        type="datetime-local"
+                                        value={story.scheduledAt ? new Date(story.scheduledAt).toISOString().slice(0, 16) : ''}
+                                        onChange={(e) => handleChange('scheduledAt', e.target.value ? new Date(e.target.value).toISOString() : null)}
+                                        className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-[10px] font-bold"
+                                    />
+                                </div>
                             </div>
                         </section>
 
@@ -573,6 +684,26 @@ export default function StoryEditor({ storyId }) {
                                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-center py-4 italic">No history logged yet.</p>
                                 )}
                             </div>
+                            <div className="space-y-3">
+                                <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-300">Snapshots</h4>
+                                {(story.revisionSnapshots || []).slice().reverse().map((snap) => (
+                                    <div key={snap.id} className="flex items-center justify-between p-3 bg-white border border-gray-50 rounded-xl">
+                                        <div>
+                                            <p className="text-[10px] font-black uppercase tracking-tight text-gray-900">Snapshot</p>
+                                            <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">{snap.user || 'System'} • {new Date(snap.createdAt).toLocaleString()}</p>
+                                        </div>
+                                        <button
+                                            onClick={() => restoreSnapshot(snap.id)}
+                                            className="text-[9px] font-black uppercase tracking-widest text-black border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50"
+                                        >
+                                            Restore
+                                        </button>
+                                    </div>
+                                ))}
+                                {(!story.revisionSnapshots || story.revisionSnapshots.length === 0) && (
+                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-center py-2 italic">No snapshots yet.</p>
+                                )}
+                            </div>
                         </section>
 
                         <section className="space-y-4">
@@ -602,6 +733,85 @@ export default function StoryEditor({ storyId }) {
                                     onChange={(e) => handleChange('videoUrl', e.target.value)}
                                 />
                             )}
+                            <div className="space-y-3">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block">Tags</label>
+                                <input
+                                    className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-[10px] font-bold"
+                                    placeholder="e.g. Telecom, Infrastructure, Lagos"
+                                    value={(story.tags || []).join(', ')}
+                                    onChange={(e) => handleChange('tags', e.target.value.split(',').map(tag => tag.trim()).filter(Boolean))}
+                                />
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block">SEO Overrides</label>
+                                <input
+                                    className="w-full bg-white border border-gray-100 p-3 rounded-2xl text-[10px] font-bold"
+                                    placeholder="OG Title"
+                                    value={story.seo?.ogTitle || ''}
+                                    onChange={(e) => handleChange('seo', { ...story.seo, ogTitle: e.target.value })}
+                                />
+                                <textarea
+                                    className="w-full bg-white border border-gray-100 p-3 rounded-2xl text-[10px] font-bold"
+                                    placeholder="OG Description"
+                                    rows="2"
+                                    value={story.seo?.ogDescription || ''}
+                                    onChange={(e) => handleChange('seo', { ...story.seo, ogDescription: e.target.value })}
+                                />
+                                <input
+                                    className="w-full bg-white border border-gray-100 p-3 rounded-2xl text-[10px] font-bold"
+                                    placeholder="OG Image URL"
+                                    value={story.seo?.ogImage || ''}
+                                    onChange={(e) => handleChange('seo', { ...story.seo, ogImage: e.target.value })}
+                                />
+                                <input
+                                    className="w-full bg-white border border-gray-100 p-3 rounded-2xl text-[10px] font-bold"
+                                    placeholder="Canonical URL"
+                                    value={story.seo?.canonicalUrl || ''}
+                                    onChange={(e) => handleChange('seo', { ...story.seo, canonicalUrl: e.target.value })}
+                                />
+                                <input
+                                    className="w-full bg-white border border-gray-100 p-3 rounded-2xl text-[10px] font-bold"
+                                    placeholder="SEO Keywords (comma separated)"
+                                    value={(story.seo?.keywords || []).join(', ')}
+                                    onChange={(e) => handleChange('seo', { ...story.seo, keywords: e.target.value.split(',').map(k => k.trim()).filter(Boolean) })}
+                                />
+                            </div>
+                        </section>
+
+                        <section className="space-y-4">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Sources & Footnotes</h3>
+                            <div className="space-y-3">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block">Sources (JSON)</label>
+                                <textarea
+                                    className="w-full bg-white border border-gray-100 p-3 rounded-2xl text-[10px] font-mono"
+                                    rows="4"
+                                    placeholder='[{"title":"World Bank Report","url":"https://...","publisher":"World Bank","date":"2024-01-02"}]'
+                                    value={JSON.stringify(story.sources || [], null, 2)}
+                                    onChange={(e) => {
+                                        try {
+                                            const parsed = JSON.parse(e.target.value || '[]');
+                                            handleChange('sources', Array.isArray(parsed) ? parsed : []);
+                                        } catch (err) {
+                                            handleChange('sources', story.sources || []);
+                                        }
+                                    }}
+                                />
+                                <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block">Footnotes (JSON)</label>
+                                <textarea
+                                    className="w-full bg-white border border-gray-100 p-3 rounded-2xl text-[10px] font-mono"
+                                    rows="4"
+                                    placeholder='[{"id":"1","text":"Internal memo","url":"https://..."}]'
+                                    value={JSON.stringify(story.footnotes || [], null, 2)}
+                                    onChange={(e) => {
+                                        try {
+                                            const parsed = JSON.parse(e.target.value || '[]');
+                                            handleChange('footnotes', Array.isArray(parsed) ? parsed : []);
+                                        } catch (err) {
+                                            handleChange('footnotes', story.footnotes || []);
+                                        }
+                                    }}
+                                />
+                            </div>
                         </section>
                     </div>
                 </aside>

@@ -184,6 +184,7 @@ export const serverStoryService = {
         return resilientFetch(async () => {
             const response = await serverDatabases.listDocuments(DB_ID, COLLECTIONS.STORIES, [
                 Query.equal('slug', slug),
+                Query.lessThanEqual('publishedAt', new Date().toISOString()),
                 Query.orderDesc('$updatedAt'), // Prioritize most recent version if duplicates exist
                 Query.limit(1)
             ]);
@@ -199,11 +200,29 @@ export const serverStoryService = {
         return resilientFetch(async () => {
             const response = await serverDatabases.listDocuments(DB_ID, COLLECTIONS.STORIES, [
                 Query.equal('status', 'Published'),
+                Query.lessThanEqual('publishedAt', new Date().toISOString()),
                 Query.orderDesc('publishedAt')
             ]);
             return response.documents;
         }, "getPublishedStories").catch(error => {
             console.error('Server Appwrite error fetching published stories:', error);
+            return [];
+        });
+    },
+
+    async searchStories(queryText) {
+        if (!serverDatabases) return [];
+        return resilientFetch(async () => {
+            const response = await serverDatabases.listDocuments(DB_ID, COLLECTIONS.STORIES, [
+                Query.search('headline', queryText),
+                Query.search('subhead', queryText),
+                Query.equal('status', 'Published'),
+                Query.lessThanEqual('publishedAt', new Date().toISOString()),
+                Query.limit(10)
+            ]);
+            return response.documents;
+        }, "searchStories").catch(error => {
+            console.error('Server Appwrite error searching stories:', error);
             return [];
         });
     },

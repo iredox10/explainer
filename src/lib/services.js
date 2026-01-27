@@ -29,6 +29,7 @@ export const storyService = {
         try {
             const response = await databases.listDocuments(DB_ID, COLLECTIONS.STORIES, [
                 Query.equal('status', 'Published'),
+                Query.lessThanEqual('publishedAt', new Date().toISOString()),
                 Query.orderDesc('publishedAt')
             ]);
             return response.documents;
@@ -112,6 +113,7 @@ export const storyService = {
         try {
             const response = await databases.listDocuments(DB_ID, COLLECTIONS.STORIES, [
                 Query.search('headline', queryText),
+                Query.search('subhead', queryText),
                 Query.limit(10)
             ]);
             return response.documents;
@@ -124,7 +126,9 @@ export const storyService = {
         try {
             const response = await databases.listDocuments(DB_ID, COLLECTIONS.STORIES, [
                 Query.search('headline', queryText),
+                Query.search('subhead', queryText),
                 Query.equal('status', 'Published'),
+                Query.lessThanEqual('publishedAt', new Date().toISOString()),
                 Query.limit(5)
             ]);
             return response.documents;

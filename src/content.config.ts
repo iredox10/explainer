@@ -46,6 +46,7 @@ const stories = defineCollection({
           type: z.literal('map'),
           text: z.string().optional(),
           label: z.string().optional(),
+          caption: z.string().optional(),
           center: z.array(z.number()).optional(),
           zoom: z.number().optional(),
           viewBox: z.string().optional(),
@@ -112,6 +113,32 @@ const stories = defineCollection({
       })
     ).optional(),
   }),
+  tags: z.array(z.string()).optional(),
+  sources: z.array(z.object({
+    title: z.string(),
+    url: z.string().optional(),
+    publisher: z.string().optional(),
+    date: z.string().optional()
+  })).optional(),
+  footnotes: z.array(z.object({
+    id: z.string(),
+    text: z.string(),
+    url: z.string().optional()
+  })).optional(),
+  scheduledAt: z.string().optional(),
+  seo: z.object({
+    ogTitle: z.string().optional(),
+    ogDescription: z.string().optional(),
+    ogImage: z.string().optional(),
+    canonicalUrl: z.string().optional(),
+    keywords: z.array(z.string()).optional()
+  }).optional(),
+  revisionSnapshots: z.array(z.object({
+    id: z.string(),
+    createdAt: z.string(),
+    user: z.string().optional(),
+    story: z.record(z.any())
+  })).optional(),
 });
 
 export const collections = { stories };

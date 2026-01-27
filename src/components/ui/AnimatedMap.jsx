@@ -4,6 +4,7 @@ import * as topojson from "topojson-client";
 import { motion, AnimatePresence, useSpring, useMotionValue } from 'framer-motion';
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from "react-simple-maps";
 import { MapPin } from 'lucide-react';
+import { analytics } from '../../lib/analytics.js';
 
 const AFRICA_URL = "https://cdn.jsdelivr.net/npm/@highcharts/map-collection/custom/africa.topo.json";
 const NIGERIA_URL = "https://raw.githubusercontent.com/BolajiBI/topojson-maps/master/countries/nigeria/nigeria-states.json";
@@ -315,6 +316,12 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
                                                 }}
                                                 onMouseLeave={() => {
                                                     setHoveredGeo(null);
+                                                }}
+                                                onClick={() => {
+                                                    analytics.track('map_region_click', {
+                                                        scope,
+                                                        region: geoName || ''
+                                                    });
                                                 }}
                                                 initial={false}
                                                 animate={{

@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
 
+import { analytics } from '../../lib/analytics.js';
+
 export default function AnimatedChart({ type = 'line', data = [10, 20, 30], labels = [], colors = [], accentColor, label, annotations = [] }) {
     const maxVal = Math.max(...data, 1);
     const chartHeight = 200;
@@ -87,9 +89,9 @@ export default function AnimatedChart({ type = 'line', data = [10, 20, 30], labe
                     )}
 
                     {type === 'bar' && (
-                        <g>
-                            <line x1="0" y1={chartHeight} x2={chartWidth} y2={chartHeight} stroke="#e5e7eb" strokeWidth="1" />
-                            {data.map((val, i) => {
+                                <g>
+                                    <line x1="0" y1={chartHeight} x2={chartWidth} y2={chartHeight} stroke="#e5e7eb" strokeWidth="1" />
+                                    {data.map((val, i) => {
                                 // Support multi-series if data[i] is an object { values: [v1, v2] }
                                 const isMulti = typeof val === 'object' && val.values;
                                 const values = isMulti ? val.values : [val];
@@ -113,6 +115,7 @@ export default function AnimatedChart({ type = 'line', data = [10, 20, 30], labe
                                                     fill={isMulti ? (val.colors?.[seriesIdx] || getSegmentColor(seriesIdx)) : getSegmentColor(i)}
                                                     transition={{ duration: 1, delay: (i * 0.1) + (seriesIdx * 0.05), ease: "circOut" }}
                                                     rx="2"
+                                                    onClick={() => analytics.track('chart_bar_click', { index: i, value: v, label: labels[i] || '' })}
                                                 />
                                             );
                                         })}
@@ -148,6 +151,7 @@ export default function AnimatedChart({ type = 'line', data = [10, 20, 30], labe
                                         transition={{ duration: 0.8, delay: i * 0.1 }}
                                         stroke="white"
                                         strokeWidth="2"
+                                        onClick={() => analytics.track('chart_pie_click', { index: i, value: val, label: labels[i] || '' })}
                                     />
                                 );
                             })}

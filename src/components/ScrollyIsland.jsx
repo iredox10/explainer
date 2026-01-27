@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Scrollama, Step } from 'react-scrollama';
 import { motion, AnimatePresence } from 'framer-motion';
+import { analytics } from '../lib/analytics.js';
 
 import AnimatedChart from './ui/AnimatedChart';
 import AnimatedMap from './ui/AnimatedMap';
@@ -13,6 +14,14 @@ export default function ScrollyIsland({ steps, forcedStep = null, id = 'scrolly-
 
     const onStepEnter = ({ data }) => {
         setCurrentStepIndex(data);
+        const step = steps?.[data];
+        if (step) {
+            analytics.track('scrolly_step_enter', {
+                stepIndex: data,
+                stepType: step.type,
+                label: step.label || ''
+            });
+        }
     };
 
     useEffect(() => {

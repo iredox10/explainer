@@ -93,6 +93,12 @@ async function setupStoriesCollection(dbId, permissions) {
         await databases.createStringAttribute(dbId, colId, 'author_id', 50, false);
         await databases.createStringAttribute(dbId, colId, 'locked_by', 50, false);
         await databases.createStringAttribute(dbId, colId, 'version_log', 10000, false);
+        await databases.createStringAttribute(dbId, colId, 'tags', 1000, false);
+        await databases.createStringAttribute(dbId, colId, 'sources', 20000, false);
+        await databases.createStringAttribute(dbId, colId, 'footnotes', 20000, false);
+        await databases.createDatetimeAttribute(dbId, colId, 'scheduledAt', false);
+        await databases.createStringAttribute(dbId, colId, 'seo', 10000, false);
+        await databases.createStringAttribute(dbId, colId, 'revisionSnapshots', 50000, false);
 
         console.log(`✅ Attributes for '${colId}' created.`);
     } catch (e) {

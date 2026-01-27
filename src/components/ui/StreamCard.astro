@@ -1,5 +1,6 @@
 ---
 import { serverStoryService } from "../../lib/server-appwrite.js";
+import { Image } from "astro:assets";
 
 interface Props {
   article: {
@@ -17,7 +18,7 @@ interface Props {
 
 const { article } = Astro.props;
 const displayTitle = article.headline || article.title;
-const displayImage = article.imageUrl || article.heroImage;
+const displayImage = article.imageUrl || article.heroImage || "/social-preview.jpg";
 const displayCategory = article.category || "General";
 const readTime = article.content
   ? serverStoryService.calculateReadTime(article.content)
@@ -67,9 +68,11 @@ const displayReadTime = `${readTime} min read`;
 
   <!-- Image -->
   <div class="w-full md:w-48 aspect-[4/3] overflow-hidden order-1 md:order-2">
-    <img
+    <Image
       src={displayImage}
-      alt={displayTitle}
+      alt={displayTitle || "Story image"}
+      width={320}
+      height={240}
       class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:scale-105"
     />
   </div>

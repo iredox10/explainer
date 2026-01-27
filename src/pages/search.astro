@@ -1,0 +1,59 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+import { serverStoryService } from "../lib/server-appwrite.js";
+
+const query = Astro.url.searchParams.get("q") || "";
+let results = [];
+
+if (query.trim()) {
+  results = await serverStoryService.searchStories(query.trim());
+}
+---
+
+<MainLayout title={query ? `Search: ${query}` : "Search"}>
+  <div class="min-h-screen bg-white text-gray-900">
+    <div class="max-w-5xl mx-auto px-6 py-16">
+      <h1 class="text-3xl md:text-5xl font-black tracking-tight mb-6">Search</h1>
+      <form class="mb-10" action="/search" method="get">
+        <input
+          type="text"
+          name="q"
+          value={query}
+          placeholder="Search headlines and subheads"
+          class="w-full border border-gray-200 rounded-2xl px-6 py-4 text-sm font-bold"
+        />
+      </form>
+
+      {query.trim() && (
+        <p class="text-xs uppercase tracking-widest text-gray-400 font-black mb-6">
+          {results.length} results for “{query}”
+        </p>
+      )}
+
+      <div class="space-y-6">
+        {results.map((story) => (
+          <a
+            href={`/article/${story.slug}`}
+            class="block border border-gray-100 rounded-2xl p-6 hover:border-black transition-all"
+          >
+            <p class="text-[10px] uppercase tracking-widest text-gray-400 font-black mb-2">
+              {story.category}
+            </p>
+            <h2 class="text-xl font-black tracking-tight text-black mb-2">
+              {story.headline}
+            </h2>
+            <p class="text-sm text-gray-600">
+              {story.subhead}
+            </p>
+          </a>
+        ))}
+
+        {query.trim() && results.length === 0 && (
+          <div class="border border-dashed border-gray-200 rounded-2xl p-10 text-center">
+            <p class="text-sm text-gray-500">No stories match that search.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</MainLayout>

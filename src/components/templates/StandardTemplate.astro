@@ -9,6 +9,7 @@ import AnimatedChart from "../../components/ui/AnimatedChart.jsx";
 import ShareButtons from "../../components/ui/ShareButtons.jsx";
 import PersistentAudioPlayer from "../../components/ui/PersistentAudioPlayer.jsx";
 import { Bookmark, Clock, Calendar } from "lucide-react";
+import { Image } from "astro:assets";
 const { story } = Astro.props;
 const ARTICLE_DATA = story;
 
@@ -27,6 +28,9 @@ const getBlocks = (content: any) => {
 };
 
 const blocks = getBlocks(ARTICLE_DATA.content);
+const sources: any[] = ARTICLE_DATA.sources || [];
+const footnotes: any[] = ARTICLE_DATA.footnotes || [];
+const relatedStories: any[] = ARTICLE_DATA.related || [];
 const fullText = blocks
   .filter((b: any) => b.type === "p" || b.type === "heading")
   .map((b: any) => b.text)
@@ -37,7 +41,15 @@ const readTime = serverStoryService.calculateReadTime(blocks);
 const displayReadTime = `${readTime} min read`;
 ---
 
-<MainLayout title={ARTICLE_DATA.headline} showNav={false}>
+<MainLayout
+  title={ARTICLE_DATA.seo?.ogTitle || ARTICLE_DATA.headline}
+  description={ARTICLE_DATA.seo?.ogDescription || ARTICLE_DATA.subhead}
+  image={ARTICLE_DATA.seo?.ogImage || ARTICLE_DATA.heroImage}
+  showNav={false}
+  canonical={ARTICLE_DATA.seo?.canonicalUrl}
+  keywords={ARTICLE_DATA.seo?.keywords}
+  article={ARTICLE_DATA}
+>
   <div
     class="bg-[#fff] text-[#121212] font-sans antialiased min-h-screen selection:bg-yellow-300 selection:text-black"
   >
@@ -80,8 +92,11 @@ const displayReadTime = `${readTime} min read`;
             >
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-gray-300 overflow-hidden">
-                  <img
+                  <Image
                     src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${ARTICLE_DATA.author}`}
+                    alt={ARTICLE_DATA.author}
+                    width={40}
+                    height={40}
                     class="w-full h-full object-cover"
                   />
                 </div>
@@ -136,10 +151,12 @@ const displayReadTime = `${readTime} min read`;
             >
             </div>
             {ARTICLE_DATA.heroImage ? (
-                <img
+                <Image
                 src={ARTICLE_DATA.heroImage}
+                alt={ARTICLE_DATA.headline}
+                width={1400}
+                height={900}
                 class="absolute inset-0 w-full h-full object-cover transform scale-105 group-hover:scale-100 transition-transform duration-[1.5s] ease-out"
-                alt="Hero"
                 />
             ) : (
                 <div class="absolute inset-0 flex items-center justify-center text-gray-400">
@@ -249,9 +266,11 @@ const displayReadTime = `${readTime} min read`;
                   return (
                     <figure class="my-16 -mx-6 md:-mx-12 lg:-mx-24 group">
                       <div class="overflow-hidden">
-                        <img
+                        <Image
                           src={block.url}
                           alt={block.caption || "Article image"}
+                          width={1200}
+                          height={800}
                           class="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-[1.02]"
                         />
                       </div>
@@ -359,8 +378,8 @@ const displayReadTime = `${readTime} min read`;
               })
             }
 
-            {/* Newsletter / Footer for Article */}
-            <div class="mt-20 pt-10 border-t border-black">
+      {/* Newsletter / Footer for Article */}
+      <div class="mt-20 pt-10 border-t border-black">
               <p
                 class="font-sans font-bold text-xs uppercase tracking-widest text-gray-400 mb-2"
               >
@@ -380,8 +399,71 @@ const displayReadTime = `${readTime} min read`;
                   <p class="text-sm text-gray-500">
                     {ARTICLE_DATA.role || "Staff Writer"}
                   </p>
+        </div>
+
+        {(sources && sources.length > 0) && (
+          <section class="mt-16 border-t border-gray-200 pt-8">
+            <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-4">Sources</h3>
+            <div class="space-y-3">
+              {sources.map((source) => (
+                <div class="text-sm font-medium text-gray-700">
+                  {source.url ? (
+                    <a href={source.url} class="underline hover:text-black" target="_blank">
+                      {source.title}
+                    </a>
+                  ) : (
+                    <span>{source.title}</span>
+                  )}
+                  {source.publisher && (
+                    <span class="text-gray-400"> • {source.publisher}</span>
+                  )}
+                  {source.date && (
+                    <span class="text-gray-400"> • {source.date}</span>
+                  )}
                 </div>
-              </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {(footnotes && footnotes.length > 0) && (
+          <section class="mt-10 border-t border-gray-100 pt-6">
+            <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-4">Footnotes</h3>
+            <ol class="space-y-3 text-sm text-gray-600 list-decimal list-inside">
+              {footnotes.map((note) => (
+                <li>
+                  {note.url ? (
+                    <a href={note.url} class="underline hover:text-black" target="_blank">
+                      {note.text}
+                    </a>
+                  ) : (
+                    <span>{note.text}</span>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
+        {(relatedStories && relatedStories.length > 0) && (
+          <section class="mt-12 border-t border-gray-100 pt-8">
+            <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-6">Related Stories</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {relatedStories.map((story) => (
+                <a href={story.slug ? `/article/${story.slug}` : '#'} class="group border border-gray-100 rounded-2xl overflow-hidden hover:border-black transition-all">
+                  <div class="aspect-[4/3] bg-gray-100 overflow-hidden">
+                    <img src={story.image} alt={story.title} class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                  </div>
+                  <div class="p-4">
+                    <p class="text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Related</p>
+                    <h4 class="text-lg font-bold text-black leading-tight">{story.title}</h4>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
 
               <div
                 class="bg-[#FAFF00] p-10 text-center relative overflow-hidden"

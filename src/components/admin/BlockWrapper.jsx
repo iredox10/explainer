@@ -1,5 +1,5 @@
 import { Reorder, useDragControls } from 'framer-motion';
-import { Trash2, Upload, Loader2, X, GripVertical, Maximize2, Minimize2, Video, Map as MapIcon, BarChart3, AlignLeft, Layers, Columns, MoveHorizontal, Crosshair, ArrowLeft } from 'lucide-react';
+import { Trash2, Upload, Loader2, X, GripVertical, Maximize2, Minimize2, Video, Map as MapIcon, BarChart3, AlignLeft, Layers, Columns, MoveHorizontal, Crosshair, ArrowLeft, MessageSquarePlus } from 'lucide-react';
 import MapConfigurator from './editors/MapConfigurator';
 import ChartConfigurator from './editors/ChartConfigurator';
 
@@ -7,6 +7,29 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
     const dragControls = useDragControls();
 
     const isLayoutBlock = ['image', 'beforeAfter', 'callout', 'quote', 'map', 'chart'].includes(block.type);
+    const comments = Array.isArray(block.comments) ? block.comments : [];
+    const [newComment, setNewComment] = useState('');
+
+    const addComment = () => {
+        if (!newComment.trim()) return;
+        const entry = {
+            id: `${block.id}-${Date.now()}`,
+            text: newComment.trim(),
+            createdAt: new Date().toISOString()
+        };
+        onUpdate({
+            ...block,
+            comments: [...comments, entry]
+        });
+        setNewComment('');
+    };
+
+    const removeComment = (id) => {
+        onUpdate({
+            ...block,
+            comments: comments.filter((c) => c.id !== id)
+        });
+    };
     const isFullWidth = block.layout === 'full-width';
 
     const isVideo = (url) => {
@@ -484,6 +507,49 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                                     <p className="text-xs text-gray-400 mt-1">Add a visual step to begin</p>
                                 </div>
                             )}
+                        </div>
+                    </div>
+                )}
+
+                {!isLocked && (
+                    <div className="mt-6 border-t border-gray-100 pt-4 space-y-3">
+                        <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">
+                            <MessageSquarePlus className="w-3.5 h-3.5" /> Editorial Notes
+                        </div>
+                        <div className="space-y-2">
+                            {comments.map((comment) => (
+                                <div key={comment.id} className="flex items-start justify-between gap-4 bg-white border border-gray-100 rounded-xl p-3">
+                                    <div>
+                                        <p className="text-[10px] font-bold text-gray-800">{comment.text}</p>
+                                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-1">{new Date(comment.createdAt).toLocaleString()}</p>
+                                    </div>
+                                    <button
+                                        onClick={() => removeComment(comment.id)}
+                                        className="text-gray-300 hover:text-red-500 transition-colors"
+                                        title="Remove note"
+                                    >
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            ))}
+                            {comments.length === 0 && (
+                                <p className="text-[10px] text-gray-300 italic">No notes yet.</p>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <input
+                                className="flex-1 bg-white border border-gray-100 p-3 rounded-xl text-[10px] font-bold"
+                                placeholder="Add an editorial note..."
+                                value={newComment}
+                                onChange={(e) => setNewComment(e.target.value)}
+                                onFocus={onActivate}
+                            />
+                            <button
+                                onClick={addComment}
+                                className="bg-black text-white px-4 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest"
+                            >
+                                Add
+                            </button>
                         </div>
                     </div>
                 )}
