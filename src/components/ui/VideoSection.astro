@@ -1,4 +1,5 @@
 ---
+import { Image } from "astro:assets";
 interface Props {
   videos: {
     title: string;
@@ -29,13 +30,15 @@ const { videos } = Astro.props;
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
-      {videos.map((video, i) => (
+      {videos.map((video) => (
         <article class="group cursor-pointer flex flex-col">
           <!-- Thumbnail Container -->
           <div class="relative aspect-[16/9] bg-gray-900 mb-6 overflow-hidden">
-            <img 
+            <Image 
               src={video.thumbUrl} 
               alt={video.title}
+              width={640}
+              height={360}
               class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-out"
             />
             

@@ -7,6 +7,7 @@ import Footer from "../components/Footer.astro";
 import NewsletterForm from "../components/ui/NewsletterForm.jsx";
 import { serverStoryService } from "../lib/server-appwrite.js";
 import { VOX_HOME_DATA } from "../data/mock";
+import { Image } from "astro:assets";
 
 // Types/Interfaces for data consistency
 interface CleanArticle {
@@ -95,6 +96,33 @@ const displayVideos = liveVideos.length > 0 ? liveVideos : VOX_HOME_DATA.videos;
 ---
 
 <MainLayout title="Explainer - Visual Journalism That Makes Sense of the World">
+    <script type="application/ld+json" slot="head">
+        {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "Explainer",
+            "alternateName": "Explainer Africa",
+            "url": "https://explainer.africa/",
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://explainer.africa/search?q={search_term_string}",
+                "query-input": "required name=search_term_string"
+            }
+        })}
+    </script>
+    <script type="application/ld+json" slot="head">
+        {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "Explainer",
+            "url": "https://explainer.africa/",
+            "logo": "https://explainer.africa/favicon.svg",
+            "sameAs": [
+                "https://twitter.com/explainer_africa",
+                "https://www.linkedin.com/company/explainer-africa"
+            ]
+        })}
+    </script>
     <main class="max-w-7xl mx-auto px-6 py-12">
         <!-- Live Data Sync Debug (Hidden) -->
         <div style="display:none" data-appwrite-sync-status={publishedStories.length} data-fetch-error={fetchError}></div>
@@ -206,8 +234,11 @@ const displayVideos = liveVideos.length > 0 ? liveVideos : VOX_HOME_DATA.videos;
                                 categoriesWithStories[catName].slice(0, 3).map((s: any, i: number) => (
                                     <article class="group">
                                         <div class="aspect-[16/10] overflow-hidden mb-6 bg-gray-100 relative rounded-sm">
-                                            <img
+                                            <Image
                                                 src={s.heroImage || s.imageUrl || 'https://images.unsplash.com/photo-1585829365294-111320e7588e?w=800&q=80'}
+                                                alt={s.headline || s.title}
+                                                width={400}
+                                                height={250}
                                                 class="w-full h-full object-cover grayscale-[50%] group-hover:grayscale-0 transition-all duration-700"
                                             />
                                         </div>

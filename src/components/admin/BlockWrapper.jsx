@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Reorder, useDragControls } from 'framer-motion';
 import { Trash2, Upload, Loader2, X, GripVertical, Maximize2, Minimize2, Video, Map as MapIcon, BarChart3, AlignLeft, Layers, Columns, MoveHorizontal, Crosshair, ArrowLeft, MessageSquarePlus } from 'lucide-react';
 import MapConfigurator from './editors/MapConfigurator';

@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /preview/
+Disallow: /api/
+
+# Crawl-delay for rate limiting
+Crawl-delay: 1
+
+# Sitemaps
+Sitemap: https://explainer.africa/sitemap-index.xml

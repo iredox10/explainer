@@ -1,0 +1,69 @@
+---
+import { serverStoryService } from "../../lib/server-appwrite.js";
+import AnimatedMap from "../../components/ui/AnimatedMap.jsx";
+import AnimatedChart from "../../components/ui/AnimatedChart.jsx";
+import "../../styles/base.css";
+import "../../styles/global.css";
+
+export const prerender = false;
+
+const { id } = Astro.params;
+const blockIndex = parseInt(Astro.url.searchParams.get("index") || "0");
+
+const story = await serverStoryService.getStoryById(id);
+if (!story) return Astro.redirect("/404");
+
+const content = JSON.parse(story.content || "[]");
+const block = content[blockIndex];
+
+if (!block || !['map', 'chart'].includes(block.type)) {
+    return Astro.redirect("/404");
+}
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width" />
+        <title>Embed: {story.headline}</title>
+        <style>
+            body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+        </style>
+    </head>
+    <body class="bg-white">
+        <div class="h-screen w-screen relative">
+            {block.type === 'map' && (
+                <AnimatedMap
+                    client:load
+                    center={block.center}
+                    zoom={block.zoom}
+                    highlight={block.highlight}
+                    label={block.label}
+                    scope={block.scope}
+                    markers={block.markers}
+                    annotations={block.annotations}
+                    overlayIcons={block.overlayIcons}
+                    showRecenter={true}
+                />
+            )}
+            {block.type === 'chart' && (
+                <AnimatedChart
+                    client:load
+                    type={block.chartType}
+                    data={block.chartData}
+                    labels={block.chartLabels}
+                    colors={block.chartColors}
+                    accentColor={block.accentColor}
+                    label={block.title || block.label}
+                    annotations={block.annotations}
+                />
+            )}
+            
+            <div class="absolute bottom-2 right-2 flex items-center gap-1.5 opacity-50 hover:opacity-100 transition-opacity">
+                <span class="text-[8px] font-black uppercase tracking-widest text-gray-400">Powered by</span>
+                <span class="text-[10px] font-black uppercase tracking-tighter text-black">Explainer</span>
+            </div>
+        </div>
+    </body>
+</html>

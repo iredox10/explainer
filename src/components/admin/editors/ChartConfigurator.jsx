@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, BarChart2, PieChart, Activity } from 'lucide-react';
+import { Plus, Trash2, BarChart2, PieChart, Activity, FileJson, X, Loader2 } from 'lucide-react';
 import AnimatedChart from '../../ui/AnimatedChart';
 
 export default function ChartConfigurator({ value, onChange }) {
@@ -22,6 +22,8 @@ export default function ChartConfigurator({ value, onChange }) {
     if (!config.annotations) config.annotations = [];
 
     const [isAnnotating, setIsAnnotating] = useState(false);
+    const [bulkData, setBulkData] = useState('');
+    const [showBulk, setShowBulk] = useState(false);
 
     // Update helper
     const updateConfig = (updates) => {
@@ -68,6 +70,40 @@ export default function ChartConfigurator({ value, onChange }) {
     const removeRow = (index) => {
         const newData = config.data.filter((_, i) => i !== index);
         updateConfig({ data: newData });
+    };
+
+    const handleBulkImport = () => {
+        try {
+            let imported = [];
+            const trimmed = bulkData.trim();
+            if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+                // Try JSON
+                const parsed = JSON.parse(trimmed);
+                imported = Array.isArray(parsed) ? parsed : [parsed];
+            } else {
+                // Try CSV (Label, Value)
+                imported = trimmed.split('\n').filter(Boolean).map(line => {
+                    const parts = line.split(',');
+                    const label = parts[0]?.trim();
+                    const value = Number(parts[1]?.trim());
+                    return { label: label || 'Imported', value: isNaN(value) ? 0 : value, color: config.accentColor || '#FAFF00' };
+                });
+            }
+            
+            if (imported.length > 0) {
+                updateConfig({
+                    data: imported.map(d => ({
+                        label: String(d.label || 'Point'),
+                        value: Number(d.value) || 0,
+                        color: d.color || config.accentColor || '#FAFF00'
+                    }))
+                });
+                setShowBulk(false);
+                setBulkData('');
+            }
+        } catch (err) {
+            alert('Import failed. Please check format (JSON array or Label,Value lines).');
+        }
     };
 
     // Prepare data for AnimatedChart
@@ -122,7 +158,6 @@ export default function ChartConfigurator({ value, onChange }) {
                     className={`h-[300px] w-full ${isAnnotating ? 'cursor-crosshair' : ''}`}
                     onClick={handleChartClick}
                 >
-                    {/* We wrap AnimatedChart to constrain its size as it takes full width/height */}
                     <AnimatedChart 
                         type={config.type}
                         data={chartData}
@@ -215,13 +250,54 @@ export default function ChartConfigurator({ value, onChange }) {
                 <div className="lg:col-span-2 space-y-4">
                     <div className="flex items-center justify-between">
                         <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Data Points</label>
-                        <button 
-                            onClick={addRow}
-                            className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
-                        >
-                            <Plus className="w-3 h-3" /> Add Row
-                        </button>
+                        <div className="flex gap-2">
+                            <button 
+                                onClick={() => setShowBulk(!showBulk)}
+                                className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-gray-600 hover:text-black bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg transition-colors"
+                            >
+                                <FileJson className="w-3 h-3" /> {showBulk ? 'Hide Import' : 'Bulk Import'}
+                            </button>
+                            <button 
+                                onClick={addRow}
+                                className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
+                            >
+                                <Plus className="w-3 h-3" /> Add Row
+                            </button>
+                        </div>
                     </div>
+
+                    {showBulk && (
+                        <div className="bg-black text-white p-6 rounded-2xl space-y-4 shadow-2xl">
+                            <div className="flex items-center justify-between">
+                                <h4 className="text-[10px] font-black uppercase tracking-widest text-yellow-400">Bulk Data Importer</h4>
+                                <div className="flex gap-2 text-[8px] font-bold text-gray-400">
+                                    <span>CSV (Label,Value)</span>
+                                    <span>•</span>
+                                    <span>JSON Array</span>
+                                </div>
+                            </div>
+                            <textarea 
+                                className="w-full h-32 bg-white/10 border border-white/10 rounded-xl p-3 text-xs font-mono focus:outline-none focus:border-yellow-400 transition-colors"
+                                placeholder={"Lagos, 45\nAbuja, 30\nKano, 25"}
+                                value={bulkData}
+                                onChange={(e) => setBulkData(e.target.value)}
+                            />
+                            <div className="flex justify-end gap-2">
+                                <button 
+                                    onClick={() => setShowBulk(false)}
+                                    className="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest text-white/50 hover:text-white"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    onClick={handleBulkImport}
+                                    className="bg-yellow-400 text-black px-6 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest hover:scale-105 transition-transform"
+                                >
+                                    Process Import
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
                         <div className="grid grid-cols-12 gap-2 bg-gray-50 p-3 border-b border-gray-100 text-[9px] font-black uppercase tracking-widest text-gray-400">

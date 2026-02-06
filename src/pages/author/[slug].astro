@@ -6,6 +6,7 @@ import Footer from "../../components/Footer.astro";
 import { AUTHORS } from "../../data/mock";
 import { storyService } from "../../lib/services";
 import { Mail, Twitter, Globe, Linkedin } from 'lucide-react';
+import { Image } from "astro:assets";
 
 export const prerender = false;
 
@@ -24,7 +25,26 @@ const authorStories = publishedStories.filter(s => s.author === author.name || s
 
 ---
 
-<MainLayout title={`${author.name} - Explainer`}>
+<MainLayout 
+    title={`${author.name} - Explainer`}
+    description={author.bio}
+    image={(author as any).imageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author.name}`}
+>
+  <script type="application/ld+json" slot="head">
+    {JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": author.name,
+        "jobTitle": author.role,
+        "description": author.bio,
+        "url": `https://explainer.africa/author/${author.slug}`,
+        "image": (author as any).imageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author.name}`,
+        "sameAs": [
+            author.social?.twitter ? `https://twitter.com/${author.social.twitter.replace('@', '')}` : null,
+            (author.social as any)?.linkedin ? `https://${(author.social as any).linkedin}` : null
+        ].filter(Boolean)
+    })}
+  </script>
   <VoxNav />
   
   <main class="min-h-screen bg-[#fdfdfd]">
@@ -32,7 +52,13 @@ const authorStories = publishedStories.filter(s => s.author === author.name || s
         <div class="max-w-4xl mx-auto px-6 py-20 text-center">
             <div class="mb-8 relative inline-block">
                 <div class="w-32 h-32 rounded-full bg-white border-4 border-white shadow-md overflow-hidden mx-auto">
-                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${author.name}`} alt={author.name} class="w-full h-full object-cover" />
+                    <Image 
+                        src={(author as any).imageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author.name}`} 
+                        alt={author.name} 
+                        width={128}
+                        height={128}
+                        class="w-full h-full object-cover" 
+                    />
                 </div>
             </div>
             <h1 class="font-serif-display font-black text-4xl md:text-5xl text-black mb-3">{author.name}</h1>

@@ -13,9 +13,10 @@ interface Props {
 }
 
 const { article } = Astro.props;
-const displayImage = article.heroImage || article.imageUrl;
+const displayImage = article.heroImage || article.imageUrl || "/social-preview.jpg";
 
 import { serverStoryService } from "../../lib/server-appwrite.js";
+import { Image } from "astro:assets";
 const readTime = (article as any).content
   ? serverStoryService.calculateReadTime((article as any).content)
   : 8;
@@ -104,9 +105,11 @@ const displayReadTime = `${readTime} min read`;
       >
         <!-- Parallax-like Image Container -->
         <a href={`/article/${article.slug}`} class="block w-full h-full">
-          <img
+          <Image
             src={displayImage}
             alt={article.headline}
+            width={1200}
+            height={900}
             class="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-110 grayscale-[30%] group-hover:grayscale-0"
           />
         </a>

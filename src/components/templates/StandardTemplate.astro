@@ -287,9 +287,9 @@ const displayReadTime = `${readTime} min read`;
                 if (block.type === "map") {
                   return (
                     <figure class={`my-16 ${block.layout === "full-width" ? "-mx-6 md:-mx-12 lg:-mx-24" : ""}`}>
-                      <div class="border border-gray-200 bg-gray-50 rounded-sm overflow-hidden relative shadow-sm">
+                      <div class="border border-gray-200 bg-gray-50 rounded-sm overflow-hidden relative shadow-sm h-[450px] md:h-[650px]">
                         <AnimatedMap
-                          client:visible
+                          client:load
                           center={block.center}
                           zoom={block.zoom}
                           highlight={block.highlight}

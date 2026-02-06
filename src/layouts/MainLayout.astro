@@ -1,5 +1,17 @@
 ---
 import "../styles/base.css";
+import "@fontsource/inter/300.css";
+import "@fontsource/inter/400.css";
+import "@fontsource/inter/500.css";
+import "@fontsource/inter/600.css";
+import "@fontsource/inter/700.css";
+import "@fontsource/inter/800.css";
+import "@fontsource/inter/900.css";
+import "@fontsource/playfair-display/400.css";
+import "@fontsource/playfair-display/700.css";
+import "@fontsource/playfair-display/900.css";
+import "@fontsource/playfair-display/400-italic.css";
+import "@fontsource/playfair-display/700-italic.css";
 import VoxNav from "../components/ui/VoxNav.astro";
 import PersistentAudioPlayer from "../components/ui/PersistentAudioPlayer.jsx";
 import CommandMenu from "../components/ui/CommandMenu.jsx";
@@ -28,6 +40,22 @@ const canonicalURL = canonical || Astro.url.href;
 const keywordsContent = Array.isArray(keywords) ? keywords.join(', ') : '';
 const articleData = article || null;
 const isArticle = !!articleData?.headline;
+const isNoIndex = Astro.url.pathname.startsWith('/admin') || Astro.url.pathname.includes('/preview');
+
+const breadcrumbs = [
+    { name: "Home", item: "https://explainer.africa/" }
+];
+
+if (isArticle && articleData.category) {
+    breadcrumbs.push({
+        name: articleData.category,
+        item: `https://explainer.africa/topic/${articleData.category.toLowerCase()}`
+    });
+    breadcrumbs.push({
+        name: articleData.headline,
+        item: canonicalURL
+    });
+}
 ---
 
 <!doctype html>
@@ -39,16 +67,31 @@ const isArticle = !!articleData?.headline;
             content={description}
         />
         <meta name="viewport" content="width=device-width" />
+        <meta name="theme-color" content="#FAFF00" />
+
+        <!-- Resource Hints for Performance -->
+        <link rel="preconnect" href="https://cloud.appwrite.io" />
+        <link rel="preconnect" href="https://images.unsplash.com" />
+        <link rel="preconnect" href="https://api.dicebear.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+
+        <!-- Icons and Manifest -->
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicon.svg" />
+        <link rel="manifest" href="/site.webmanifest" />
+
+        <link rel="alternate" type="application/rss+xml" title="Explainer RSS Feed" href="/rss.xml" />
         <meta name="generator" content={Astro.generator} />
+        {isNoIndex && <meta name="robots" content="noindex, nofollow" />}
         {keywordsContent && <meta name="keywords" content={keywordsContent} />}
 
         <!-- Open Graph / Facebook -->
-        <meta property="og:type" content="website" />
+        <meta property="og:type" content={isArticle ? "article" : "website"} />
         <meta property="og:url" content={canonicalURL} />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:image" content={image} />
+        <meta property="og:site_name" content="Explainer" />
 
         <!-- Twitter -->
         <meta property="twitter:card" content="summary_large_image" />
@@ -56,6 +99,8 @@ const isArticle = !!articleData?.headline;
         <meta property="twitter:title" content={title} />
         <meta property="twitter:description" content={description} />
         <meta property="twitter:image" content={image} />
+        <meta property="twitter:site" content="@explainer_africa" />
+        <meta property="twitter:creator" content="@explainer_africa" />
 
         {import.meta.env.PUBLIC_ANALYTICS_KEY && (
             <script async src={`https://www.googletagmanager.com/gtag/js?id=${import.meta.env.PUBLIC_ANALYTICS_KEY}`}></script>
@@ -69,6 +114,19 @@ gtag('config', '${import.meta.env.PUBLIC_ANALYTICS_KEY}');`}
             </script>
         )}
 
+        <script type="application/ld+json">
+            {JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                "itemListElement": breadcrumbs.map((b, i) => ({
+                    "@type": "ListItem",
+                    "position": i + 1,
+                    "name": b.name,
+                    "item": b.item
+                }))
+            })}
+        </script>
+
         {isArticle && (
             <script type="application/ld+json">
                 {JSON.stringify({
@@ -80,7 +138,8 @@ gtag('config', '${import.meta.env.PUBLIC_ANALYTICS_KEY}');`}
                     dateModified: articleData.$updatedAt || articleData.publishedAt || articleData.date,
                     author: {
                         "@type": "Person",
-                        name: articleData.author
+                        name: articleData.author,
+                        url: `https://explainer.africa/author/${articleData.author?.toLowerCase().replace(/ /g, '-')}`
                     },
                     image: image ? [image] : undefined,
                     mainEntityOfPage: canonicalURL,
@@ -89,7 +148,7 @@ gtag('config', '${import.meta.env.PUBLIC_ANALYTICS_KEY}');`}
                         name: "Explainer",
                         logo: {
                             "@type": "ImageObject",
-                            url: "/favicon.svg"
+                            url: "https://explainer.africa/favicon.svg"
                         }
                     }
                 })}
@@ -97,6 +156,7 @@ gtag('config', '${import.meta.env.PUBLIC_ANALYTICS_KEY}');`}
         )}
 
         <title>{title}</title>
+        <slot name="head" />
     </head>
     <body class="bg-white text-gray-900 font-sans antialiased">
         <CommandMenu client:load />

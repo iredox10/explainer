@@ -1,0 +1,41 @@
+{
+  "name": "Explainer - Visual Journalism Platform",
+  "short_name": "Explainer",
+  "description": "A Vox-style visual journalism platform specializing in Scrollytelling - deep reporting with cinematic, motion-driven interactive experiences.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAFF00",
+  "theme_color": "#FAFF00",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["news", "magazines", "journalism"],
+  "lang": "en",
+  "dir": "ltr",
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Search",
+      "short_name": "Search",
+      "description": "Search for articles",
+      "url": "/search",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "About",
+      "short_name": "About",
+      "description": "Learn about Explainer",
+      "url": "/about",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    }
+  ]
+}

@@ -8,7 +8,6 @@ import { analytics } from '../../lib/analytics.js';
 
 const AFRICA_URL = "https://cdn.jsdelivr.net/npm/@highcharts/map-collection/custom/africa.topo.json";
 const NIGERIA_URL = "https://raw.githubusercontent.com/BolajiBI/topojson-maps/master/countries/nigeria/nigeria-states.json";
-// GRID3 Nigeria LGA GeoJSON - clean, properly formatted data
 const NIGERIA_LGA_URL = "/data/grid3-lga.geojson";
 
 const NIGERIA_STATES = [
@@ -61,30 +60,48 @@ const STATE_COORDINATES = {
 
 const MotionGeography = motion(Geography);
 
+const getGeoName = (geo, stateMode) => {
+    if (!geo?.properties) return 'Unknown';
+    if (stateMode) {
+        return (geo.properties.lganame || geo.properties.admin2Name || geo.properties.admin2 || geo.properties.NAME_2 || 'Unknown').trim();
+    }
+    return (geo.properties.NAME_1 || geo.properties.name || geo.properties.admin1Name || geo.properties.admin1 || geo.properties.State || geo.properties.state || 'Unknown').trim();
+};
+
 export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, label, scope = 'africa', markers = [], annotations = [], overlayIcons = [], showRecenter = false }) {
     const springConfig = { damping: 20, stiffness: 100, mass: 1 };
 
-    // Motion values for our coordinates
-    const lon = useMotionValue(center[0]);
-    const lat = useMotionValue(center[1]);
-    const z = useMotionValue(zoom);
+    const safeCenter = Array.isArray(center) && center.length === 2 ? center : [20, 0];
+    const safeZoom = typeof zoom === 'number' ? zoom : 1;
 
-    // Smooth springs
+    const lon = useMotionValue(safeCenter[0]);
+    const lat = useMotionValue(safeCenter[1]);
+    const z = useMotionValue(safeZoom);
+
     const smoothLon = useSpring(lon, springConfig);
     const smoothLat = useSpring(lat, springConfig);
     const smoothZ = useSpring(z, springConfig);
 
-    // Tooltip state
     const [hoveredGeo, setHoveredGeo] = useState(null);
     const mouseX = useMotionValue(0);
     const mouseY = useMotionValue(0);
 
-    // Sync props to motion values
     useEffect(() => {
-        lon.set(center[0]);
-        lat.set(center[1]);
-        z.set(zoom);
-    }, [center, zoom, lon, lat, z]);
+        lon.set(safeCenter[0]);
+        lat.set(safeCenter[1]);
+        z.set(safeZoom);
+    }, [safeCenter, safeZoom]);
+
+    const isNigeria = scope === 'nigeria';
+    const isState = NIGERIA_STATES.some(s => s.toLowerCase() === scope.toLowerCase());
+
+    const normalizedScope = useMemo(() => {
+        if (!scope) return '';
+        return scope.charAt(0).toUpperCase() + scope.slice(1).toLowerCase();
+    }, [scope]);
+
+    const defaultCenter = isNigeria ? [8.6753, 9.0820] : (isState ? STATE_COORDINATES[normalizedScope] || STATE_COORDINATES[scope] || safeCenter : [20, 0]);
+    const defaultZoom = isState ? 1 : (isNigeria ? 1 : 1);
 
     const handleRecenter = () => {
         lon.set(defaultCenter[0]);
@@ -94,14 +111,17 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
 
     const handleUserMoveEnd = ({ coordinates, zoom: nextZoom }) => {
         if (!showRecenter) return;
-        lon.set(coordinates[0]);
-        lat.set(coordinates[1]);
-        z.set(nextZoom);
+        if (coordinates && coordinates.length === 2) {
+            lon.set(coordinates[0]);
+            lat.set(coordinates[1]);
+        }
+        if (typeof nextZoom === 'number') {
+            z.set(nextZoom);
+        }
     };
 
-    // Internal state to force re-render for ZoomableGroup (since it needs raw numbers)
-    const [renderCenter, setRenderCenter] = useState(center);
-    const [renderZoom, setRenderZoom] = useState(zoom);
+    const [renderCenter, setRenderCenter] = useState(safeCenter);
+    const [renderZoom, setRenderZoom] = useState(safeZoom);
 
     useEffect(() => {
         const unsubLon = smoothLon.on("change", (v) => setRenderCenter(prev => [v, prev[1]]));
@@ -110,81 +130,103 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
         return () => { unsubLon(); unsubLat(); unsubZ(); };
     }, [smoothLon, smoothLat, smoothZ]);
 
-    const isNigeria = scope === 'nigeria';
-    const isState = NIGERIA_STATES.some(s => s.toLowerCase() === scope.toLowerCase());
-
     let mapUrl = AFRICA_URL;
-    let objectKey = null;
+    if (isNigeria) mapUrl = NIGERIA_URL;
+    else if (isState) mapUrl = NIGERIA_LGA_URL;
 
-    if (isNigeria) {
-        mapUrl = NIGERIA_URL;
-        objectKey = "NGA_adm1";
-    } else if (isState) {
-        mapUrl = NIGERIA_LGA_URL;
-        objectKey = "lga";
-    }
-
-    const defaultCenter = isNigeria ? [8.6753, 9.0820] : (isState ? STATE_COORDINATES[scope] || center : [20, 0]);
-    const defaultZoom = isState ? 1 : (isNigeria ? 1 : 1);
-
-    // Dynamic projection config based on scope
-    const projectionConfig = useMemo(() => {
-        if (isState) {
-            return {
-                center: STATE_COORDINATES[scope] || [8.6753, 9.0820],
-                scale: 15000 // High zoom for state-level
-            };
-        } else if (isNigeria) {
-            return {
-                center: [8.6753, 9.0820],
-                scale: 2500
-            };
-        }
-        return {
-            center: [20, 0],
-            scale: 150
-        };
-    }, [isState, isNigeria, scope]);
-
-    // Fetch and manage LGA data for state-level rendering
-    const [lgaData, setLgaData] = useState(null);
+    const [geoData, setGeoData] = useState(null);
+    const [geoError, setGeoError] = useState(null);
+    const [geoLoading, setGeoLoading] = useState(false);
 
     useEffect(() => {
         if (isState) {
+            setGeoData(null);
+            setGeoError(null);
+            setGeoLoading(false);
+            return;
+        }
+
+        let cancelled = false;
+        setGeoLoading(true);
+        setGeoError(null);
+        fetch(mapUrl)
+            .then((res) => {
+                if (!res.ok) throw new Error(`Failed to load geography: ${res.status}`);
+                return res.json();
+            })
+            .then((data) => {
+                if (cancelled) return;
+                if (data?.type === 'Topology' && data.objects) {
+                    const objectKeys = Object.keys(data.objects);
+                    const key = objectKeys[0];
+                    if (!key) throw new Error('Invalid TopoJSON: missing objects');
+                    const featureCollection = topojson.feature(data, data.objects[key]);
+                    setGeoData(featureCollection);
+                } else {
+                    setGeoData(data);
+                }
+                setGeoLoading(false);
+            })
+            .catch((err) => {
+                if (cancelled) return;
+                console.error('Failed to load map geography:', err);
+                setGeoError(err);
+                setGeoLoading(false);
+            });
+
+        return () => { cancelled = true; };
+    }, [mapUrl, isState]);
+
+    const projectionConfig = useMemo(() => {
+        if (isState) {
+            return { center: STATE_COORDINATES[normalizedScope] || STATE_COORDINATES[scope] || [8.6753, 9.0820], scale: 15000 };
+        } else if (isNigeria) {
+            return { center: [8.6753, 9.0820], scale: 2500 };
+        }
+        return { center: [20, 0], scale: 150 };
+    }, [isState, isNigeria, normalizedScope, scope]);
+
+    const [lgaData, setLgaData] = useState(null);
+    const [lgaError, setLgaError] = useState(null);
+    const [lgaLoading, setLgaLoading] = useState(false);
+    useEffect(() => {
+        if (isState) {
+            let cancelled = false;
+            setLgaLoading(true);
+            setLgaError(null);
             fetch(NIGERIA_LGA_URL)
                 .then(res => res.json())
                 .then(data => {
-                    // GRID3 GeoJSON - features are directly in data.features
+                    if (cancelled) return;
                     const features = data.features || [];
-                    // Filter for the selected state using 'statename' property
-                    const stateFeatures = features.filter(f => {
-                        const stateName = (f.properties.statename || "").toLowerCase();
-                        return stateName === scope.toLowerCase();
-                    });
+                    const stateFeatures = features.filter(f => (f.properties.statename || "").toLowerCase() === scope.toLowerCase());
                     setLgaData(stateFeatures);
+                    setLgaLoading(false);
                 })
-                .catch(err => console.error('Failed to load LGA data:', err));
+                .catch(err => {
+                    if (cancelled) return;
+                    console.error('Failed to load LGA data:', err);
+                    setLgaError(err);
+                    setLgaLoading(false);
+                });
+
+            return () => { cancelled = true; };
         } else {
             setLgaData(null);
+            setLgaError(null);
+            setLgaLoading(false);
         }
     }, [isState, scope]);
 
-    // Create projection using fitSize for automatic centering
     const stateProjection = useMemo(() => {
         if (isState && lgaData && lgaData.length > 0) {
             const featureCollection = { type: "FeatureCollection", features: lgaData };
-            // Disable clipExtent to prevent bounding rectangle from appearing in paths
             return geoMercator().fitSize([800, 600], featureCollection).clipExtent(null);
         }
         return null;
     }, [isState, lgaData]);
 
-    const pathGenerator = useMemo(() => {
-        if (stateProjection) {
-            return geoPath().projection(stateProjection);
-        }
-        return null;
-    }, [stateProjection]);
+    const pathGenerator = useMemo(() => stateProjection ? geoPath().projection(stateProjection) : null, [stateProjection]);
 
     return (
         <div
@@ -194,90 +236,57 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
                 mouseY.set(e.clientY + 10);
             }}
         >
-            {/* State-level map using d3-geo direct rendering */}
-            {isState && lgaData && pathGenerator ? (
-                <svg
-                    viewBox="0 0 800 600"
-                    className="w-full h-full"
-                    style={{ background: '#F5F5F3' }}
-                >
+            {isState ? (
+                (lgaLoading || !lgaData || !pathGenerator) ? (
+                    <div className="absolute inset-0 flex items-center justify-center bg-[#F5F5F3]">
+                        <div className="text-xs font-black uppercase tracking-widest text-gray-400">
+                            {lgaError ? 'Map failed to load' : 'Loading map…'}
+                        </div>
+                    </div>
+                ) : (
+                <svg viewBox="0 0 800 600" className="w-full h-full" style={{ background: '#F5F5F3' }}>
                     {lgaData.map((geo, i) => {
-                        // GRID3 GeoJSON uses 'lganame' property
-                        const name = geo.properties.lganame || geo.properties.admin2Name || `LGA-${i}`;
+                        const name = getGeoName(geo, true);
                         const pathD = pathGenerator(geo);
-                        const centroid = stateProjection(geoCentroid(geo));
+                        let centroid = null;
+                        try { centroid = stateProjection(geoCentroid(geo)); } catch (e) {}
 
-                        // Check highlight
                         let fillColor = "#F5F5F3";
-                        if (highlight) {
-                            if (typeof highlight === 'object' && !Array.isArray(highlight)) {
-                                const key = Object.keys(highlight).find(k => k.toLowerCase() === name.toLowerCase());
-                                if (key) fillColor = highlight[key];
-                            }
+                        if (highlight && typeof highlight === 'object' && !Array.isArray(highlight)) {
+                            const key = Object.keys(highlight).find(k => k.toLowerCase() === name.toLowerCase());
+                            if (key) fillColor = highlight[key];
                         }
 
                         return (
                             <g key={name}>
-                                <path
-                                    d={pathD}
-                                    fill={fillColor}
-                                    stroke="#FFFFFF"
-                                    strokeWidth={0.5}
-                                    style={{ transition: 'fill 300ms' }}
-                                />
-                                {/* Label for highlighted LGAs */}
+                                <path d={pathD} fill={fillColor} stroke="#FFFFFF" strokeWidth={0.5} style={{ transition: 'fill 300ms' }} />
                                 {fillColor !== "#F5F5F3" && centroid && (
                                     <g transform={`translate(${centroid[0]}, ${centroid[1]})`}>
                                         <rect x="-25" y="-10" width="50" height="20" rx="3" fill="black" fillOpacity={0.7} />
-                                        <text textAnchor="middle" y="4" fill="white" style={{ fontSize: '7px', fontWeight: 'bold' }}>
-                                            {name.toUpperCase()}
-                                        </text>
+                                        <text textAnchor="middle" y="4" fill="white" style={{ fontSize: '7px', fontWeight: 'bold' }}>{name.toUpperCase()}</text>
                                     </g>
                                 )}
                             </g>
                         );
                     })}
                 </svg>
+                )
             ) : (
-                <ComposableMap
-                    projection="geoMercator"
-                    projectionConfig={projectionConfig}
-                    className="w-full h-full"
-                >
-                    <ZoomableGroup
-                        center={renderCenter}
-                        zoom={renderZoom}
-                        onMoveEnd={showRecenter ? handleUserMoveEnd : undefined}
-                    >
-                        <Geographies
-                            geography={mapUrl}
-                            key={`${mapUrl}-${scope}`} // Force re-render when scope changes
-                            parseGeographies={(geos) => {
-                                if (geos.objects) {
-                                    // Robust key detection
-                                    const key = geos.objects.lga ? "lga" : (geos.objects.NGA_adm1 ? "NGA_adm1" : Object.keys(geos.objects)[0]);
-                                    return topojson.feature(geos, geos.objects[key]).features;
-                                }
-                                return geos;
-                            }}
-                        >
+                <ComposableMap projection="geoMercator" projectionConfig={projectionConfig} className="w-full h-full">
+                    <ZoomableGroup center={renderCenter} zoom={renderZoom} onMoveEnd={showRecenter ? handleUserMoveEnd : undefined}>
+                        <Geographies geography={geoData || mapUrl}>
                             {({ geographies }) => {
-                                // Filter if we are in state (LGA) view
                                 const filteredGeos = isState
                                     ? geographies.filter(geo => {
                                         const admin1 = (geo.properties.admin1Name || geo.properties.admin1 || geo.properties.NAME_1 || "").trim().toLowerCase();
-                                        const targetScope = scope.toLowerCase().trim();
-                                        return admin1 === targetScope || admin1 === `${targetScope} state` || admin1.includes(targetScope);
+                                        return admin1 === scope.toLowerCase() || admin1.includes(scope.toLowerCase());
                                     })
                                     : geographies;
 
                                 return filteredGeos.map((geo) => {
-                                    // Calculate color based on highlight type
-                                    let fillColor = "#F5F5F3"; // Default off-white
+                                    let fillColor = "#F5F5F3";
                                     let highlightKey = null;
-
-                                    // Normalize names across different TopoJSON structures
-                                    const geoName = isState ? (geo.properties.admin2Name || geo.properties.admin2) : (geo.properties.NAME_1 || geo.properties.name);
+                                    const geoName = getGeoName(geo, isState);
                                     const normalizedGeoName = geoName?.toLowerCase();
                                     const geoId = geo.id?.toString().toLowerCase();
                                     const geoRegion = (geo.properties.region || geo.properties.admin1Name)?.toLowerCase();
@@ -295,11 +304,7 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
                                                 highlightKey = match;
                                             }
                                         } else if (typeof highlight === 'object') {
-                                            const key = Object.keys(highlight).find(k =>
-                                                normalizedGeoName === k.toLowerCase() ||
-                                                geoId === k.toLowerCase() ||
-                                                geoRegion === k.toLowerCase()
-                                            );
+                                            const key = Object.keys(highlight).find(k => normalizedGeoName === k.toLowerCase() || geoId === k.toLowerCase() || geoRegion === k.toLowerCase());
                                             if (key) {
                                                 fillColor = highlight[key];
                                                 highlightKey = key;
@@ -311,23 +316,10 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
                                         <Fragment key={geo.rsmKey || geoName}>
                                             <MotionGeography
                                                 geography={geo}
-                                                onMouseEnter={() => {
-                                                    setHoveredGeo(geoName);
-                                                }}
-                                                onMouseLeave={() => {
-                                                    setHoveredGeo(null);
-                                                }}
-                                                onClick={() => {
-                                                    analytics.track('map_region_click', {
-                                                        scope,
-                                                        region: geoName || ''
-                                                    });
-                                                }}
-                                                initial={false}
-                                                animate={{
-                                                    fill: fillColor,
-                                                }}
-                                                transition={{ duration: 0.8 }}
+                                                onMouseEnter={() => setHoveredGeo(geoName)}
+                                                onMouseLeave={() => setHoveredGeo(null)}
+                                                onClick={() => analytics.track('map_region_click', { scope, region: geoName || '' })}
+                                                fill={fillColor}
                                                 stroke={isState ? "#FFFFFF" : "#D6D6DA"}
                                                 strokeWidth={isState ? 0.3 : 0.5}
                                                 style={{
@@ -340,9 +332,7 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
                                                 <Marker coordinates={geoCentroid(geo)}>
                                                     <g transform="translate(0, 5)">
                                                         <rect x="-30" y="-12" width="60" height="24" rx="4" fill="black" fillOpacity={0.7} />
-                                                        <text textAnchor="middle" y="4" fill="white" style={{ fontSize: '8px', fontWeight: 'bold' }}>
-                                                            {geoName?.toUpperCase() || highlightKey.toUpperCase()}
-                                                        </text>
+                                                        <text textAnchor="middle" y="4" fill="white" style={{ fontSize: '8px', fontWeight: 'bold' }}>{geoName?.toUpperCase() || highlightKey.toUpperCase()}</text>
                                                     </g>
                                                 </Marker>
                                             )}
@@ -351,8 +341,6 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
                                 });
                             }}
                         </Geographies>
-
-                        {/* Overlay Icons (Resolved) */}
                         {overlayIcons?.map((item, i) => {
                             const Icon = {
                                 'police': (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>,
@@ -360,42 +348,19 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
                                 'court': (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 20h20M7 8V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v3M12 4v16M3 8h18M3 20h18"></path></svg>,
                                 'heart': (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                             }[item.icon.toLowerCase()] || MapPin;
-
                             return (
                                 <Marker key={`icon-${i}`} coordinates={item.coordinates || [0, 0]}>
-                                    <motion.g
-                                        initial={{ scale: 0, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        transition={{ delay: 0.5 + (i * 0.1) }}
-                                        onMouseEnter={() => setHoveredGeo(item.label)}
-                                        onMouseLeave={() => setHoveredGeo(null)}
-                                        style={{ cursor: 'pointer' }}
-                                    >
+                                    <motion.g initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.5 + (i * 0.1) }} onMouseEnter={() => setHoveredGeo(item.label)} onMouseLeave={() => setHoveredGeo(null)} style={{ cursor: 'pointer' }}>
                                         <circle r="12" fill="black" opacity="0.1" />
-                                        <Icon
-                                            size={20}
-                                            className="text-black fill-[#FAFF00]"
-                                            strokeWidth={2}
-                                            transform="translate(-10, -10)"
-                                        />
+                                        <Icon size={20} className="text-black fill-[#FAFF00]" strokeWidth={2} transform="translate(-10, -10)" />
                                     </motion.g>
                                 </Marker>
                             );
                         })}
-
                         {markers.map((marker, i) => (
                             <Marker key={i} coordinates={marker.coordinates}>
-                                <g
-                                    onMouseEnter={() => setHoveredGeo(marker.label)}
-                                    onMouseLeave={() => setHoveredGeo(null)}
-                                    style={{ cursor: 'pointer' }}
-                                >
-                                    <MapPin
-                                        size={24}
-                                        className="text-black fill-[#FAFF00]"
-                                        strokeWidth={1.5}
-                                        transform="translate(-12, -24)"
-                                    />
+                                <g onMouseEnter={() => setHoveredGeo(marker.label)} onMouseLeave={() => setHoveredGeo(null)} style={{ cursor: 'pointer' }}>
+                                    <MapPin size={24} className="text-black fill-[#FAFF00]" strokeWidth={1.5} transform="translate(-12, -24)" />
                                 </g>
                             </Marker>
                         ))}
@@ -403,55 +368,33 @@ export default function AnimatedMap({ center = [20, 0], zoom = 1, highlight, lab
                 </ComposableMap>
             )}
 
+            {!isState && (geoLoading || geoError) && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="px-3 py-1.5 rounded bg-white/90 border border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-500 shadow-sm">
+                        {geoError ? 'Map failed to load' : 'Loading map…'}
+                    </div>
+                </div>
+            )}
+
             <AnimatePresence>
                 {hoveredGeo && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        style={{
-                            position: 'fixed',
-                            left: 0,
-                            top: 0,
-                            x: mouseX,
-                            y: mouseY,
-                            pointerEvents: 'none',
-                            zIndex: 50
-                        }}
-                        className="px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded shadow-xl"
-                    >
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', left: 0, top: 0, x: mouseX, y: mouseY, pointerEvents: 'none', zIndex: 50 }} className="px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded shadow-xl">
                         {hoveredGeo}
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Annotations Layer */}
             {annotations.map((ann, i) => (
-                <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 + (i * 0.1), duration: 0.5 }}
-                    className="absolute z-40 px-3 py-1.5 bg-[#FAFF00] text-black text-xs md:text-sm font-bold shadow-lg border-2 border-black transform -translate-x-1/2 -translate-y-1/2 pointer-events-none whitespace-nowrap"
-                    style={{
-                        left: `${ann.x}%`,
-                        top: `${ann.y}%`,
-                    }}
-                >
+                <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 + (i * 0.1), duration: 0.5 }} className="absolute z-40 px-3 py-1.5 bg-[#FAFF00] text-black text-xs md:text-sm font-bold shadow-lg border-2 border-black transform -translate-x-1/2 -translate-y-1/2 pointer-events-none whitespace-nowrap" style={{ left: `${ann.x}%`, top: `${ann.y}%` }}>
                     {ann.text}
                 </motion.div>
             ))}
 
             {showRecenter && (
-                <button
-                    onClick={handleRecenter}
-                    className="absolute top-4 right-4 w-9 h-9 bg-white/90 backdrop-blur border border-gray-100 rounded-full shadow-lg text-black flex items-center justify-center hover:bg-white z-10"
-                    title="Recenter map"
-                >
+                <button onClick={handleRecenter} className="absolute top-4 right-4 w-9 h-9 bg-white/90 backdrop-blur border border-gray-100 rounded-full shadow-lg text-black flex items-center justify-center hover:bg-white z-10" title="Recenter map">
                     <MapPin className="w-4 h-4" />
                 </button>
             )}
-
         </div>
     );
 }

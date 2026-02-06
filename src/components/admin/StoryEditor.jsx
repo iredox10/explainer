@@ -248,7 +248,8 @@ export default function StoryEditor({ storyId }) {
         const file = e.target.files[0];
         if (!file) return;
 
-        const actualTarget = window._currentUploadTarget || target;
+        const actualTargetRaw = window._currentUploadTarget || target;
+        const actualTarget = String(actualTargetRaw || '');
         console.log('StoryEditor: handleFileUpload', { actualTarget, file: file.name });
 
         setUploadingField(actualTarget);
@@ -262,7 +263,7 @@ export default function StoryEditor({ storyId }) {
                 const id = actualTarget.split('_')[0];
                 updateContent(content.map(b => String(b.id) === id ? { ...b, rightImage: url } : b));
             }
-            else updateContent(content.map(b => b.id === actualTarget ? { ...b, url } : b));
+            else updateContent(content.map(b => String(b.id) === actualTarget ? { ...b, url } : b));
         } catch (err) { alert("Upload failed: " + err.message); }
         finally { setUploadingField(null); window._currentUploadTarget = null; }
     };

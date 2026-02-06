@@ -83,7 +83,19 @@ const displayStories =
           : VOX_HOME_DATA.futurePerfect;
 ---
 
-<MainLayout title={`${title} - Explainer`}>
+<MainLayout 
+    title={`${title} - Explainer`}
+    description={description}
+>
+  <script type="application/ld+json" slot="head">
+    {JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": title,
+        "description": description,
+        "url": `https://explainer.africa/topic/${slug}`
+    })}
+  </script>
   <main class="min-h-screen bg-[#fdfdfd]">
     <div class="relative pt-20 pb-12 px-6 overflow-hidden">
       <div

@@ -8,6 +8,7 @@ import BeforeAfter from "../../components/ui/BeforeAfter.jsx";
 import ShareButtons from "../../components/ui/ShareButtons.jsx";
 import PersistentAudioPlayer from "../../components/ui/PersistentAudioPlayer.jsx";
 import { Bookmark } from "lucide-react";
+import { Image } from "astro:assets";
 
 const { story } = Astro.props;
 
@@ -26,7 +27,7 @@ const parseJSON = (data: any, fallback = []) => {
 const blocks = parseJSON(story.content);
 
 // Pre-process blocks to group standard content vs scrolly content
-const contentGroups = [];
+const contentGroups: any[] = [];
 let currentStandardBlocks: any[] = [];
 
 if (Array.isArray(blocks)) {
@@ -130,8 +131,11 @@ const readTime = serverStoryService.calculateReadTime(blocks);
               if (block.type === "image") {
                 return (
                   <figure class="my-12">
-                    <img
+                    <Image
                       src={block.url}
+                      alt={block.caption || "Story Image"}
+                      width={1200}
+                      height={800}
                       class="w-full h-auto rounded-3xl shadow-xl"
                     />
                     {block.caption && (
