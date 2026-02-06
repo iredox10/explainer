@@ -4,7 +4,7 @@ import * as topojson from "topojson-client";
 import { motion, AnimatePresence, useSpring, useMotionValue } from 'framer-motion';
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from "react-simple-maps";
 import { MapPin } from 'lucide-react';
-import { analytics } from '../../lib/analytics.js';
+import { analytics } from '../../lib/telemetry.js';
 
 const AFRICA_URL = "https://cdn.jsdelivr.net/npm/@highcharts/map-collection/custom/africa.topo.json";
 const NIGERIA_URL = "https://raw.githubusercontent.com/BolajiBI/topojson-maps/master/countries/nigeria/nigeria-states.json";

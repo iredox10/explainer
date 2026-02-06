@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Scrollama, Step } from 'react-scrollama';
 import { motion, AnimatePresence } from 'framer-motion';
-import { analytics } from '../lib/analytics.js';
+import { analytics } from '../lib/telemetry.js';
 
 import AnimatedChart from './ui/AnimatedChart';
 import AnimatedMap from './ui/AnimatedMap';

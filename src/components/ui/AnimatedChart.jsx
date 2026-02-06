@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 
-import { analytics } from '../../lib/analytics.js';
+import { analytics } from '../../lib/telemetry.js';
 
 export default function AnimatedChart({ type = 'line', data = [10, 20, 30], labels = [], colors = [], accentColor, label, annotations = [] }) {
     const maxVal = Math.max(...data, 1);
