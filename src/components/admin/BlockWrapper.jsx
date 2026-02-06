@@ -3,6 +3,7 @@ import { Reorder, useDragControls } from 'framer-motion';
 import { Trash2, Upload, Loader2, X, GripVertical, Maximize2, Minimize2, Video, Map as MapIcon, BarChart3, AlignLeft, Layers, Columns, MoveHorizontal, Crosshair, ArrowLeft, MessageSquarePlus } from 'lucide-react';
 import MapConfigurator from './editors/MapConfigurator';
 import ChartConfigurator from './editors/ChartConfigurator';
+import RichTextEditor from './editors/RichTextEditor';
 
 export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uploadingField, onTriggerUpload, isActive, onActivate }) {
     const dragControls = useDragControls();
@@ -231,22 +232,12 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                     </div>
                 )}
                 {block.type === 'p' && (
-                    <textarea
-                        className="w-full text-xl font-serif leading-relaxed outline-none resize-none border-none placeholder:text-gray-400 bg-transparent"
-                        placeholder="Start writing..."
-                        rows="1"
-                        style={{ height: 'auto', minHeight: '1em' }}
+                    <RichTextEditor
                         value={block.text}
-                        onChange={(e) => {
-                            e.target.style.height = 'auto';
-                            e.target.style.height = e.target.scrollHeight + 'px';
-                            onUpdate({ ...block, text: e.target.value });
-                        }}
+                        onChange={(value) => onUpdate({ ...block, text: value })}
+                        placeholder="Start writing..."
+                        className="w-full text-xl font-serif leading-relaxed outline-none border-none bg-transparent"
                         onFocus={onActivate}
-                        onInput={(e) => {
-                            e.target.style.height = 'auto';
-                            e.target.style.height = e.target.scrollHeight + 'px';
-                        }}
                         disabled={isLocked}
                     />
                 )}
@@ -262,12 +253,11 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                 )}
                 {block.type === 'quote' && (
                     <div className="pl-6 border-l-4 border-[#FAFF00] space-y-2 py-2">
-                        <textarea
-                            className="w-full text-2xl font-serif italic font-bold outline-none resize-none border-none placeholder:text-gray-200 bg-transparent"
-                            placeholder="The striking quote..."
-                            rows="1"
+                        <RichTextEditor
                             value={block.text}
-                            onChange={(e) => onUpdate({ ...block, text: e.target.value })}
+                            onChange={(value) => onUpdate({ ...block, text: value })}
+                            placeholder="The striking quote..."
+                            className="w-full text-2xl font-serif italic font-bold outline-none border-none bg-transparent"
                             onFocus={onActivate}
                             disabled={isLocked}
                         />
@@ -291,12 +281,11 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                             onFocus={onActivate}
                             disabled={isLocked}
                         />
-                        <textarea
-                            className="w-full text-lg font-bold outline-none resize-none border-none placeholder:text-gray-200 bg-transparent"
-                            placeholder="Factual highlight or insight..."
-                            rows="1"
+                        <RichTextEditor
                             value={block.text}
-                            onChange={(e) => onUpdate({ ...block, text: e.target.value })}
+                            onChange={(value) => onUpdate({ ...block, text: value })}
+                            placeholder="Factual highlight or insight..."
+                            className="w-full text-lg font-bold outline-none border-none bg-transparent"
                             onFocus={onActivate}
                             disabled={isLocked}
                         />
@@ -492,13 +481,16 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                                                 />
                                             )}
                                         </div>
-                                        <textarea
-                                            className="w-full bg-gray-50 border border-gray-100 p-4 rounded-xl text-xs h-full min-h-[150px] font-medium leading-relaxed"
-                                            placeholder="Narrative text for this step..."
-                                            value={step.text || ''}
-                                            onChange={(e) => updateScrollyStep(idx, { text: e.target.value })}
-                                            disabled={isLocked}
-                                        />
+                                        <div className="bg-gray-50 border border-gray-100 p-4 rounded-xl">
+                                            <RichTextEditor
+                                                value={step.text || ''}
+                                                onChange={(value) => updateScrollyStep(idx, { text: value })}
+                                                placeholder="Narrative text for this step..."
+                                                className="w-full text-xs font-medium leading-relaxed outline-none border-none bg-transparent"
+                                                onFocus={onActivate}
+                                                disabled={isLocked}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             ))}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Type, X, AlertCircle, Loader2, Upload, Send, CheckSquare, Eye, Clock, History, Search, ChevronRight, ExternalLink, BookOpen, Zap, Settings2, Video, Layers, Map as MapIcon, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Type, X, AlertCircle, Loader2, Upload, Send, CheckSquare, Eye, Clock, History, Search, ChevronRight, ExternalLink, BookOpen, Zap, Settings2, Video, Layers, Map as MapIcon, BarChart3, Smartphone } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import BlockWrapper from './BlockWrapper';
 import { getCurrentUser, ROLES } from '../../lib/authStore';
@@ -14,12 +14,20 @@ export default function StoryEditor({ storyId }) {
     const [uploadingField, setUploadingField] = useState(null);
     const [showMeta, setShowMeta] = useState(true);
     const [showGhostPreview, setShowGhostPreview] = useState(false);
+    const [previewMode, setPreviewMode] = useState('desktop');
     const [focusedStepIndex, setFocusedStepIndex] = useState(null);
     const [activeBlockId, setActiveBlockId] = useState(null);
     const [categories, setCategories] = useState([]);
 
     const fileInputRef = useRef(null);
     const previewIframeRef = useRef(null);
+    const autoSaveTimeoutRef = useRef(null);
+    const autoSaveEnabled = storyId !== 'new-story';
+
+    const isWriter = user?.role === ROLES.WRITER;
+    const isEditor = user?.role === ROLES.EDITOR || user?.role === ROLES.ADMIN;
+    const canEdit = !isWriter || story?.workflow_status === 'draft';
+    const isLocked = isWriter && story?.workflow_status !== 'draft';
 
     const parseJSONField = (value, fallback) => {
         if (!value) return fallback;
@@ -58,6 +66,27 @@ export default function StoryEditor({ storyId }) {
             }, '*');
         }
     }, [story, showGhostPreview, focusedStepIndex]);
+
+    useEffect(() => {
+        if (!autoSaveEnabled || !story || isLocked || !isDirty) return;
+        if (saveStatus === 'saving') return;
+
+        if (autoSaveTimeoutRef.current) {
+            clearTimeout(autoSaveTimeoutRef.current);
+        }
+
+        autoSaveTimeoutRef.current = setTimeout(() => {
+            performSave(story.workflow_status).catch((err) => {
+                console.error('Auto-save failed', err);
+            });
+        }, 15000);
+
+        return () => {
+            if (autoSaveTimeoutRef.current) {
+                clearTimeout(autoSaveTimeoutRef.current);
+            }
+        };
+    }, [autoSaveEnabled, story, isLocked, isDirty, saveStatus, storyId]);
 
     useEffect(() => {
         const u = getCurrentUser();
@@ -152,12 +181,6 @@ export default function StoryEditor({ storyId }) {
 
     if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin w-12 h-12 text-[#FAFF00]" /></div>;
     if (!user || !story) return null;
-
-    const isWriter = user.role === ROLES.WRITER;
-    const isEditor = user.role === ROLES.EDITOR || user.role === ROLES.ADMIN;
-
-    const canEdit = !isWriter || story.workflow_status === 'draft';
-    const isLocked = isWriter && story.workflow_status !== 'draft';
 
     const content = typeof story.content === 'string' ? JSON.parse(story.content) : (story.content || []);
 
@@ -402,6 +425,7 @@ export default function StoryEditor({ storyId }) {
 
                     <div className="flex items-center gap-2 md:gap-3 w-full md:w-auto justify-end overflow-x-auto no-scrollbar pb-2 md:pb-0">
                         {saveStatus === 'saved' && (<span className="hidden lg:flex text-xs text-green-600 font-bold items-center gap-1.5 animate-in fade-in slide-in-from-right-2 whitespace-nowrap"><CheckSquare className="w-4 h-4" /> Synced</span>)}
+                        {saveStatus === 'saving' && (<span className="hidden lg:flex text-xs text-gray-500 font-bold items-center gap-1.5 animate-in fade-in slide-in-from-right-2 whitespace-nowrap"><Loader2 className="w-4 h-4 animate-spin" /> Saving...</span>)}
 
                         <a
                             href="/admin/guide"
@@ -460,6 +484,17 @@ export default function StoryEditor({ storyId }) {
                             <Zap className={`w-4 h-4 md:w-5 md:h-5 ${showGhostPreview ? 'fill-black' : ''}`} />
                             <span className="text-[9px] font-black uppercase tracking-widest hidden lg:block">Ghost</span>
                         </button>
+
+                        {showGhostPreview && (
+                            <button
+                                onClick={() => setPreviewMode(previewMode === 'mobile' ? 'desktop' : 'mobile')}
+                                className={`p-2 md:p-3 rounded-xl transition-all border flex items-center gap-2 shrink-0 ${previewMode === 'mobile' ? 'bg-black border-black text-white' : 'bg-white border-gray-100 text-gray-400 hover:text-black'}`}
+                                title="Toggle preview size"
+                            >
+                                <Smartphone className="w-4 h-4 md:w-5 md:h-5" />
+                                <span className="text-[9px] font-black uppercase tracking-widest hidden lg:block">{previewMode === 'mobile' ? 'Mobile' : 'Desktop'}</span>
+                            </button>
+                        )}
 
                         <button onClick={() => setShowMeta(!showMeta)} className={`p-2 md:p-3 rounded-xl transition-all border shrink-0 ${showMeta ? 'bg-gray-100 border-gray-200 text-black' : 'bg-white border-gray-100 text-gray-400'}`}>
                             <Settings2 className="w-4 h-4 md:w-5 md:h-5" />
@@ -557,12 +592,16 @@ export default function StoryEditor({ storyId }) {
                                     <div className="w-2 h-2 rounded-full bg-green-500"></div>
                                 </div>
                             </div>
-                            <iframe
-                                ref={previewIframeRef}
-                                src="/admin/preview/live"
-                                className="w-full flex-1 border-none bg-white"
-                                title="Ghost Preview"
-                            />
+                            <div className={`flex-1 flex items-center justify-center p-4 ${previewMode === 'mobile' ? 'bg-gray-100' : ''}`}>
+                                <div className={`w-full h-full ${previewMode === 'mobile' ? 'max-w-[420px] rounded-2xl overflow-hidden border border-gray-200 shadow-xl bg-white' : ''}`}>
+                                    <iframe
+                                        ref={previewIframeRef}
+                                        src="/admin/preview/live"
+                                        className="w-full h-full border-none bg-white"
+                                        title="Ghost Preview"
+                                    />
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>

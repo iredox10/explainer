@@ -31,9 +31,15 @@ const blocks = getBlocks(ARTICLE_DATA.content);
 const sources: any[] = ARTICLE_DATA.sources || [];
 const footnotes: any[] = ARTICLE_DATA.footnotes || [];
 const relatedStories: any[] = ARTICLE_DATA.related || [];
+const stripHtml = (value: any) => {
+  if (!value) return "";
+  if (typeof value !== "string") return String(value);
+  return value.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+};
+
 const fullText = blocks
-  .filter((b: any) => b.type === "p" || b.type === "heading")
-  .map((b: any) => b.text)
+  .filter((b: any) => b.type === "p" || b.type === "heading" || b.type === "quote" || b.type === "callout")
+  .map((b: any) => stripHtml(b.text))
   .join(". ");
 
 import { serverStoryService } from "../../lib/server-appwrite.js";
@@ -208,7 +214,7 @@ const displayReadTime = `${readTime} min read`;
                 if (block.type === "heading") {
                   return (
                     <h2 class="font-sans font-black text-3xl md:text-4xl text-black mt-16 mb-8 tracking-tight leading-none border-b-4 border-yellow-300 inline-block pb-1">
-                      {block.text}
+                      <Fragment set:html={block.text} />
                     </h2>
                   );
                 }
@@ -220,7 +226,7 @@ const displayReadTime = `${readTime} min read`;
                     <p
                       class={`mb-8 ${isFirst ? "first-letter:float-left first-letter:text-[6rem] first-letter:font-black first-letter:font-serif-display first-letter:text-black first-letter:leading-[0.75] first-letter:mr-4 first-letter:mt-2" : ""}`}
                     >
-                      {block.text}
+                      <Fragment set:html={block.text} />
                     </p>
                   );
                 }
@@ -232,7 +238,7 @@ const displayReadTime = `${readTime} min read`;
                         “
                       </div>
                       <blockquote class="text-3xl md:text-4xl font-serif-display font-bold italic text-black leading-[1.15] mb-6">
-                        {block.text}
+                        <Fragment set:html={block.text} />
                       </blockquote>
                       {block.author && (
                         <div class="flex items-center gap-3">
@@ -256,7 +262,7 @@ const displayReadTime = `${readTime} min read`;
                         </h4>
                       </div>
                       <p class="font-sans font-bold text-xl md:text-2xl leading-tight text-black">
-                        {block.text}
+                        <Fragment set:html={block.text} />
                       </p>
                     </div>
                   );

@@ -169,10 +169,11 @@ export default function ScrollyIsland({ steps, forcedStep = null, id = 'scrolly-
                                     <span className="block text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 mb-3">
                                         {step.type === 'text' ? 'Narrative Context' : `Step ${index + 1}/${steps.length}`}
                                     </span>
-                                    <p className={`leading-relaxed text-gray-900 font-serif ${step.type === 'text' ? 'text-2xl md:text-4xl font-bold tracking-tight' : 'text-lg md:text-xl font-medium'
-                                        }`}>
-                                        {step.text}
-                                    </p>
+                                    <p
+                                        className={`leading-relaxed text-gray-900 font-serif ${step.type === 'text' ? 'text-2xl md:text-4xl font-bold tracking-tight' : 'text-lg md:text-xl font-medium'
+                                            }`}
+                                        dangerouslySetInnerHTML={{ __html: step.text || '' }}
+                                    />
                                 </motion.div>
                             </div>
                         </Step>
