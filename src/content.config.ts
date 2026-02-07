@@ -37,6 +37,13 @@ const stories = defineCollection({
           displayMode: z.enum(['slider', 'split']).default('slider')
         }),
         z.object({
+          type: z.literal('timeline'),
+          label: z.string().optional(),
+          highlight: z.string().optional(),
+          timelineSteps: z.array(z.object({ year: z.string(), label: z.string() })).optional(),
+          layout: z.enum(['standard', 'full-width']).optional()
+        }),
+        z.object({
           type: z.literal('video'),
           url: z.string(),
           caption: z.string().optional(),
@@ -78,6 +85,7 @@ const stories = defineCollection({
               center: z.array(z.number()).optional(), // For TacticalVisual
               viewBox: z.string().optional(),
               highlight: z.union([z.string(), z.array(z.string()), z.record(z.string())]).optional(),
+              timelineSteps: z.array(z.object({ year: z.string(), label: z.string() })).optional(),
               chartData: z.array(z.number()).optional(),
               accentColor: z.string().optional(),
               markers: z.array(z.object({ lat: z.number(), lon: z.number(), label: z.string(), icon: z.string() })).optional(),
@@ -112,33 +120,33 @@ const stories = defineCollection({
         slug: z.string().optional()
       })
     ).optional(),
+    tags: z.array(z.string()).optional(),
+    sources: z.array(z.object({
+      title: z.string(),
+      url: z.string().optional(),
+      publisher: z.string().optional(),
+      date: z.string().optional()
+    })).optional(),
+    footnotes: z.array(z.object({
+      id: z.string(),
+      text: z.string(),
+      url: z.string().optional()
+    })).optional(),
+    scheduledAt: z.string().optional(),
+    seo: z.object({
+      ogTitle: z.string().optional(),
+      ogDescription: z.string().optional(),
+      ogImage: z.string().optional(),
+      canonicalUrl: z.string().optional(),
+      keywords: z.array(z.string()).optional()
+    }).optional(),
+    revisionSnapshots: z.array(z.object({
+      id: z.string(),
+      createdAt: z.string(),
+      user: z.string().optional(),
+      story: z.record(z.any())
+    })).optional(),
   }),
-  tags: z.array(z.string()).optional(),
-  sources: z.array(z.object({
-    title: z.string(),
-    url: z.string().optional(),
-    publisher: z.string().optional(),
-    date: z.string().optional()
-  })).optional(),
-  footnotes: z.array(z.object({
-    id: z.string(),
-    text: z.string(),
-    url: z.string().optional()
-  })).optional(),
-  scheduledAt: z.string().optional(),
-  seo: z.object({
-    ogTitle: z.string().optional(),
-    ogDescription: z.string().optional(),
-    ogImage: z.string().optional(),
-    canonicalUrl: z.string().optional(),
-    keywords: z.array(z.string()).optional()
-  }).optional(),
-  revisionSnapshots: z.array(z.object({
-    id: z.string(),
-    createdAt: z.string(),
-    user: z.string().optional(),
-    story: z.record(z.any())
-  })).optional(),
 });
 
 export const collections = { stories };

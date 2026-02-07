@@ -7,6 +7,7 @@ import ProgressBar from "../../components/ui/ProgressBar.jsx";
 import BeforeAfter from "../../components/ui/BeforeAfter.jsx";
 import ShareButtons from "../../components/ui/ShareButtons.jsx";
 import PersistentAudioPlayer from "../../components/ui/PersistentAudioPlayer.jsx";
+import Timeline from "../../components/ui/Timeline.jsx";
 import { Bookmark } from "lucide-react";
 import { Image } from "astro:assets";
 
@@ -194,6 +195,18 @@ const readTime = serverStoryService.calculateReadTime(blocks);
                     <p class="text-xl font-bold text-black leading-tight">
                       <Fragment set:html={block.text} />
                     </p>
+                  </div>
+                );
+              }
+              if (block.type === "timeline") {
+                return (
+                  <div class="my-12 bg-gray-50 border border-gray-100 rounded-3xl overflow-hidden">
+                    <Timeline
+                      client:only="react"
+                      label={block.label}
+                      highlight={block.highlight}
+                      steps={block.timelineSteps || []}
+                    />
                   </div>
                 );
               }

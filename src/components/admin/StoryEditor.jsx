@@ -269,6 +269,19 @@ export default function StoryEditor({ storyId }) {
             case 'beforeAfter':
                 newBlock = { ...newBlock, leftImage: '', rightImage: '', leftLabel: 'Before', rightLabel: 'After', caption: '' };
                 break;
+            case 'timeline':
+                newBlock = {
+                    ...newBlock,
+                    label: 'Historical Timeline',
+                    highlight: '2024',
+                    timelineSteps: [
+                        { year: '1984', label: 'AFCON Final' },
+                        { year: '1988', label: 'AFCON Final' },
+                        { year: '2000', label: 'The Home Loss' },
+                        { year: '2024', label: 'The Referendum' }
+                    ]
+                };
+                break;
             case 'scrolly-group':
                 newBlock = { 
                     ...newBlock, 
@@ -591,6 +604,9 @@ export default function StoryEditor({ storyId }) {
                                         </button>
                                         <button onClick={() => handleInsertBlock('chart')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
                                             <BarChart3 className="w-4 h-4" /> Chart
+                                        </button>
+                                        <button onClick={() => handleInsertBlock('timeline')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
+                                            <ArrowLeft className="w-4 h-4" /> Timeline
                                         </button>
                                         <button onClick={() => handleInsertBlock('quote')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
                                             <History className="w-4 h-4" /> Quote

@@ -6,6 +6,7 @@ import BeforeAfter from '../ui/BeforeAfter';
 import ScrollyIsland from '../ScrollyIsland';
 import AnimatedMap from '../ui/AnimatedMap';
 import AnimatedChart from '../ui/AnimatedChart';
+import Timeline from '../ui/Timeline';
 
 export default function LivePreviewer() {
   const [story, setStory] = useState(null);
@@ -213,6 +214,16 @@ function BlockRenderer({ block, index }) {
             accentColor={block.accentColor}
             label={block.title || block.label}
             annotations={block.annotations}
+          />
+        </div>
+      );
+    case 'timeline':
+      return (
+        <div className="my-12 bg-gray-50 border border-gray-200 rounded-2xl overflow-hidden min-h-[320px]">
+          <Timeline
+            label={block.label}
+            highlight={block.highlight}
+            steps={block.timelineSteps || []}
           />
         </div>
       );

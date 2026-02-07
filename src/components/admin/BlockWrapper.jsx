@@ -4,6 +4,7 @@ import { Trash2, Upload, Loader2, X, GripVertical, Maximize2, Minimize2, Video, 
 import MapConfigurator from './editors/MapConfigurator';
 import ChartConfigurator from './editors/ChartConfigurator';
 import RichTextEditor from './editors/RichTextEditor';
+import Timeline from '../ui/Timeline';
 
 export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uploadingField, onTriggerUpload, isActive, onActivate }) {
     const dragControls = useDragControls();
@@ -60,7 +61,17 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
         } else if (type === 'tactical') {
             newStep = { ...newStep, label: 'Tactical Analysis', center: [50, 50], annotations: [] };
         } else if (type === 'timeline') {
-            newStep = { ...newStep, label: 'Historical Timeline', highlightedYear: 2024, steps: [] };
+            newStep = {
+                ...newStep,
+                label: 'Historical Timeline',
+                highlight: '2024',
+                timelineSteps: [
+                    { year: '1984', label: 'AFCON Final' },
+                    { year: '1988', label: 'AFCON Final' },
+                    { year: '2000', label: 'The Home Loss' },
+                    { year: '2024', label: 'The Referendum' }
+                ]
+            };
         } else if (type === 'media') {
             newStep = { ...newStep, label: 'Media Backdrop', url: '', mediaType: 'image' };
         }
@@ -405,6 +416,101 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                         />
                     </div>
                 )}
+                {block.type === 'timeline' && (
+                    <div className="bg-white border border-gray-100 p-6 rounded-3xl space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <ArrowLeft className="w-4 h-4 text-gray-400" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Timeline</span>
+                            </div>
+                            {!isLocked && (
+                                <button
+                                    onClick={() => onUpdate({
+                                        ...block,
+                                        timelineSteps: [...(block.timelineSteps || []), { year: '2025', label: 'New Milestone' }]
+                                    })}
+                                    className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg bg-gray-100 hover:bg-black hover:text-white transition-colors"
+                                >
+                                    Add Point
+                                </button>
+                            )}
+                        </div>
+
+                        <input
+                            className="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl text-xs font-bold"
+                            placeholder="Timeline Label"
+                            value={block.label || ''}
+                            onChange={(e) => onUpdate({ ...block, label: e.target.value })}
+                            onFocus={onActivate}
+                            disabled={isLocked}
+                        />
+
+                        <div className="space-y-2">
+                            {(block.timelineSteps || []).map((entry, entryIndex) => (
+                                <div key={entryIndex} className="grid grid-cols-12 gap-2 items-center">
+                                    <input
+                                        className="col-span-3 bg-gray-50 border border-gray-100 p-2 rounded-lg text-[10px] font-black uppercase tracking-widest"
+                                        placeholder="Year"
+                                        value={entry.year || ''}
+                                        onChange={(e) => {
+                                            const next = [...(block.timelineSteps || [])];
+                                            next[entryIndex] = { ...next[entryIndex], year: e.target.value };
+                                            onUpdate({ ...block, timelineSteps: next });
+                                        }}
+                                        onFocus={onActivate}
+                                        disabled={isLocked}
+                                    />
+                                    <input
+                                        className="col-span-8 bg-gray-50 border border-gray-100 p-2 rounded-lg text-xs font-medium"
+                                        placeholder="Event description"
+                                        value={entry.label || ''}
+                                        onChange={(e) => {
+                                            const next = [...(block.timelineSteps || [])];
+                                            next[entryIndex] = { ...next[entryIndex], label: e.target.value };
+                                            onUpdate({ ...block, timelineSteps: next });
+                                        }}
+                                        onFocus={onActivate}
+                                        disabled={isLocked}
+                                    />
+                                    {!isLocked && (
+                                        <button
+                                            className="col-span-1 text-gray-300 hover:text-red-500"
+                                            onClick={() => {
+                                                const next = (block.timelineSteps || []).filter((_, i) => i !== entryIndex);
+                                                onUpdate({ ...block, timelineSteps: next });
+                                            }}
+                                            title="Remove"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                            {(block.timelineSteps || []).length === 0 && (
+                                <p className="text-[10px] text-gray-300 italic">No timeline points yet.</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Highlight Year</span>
+                            <select
+                                className="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl text-xs font-bold"
+                                value={block.highlight || ''}
+                                onChange={(e) => onUpdate({ ...block, highlight: e.target.value })}
+                                disabled={isLocked}
+                            >
+                                <option value="">None</option>
+                                {(block.timelineSteps || []).map((entry, entryIndex) => (
+                                    <option key={entryIndex} value={entry.year}>{entry.year}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="h-[320px] bg-gray-50 border border-gray-100 rounded-2xl overflow-hidden">
+                            <Timeline label={block.label} highlight={block.highlight} steps={block.timelineSteps || []} />
+                        </div>
+                    </div>
+                )}
                 {block.type === 'scrolly-group' && (
                     <div className="space-y-6">
                         <div className="flex items-center justify-between border-b border-gray-100 pb-4">
@@ -467,6 +573,86 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                                                         });
                                                     }}
                                                 />
+                                            )}
+                                            {step.type === 'timeline' && (
+                                                <div className="space-y-4">
+                                                    <input
+                                                        className="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl text-xs font-bold"
+                                                        placeholder="Timeline Label"
+                                                        value={step.label || ''}
+                                                        onChange={(e) => updateScrollyStep(idx, { label: e.target.value })}
+                                                        disabled={isLocked}
+                                                    />
+                                                    <div className="space-y-2">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Timeline Points</span>
+                                                            <button
+                                                                onClick={() => !isLocked && updateScrollyStep(idx, {
+                                                                    timelineSteps: [...(step.timelineSteps || []), { year: '2025', label: 'New Milestone' }]
+                                                                })}
+                                                                className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg bg-gray-100 hover:bg-black hover:text-white transition-colors"
+                                                            >
+                                                                Add Point
+                                                            </button>
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            {(step.timelineSteps || []).map((entry, entryIndex) => (
+                                                                <div key={entryIndex} className="grid grid-cols-12 gap-2 items-center">
+                                                                    <input
+                                                                        className="col-span-3 bg-white border border-gray-100 p-2 rounded-lg text-[10px] font-black uppercase tracking-widest"
+                                                                        placeholder="Year"
+                                                                        value={entry.year || ''}
+                                                                        onChange={(e) => {
+                                                                            const next = [...(step.timelineSteps || [])];
+                                                                            next[entryIndex] = { ...next[entryIndex], year: e.target.value };
+                                                                            updateScrollyStep(idx, { timelineSteps: next });
+                                                                        }}
+                                                                        disabled={isLocked}
+                                                                    />
+                                                                    <input
+                                                                        className="col-span-8 bg-white border border-gray-100 p-2 rounded-lg text-xs font-medium"
+                                                                        placeholder="Event description"
+                                                                        value={entry.label || ''}
+                                                                        onChange={(e) => {
+                                                                            const next = [...(step.timelineSteps || [])];
+                                                                            next[entryIndex] = { ...next[entryIndex], label: e.target.value };
+                                                                            updateScrollyStep(idx, { timelineSteps: next });
+                                                                        }}
+                                                                        disabled={isLocked}
+                                                                    />
+                                                                    <button
+                                                                        className="col-span-1 text-gray-300 hover:text-red-500"
+                                                                        onClick={() => {
+                                                                            if (isLocked) return;
+                                                                            const next = (step.timelineSteps || []).filter((_, i) => i !== entryIndex);
+                                                                            updateScrollyStep(idx, { timelineSteps: next });
+                                                                        }}
+                                                                        title="Remove"
+                                                                    >
+                                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                            {(step.timelineSteps || []).length === 0 && (
+                                                                <p className="text-[10px] text-gray-300 italic">No timeline points yet.</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Highlight Year</span>
+                                                        <select
+                                                            className="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl text-xs font-bold"
+                                                            value={step.highlight || ''}
+                                                            onChange={(e) => updateScrollyStep(idx, { highlight: e.target.value })}
+                                                            disabled={isLocked}
+                                                        >
+                                                            <option value="">None</option>
+                                                            {(step.timelineSteps || []).map((entry, entryIndex) => (
+                                                                <option key={entryIndex} value={entry.year}>{entry.year}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                </div>
                                             )}
                                             {step.type === 'text' && (
                                                 <input
