@@ -87,12 +87,8 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
     return (
         <Reorder.Item
             value={block}
-            dragListener={!isLocked}
+            dragListener={false}
             dragControls={dragControls}
-            onPointerDown={(e) => {
-                if (e.target?.closest?.('[data-no-dnd="true"]')) return;
-                if (!isLocked) dragControls.start(e);
-            }}
             className={`relative group min-h-[50px] p-2 rounded-xl transition-all ${isActive ? 'ring-2 ring-[#FAFF00] bg-gray-50' : 'hover:bg-gray-50/50'}`}
             onClick={(e) => {
                 e.stopPropagation();
@@ -100,16 +96,17 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
             }}
         >
             {/* Control Bar - Floating Top Right */}
-            {!isLocked && (
-                <div className="absolute -top-3 right-4 z-50 flex items-center gap-1 bg-white shadow-sm border border-gray-200 rounded-lg p-1 opacity-0 group-hover:opacity-100 transition-all">
-                    {/* Drag Handle */}
-                    <div
-                        className="p-1.5 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded"
-                        onPointerDown={(e) => dragControls.start(e)}
-                        title="Drag to reorder"
-                    >
-                        <GripVertical className="w-3.5 h-3.5" />
-                    </div>
+                {!isLocked && (
+                    <div className="absolute -top-3 right-4 z-50 flex items-center gap-1 bg-white shadow-sm border border-gray-200 rounded-lg p-1 opacity-0 group-hover:opacity-100 transition-all">
+                        {/* Drag Handle */}
+                        <div
+                            className="p-1.5 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded"
+                            onPointerDown={(e) => dragControls.start(e)}
+                            title="Drag to reorder"
+                            data-no-dnd="true"
+                        >
+                            <GripVertical className="w-3.5 h-3.5" />
+                        </div>
 
                     {/* Layout Toggle */}
                     {isLayoutBlock && (

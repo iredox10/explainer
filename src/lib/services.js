@@ -68,6 +68,35 @@ export const storyService = {
             throw new Error("Access Revoked: Your account is suspended and cannot perform this action.");
         }
 
+        const attemptSave = async (payload) => {
+            if (id === 'new-story' || !id) {
+                return await databases.createDocument(DB_ID, COLLECTIONS.STORIES, ID.unique(), payload);
+            }
+            return await databases.updateDocument(DB_ID, COLLECTIONS.STORIES, id, payload);
+        };
+
+        const attemptSaveWithRecovery = async (payload) => {
+            let currentPayload = { ...payload };
+            for (let attempt = 0; attempt < 6; attempt += 1) {
+                try {
+                    return await attemptSave(currentPayload);
+                } catch (saveError) {
+                    const message = saveError?.message || '';
+                    if (!message.includes('Unknown attribute')) {
+                        throw saveError;
+                    }
+                    const unknownAttrs = [...message.matchAll(/Unknown attribute: "([^"]+)"/g)].map((match) => match[1]);
+                    if (unknownAttrs.length === 0) {
+                        throw saveError;
+                    }
+                    unknownAttrs.forEach((attr) => {
+                        if (attr in currentPayload) delete currentPayload[attr];
+                    });
+                }
+            }
+            return await attemptSave(currentPayload);
+        };
+
         try {
             // Sanitize data: remove empty strings for URL/Email fields as they cause validation errors
             const sanitizedData = { ...data };
@@ -82,11 +111,7 @@ export const storyService = {
                 publishedAt: sanitizedData.status === 'Published' && !sanitizedData.publishedAt ? new Date().toISOString() : sanitizedData.publishedAt
             };
 
-            if (id === 'new-story' || !id) {
-                return await databases.createDocument(DB_ID, COLLECTIONS.STORIES, ID.unique(), finalData);
-            } else {
-                return await databases.updateDocument(DB_ID, COLLECTIONS.STORIES, id, finalData);
-            }
+            return await attemptSaveWithRecovery(finalData);
         } catch (error) {
             console.error('Appwrite error saving story:', error);
             throw error;
