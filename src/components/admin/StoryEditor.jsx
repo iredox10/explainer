@@ -15,6 +15,7 @@ export default function StoryEditor({ storyId }) {
     const [showMeta, setShowMeta] = useState(true);
     const [showGhostPreview, setShowGhostPreview] = useState(false);
     const [previewMode, setPreviewMode] = useState('desktop');
+    const [previewReady, setPreviewReady] = useState(false);
     const [focusedStepIndex, setFocusedStepIndex] = useState(null);
     const [activeBlockId, setActiveBlockId] = useState(null);
     const [categories, setCategories] = useState([]);
@@ -58,14 +59,38 @@ export default function StoryEditor({ storyId }) {
     };
 
     useEffect(() => {
-        if (showGhostPreview && previewIframeRef.current && story) {
+        if (showGhostPreview && previewReady && previewIframeRef.current && story) {
             previewIframeRef.current.contentWindow?.postMessage({
                 type: 'GHOST_PREVIEW_UPDATE',
                 story,
                 activeStepIndex: focusedStepIndex
             }, '*');
         }
-    }, [story, showGhostPreview, focusedStepIndex]);
+    }, [story, showGhostPreview, focusedStepIndex, previewReady]);
+
+    useEffect(() => {
+        const handleMessage = (event) => {
+            if (event.data?.type === 'GHOST_PREVIEW_READY') {
+                setPreviewReady(true);
+                if (previewIframeRef.current && story) {
+                    previewIframeRef.current.contentWindow?.postMessage({
+                        type: 'GHOST_PREVIEW_UPDATE',
+                        story,
+                        activeStepIndex: focusedStepIndex
+                    }, '*');
+                }
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, [story, focusedStepIndex]);
+
+    useEffect(() => {
+        if (!showGhostPreview) {
+            setPreviewReady(false);
+        }
+    }, [showGhostPreview]);
 
     useEffect(() => {
         if (!autoSaveEnabled || !story || isLocked || !isDirty) return;

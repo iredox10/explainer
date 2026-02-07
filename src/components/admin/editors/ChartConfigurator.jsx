@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, BarChart2, PieChart, Activity, FileJson, X, Loader2 } from 'lucide-react';
+import { Plus, Trash2, BarChart2, PieChart, Activity, FileJson, X, Loader2, AreaChart, ScatterChart } from 'lucide-react';
 import AnimatedChart from '../../ui/AnimatedChart';
 
 export default function ChartConfigurator({ value, onChange }) {
@@ -123,8 +123,10 @@ export default function ChartConfigurator({ value, onChange }) {
                 <div className="flex flex-wrap gap-1 bg-white p-1 rounded-xl border border-gray-200 shadow-sm">
                     {[
                         { id: 'line', icon: Activity, label: 'Line' },
+                        { id: 'area', icon: AreaChart, label: 'Area' },
                         { id: 'bar', icon: BarChart2, label: 'Bar' },
-                        { id: 'pie', icon: PieChart, label: 'Pie' }
+                        { id: 'pie', icon: PieChart, label: 'Pie' },
+                        { id: 'scatter', icon: ScatterChart, label: 'Scatter' }
                     ].map((type) => (
                         <button
                             key={type.id}

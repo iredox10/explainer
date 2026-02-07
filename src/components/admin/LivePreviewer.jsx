@@ -4,6 +4,8 @@ import { Clock, Calendar, Bookmark, Share2 } from 'lucide-react';
 import ProgressBar from '../ui/ProgressBar';
 import BeforeAfter from '../ui/BeforeAfter';
 import ScrollyIsland from '../ScrollyIsland';
+import AnimatedMap from '../ui/AnimatedMap';
+import AnimatedChart from '../ui/AnimatedChart';
 
 export default function LivePreviewer() {
   const [story, setStory] = useState(null);
@@ -35,22 +37,28 @@ export default function LivePreviewer() {
   }
 
   const blocks = typeof story.content === 'string' ? JSON.parse(story.content) : (story.content || []);
-  const steps = typeof story.scrollySections === 'string' ? JSON.parse(story.scrollySections) : (story.scrollySections || []);
+  const legacySteps = typeof story.scrollySections === 'string' ? JSON.parse(story.scrollySections) : (story.scrollySections || []);
+  const scrollyBlocks = blocks.filter((block) => block.type === 'scrolly-group');
+  const scrollySteps = legacySteps.length > 0
+    ? legacySteps
+    : scrollyBlocks.flatMap((block) => block.steps || []);
 
   return (
     <div className="bg-white text-gray-900 font-sans selection:bg-yellow-300 selection:text-black min-h-screen">
       <ProgressBar />
       
       {story.layout === 'scrolly' ? (
-        <ScrollyLayout story={story} blocks={blocks} steps={steps} activeStep={activeStep} />
+        <ScrollyLayout story={story} blocks={blocks} steps={scrollySteps} activeStep={activeStep} />
       ) : (
-        <StandardLayout story={story} blocks={blocks} />
+        <StandardLayout story={story} blocks={blocks} scrollyBlocks={scrollyBlocks} />
       )}
     </div>
   );
 }
 
-function StandardLayout({ story, blocks }) {
+function StandardLayout({ story, blocks, scrollyBlocks = [] }) {
+  const standardBlocks = blocks.filter((block) => block.type !== 'scrolly-group');
+
   return (
     <main>
       <div className="pt-12 pb-16 px-6 bg-[#f8f9fa] border-b border-gray-200">
@@ -69,16 +77,26 @@ function StandardLayout({ story, blocks }) {
 
       <div className="max-w-4xl mx-auto px-6 py-16">
         <article className="font-serif text-[1.2rem] leading-[1.8] text-gray-900">
-          {blocks.map((block, index) => (
+          {standardBlocks.map((block, index) => (
             <BlockRenderer key={block.id || index} block={block} index={index} />
           ))}
         </article>
       </div>
+
+      {scrollyBlocks.length > 0 && (
+        <div className="border-y border-gray-100">
+          {scrollyBlocks.map((block, index) => (
+            <ScrollyIsland key={block.id || index} steps={block.steps || []} id={`preview-scrolly-${index}`} />
+          ))}
+        </div>
+      )}
     </main>
   );
 }
 
 function ScrollyLayout({ story, blocks, steps, activeStep }) {
+  const storyBlocks = blocks.filter((block) => block.type !== 'scrolly-group');
+
   return (
     <main>
       <div className="relative h-[80vh] flex flex-col items-center justify-center text-center p-6 overflow-hidden bg-black text-white">
@@ -105,12 +123,14 @@ function ScrollyLayout({ story, blocks, steps, activeStep }) {
       </div>
 
       <div className="max-w-4xl mx-auto px-6 py-24 text-2xl font-serif leading-relaxed text-gray-900">
-        {blocks.map((block, index) => (
+        {storyBlocks.map((block, index) => (
           <BlockRenderer key={block.id || index} block={block} index={index} />
         ))}
       </div>
 
-      <ScrollyIsland steps={steps} forcedStep={activeStep} />
+      {steps.length > 0 && (
+        <ScrollyIsland steps={steps} forcedStep={activeStep} />
+      )}
     </main>
   );
 }
@@ -120,15 +140,20 @@ function BlockRenderer({ block, index }) {
     case 'heading':
       return (
         <h2 className="font-sans font-black text-3xl text-black mt-16 mb-8 tracking-tight border-b-4 border-yellow-300 inline-block pb-1">
-          {block.text}
+          <span dangerouslySetInnerHTML={{ __html: block.text || '' }} />
         </h2>
       );
     case 'p':
-      return <p className={`mb-8 ${index === 0 ? "first-letter:float-left first-letter:text-[5rem] first-letter:font-black first-letter:mr-3" : ""}`}>{block.text}</p>;
+      return (
+        <p
+          className={`mb-8 ${index === 0 ? "first-letter:float-left first-letter:text-[5rem] first-letter:font-black first-letter:mr-3" : ""}`}
+          dangerouslySetInnerHTML={{ __html: block.text || '' }}
+        />
+      );
     case 'quote':
       return (
         <blockquote className="my-16 border-l-4 border-[#FAFF00] pl-8 font-serif text-3xl italic text-gray-700">
-          {block.text}
+          <span dangerouslySetInnerHTML={{ __html: block.text || '' }} />
           {block.author && <cite className="block text-xs font-sans font-black uppercase tracking-widest text-gray-400 mt-4 not-italic">— {block.author}</cite>}
         </blockquote>
       );
@@ -136,7 +161,7 @@ function BlockRenderer({ block, index }) {
       return (
         <div className="bg-gray-50 p-8 my-12 border-t-4 border-black">
           <h4 className="font-sans font-black uppercase text-xs text-gray-400 mb-3">{block.title}</h4>
-          <p className="text-xl font-bold text-black">{block.text}</p>
+          <p className="text-xl font-bold text-black" dangerouslySetInnerHTML={{ __html: block.text || '' }} />
         </div>
       );
     case 'image':
@@ -145,6 +170,57 @@ function BlockRenderer({ block, index }) {
           <img src={block.url} className="w-full h-auto rounded-3xl" />
           {block.caption && <figcaption className="mt-4 text-xs font-bold text-gray-400 text-center uppercase tracking-widest">{block.caption}</figcaption>}
         </figure>
+      );
+    case 'video':
+      return (
+        <figure className="my-12">
+          <video
+            src={block.url}
+            className="w-full h-auto rounded-3xl"
+            controls={!block.autoplay}
+            autoPlay={block.autoplay}
+            muted={block.autoplay}
+            loop
+            playsInline
+          />
+          {block.caption && <figcaption className="mt-4 text-xs font-bold text-gray-400 text-center uppercase tracking-widest">{block.caption}</figcaption>}
+        </figure>
+      );
+    case 'map':
+      return (
+        <div className="my-12 border border-gray-200 bg-gray-50 rounded-2xl overflow-hidden relative shadow-sm h-[420px]">
+          <AnimatedMap
+            center={block.center}
+            zoom={block.zoom}
+            highlight={block.highlight}
+            label={block.label}
+            scope={block.scope}
+            markers={block.markers}
+            annotations={block.annotations}
+            overlayIcons={block.overlayIcons}
+            showRecenter={true}
+          />
+        </div>
+      );
+    case 'chart':
+      return (
+        <div className="my-12 bg-gray-50 border border-gray-200 rounded-2xl p-6 shadow-sm min-h-[320px]">
+          <AnimatedChart
+            type={block.chartType}
+            data={block.chartData}
+            labels={block.chartLabels}
+            colors={block.chartColors}
+            accentColor={block.accentColor}
+            label={block.title || block.label}
+            annotations={block.annotations}
+          />
+        </div>
+      );
+    case 'scrolly-group':
+      return (
+        <div className="my-12 -mx-6 border-y border-gray-100">
+          <ScrollyIsland steps={block.steps || []} id={`preview-inline-scrolly-${block.id || index}`} />
+        </div>
       );
     case 'beforeAfter':
       return (

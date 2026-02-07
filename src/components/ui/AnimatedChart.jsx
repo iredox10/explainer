@@ -6,19 +6,24 @@ export default function AnimatedChart({ type = 'line', data = [10, 20, 30], labe
     const maxVal = Math.max(...data, 1);
     const chartHeight = 200;
     const chartWidth = 300;
+    const pieRadius = 80;
+    const pieCenter = { x: chartWidth / 2, y: (chartHeight / 2) - 10 };
+    const barBaseline = chartHeight - 30;
+    const barMaxHeight = chartHeight - 50;
 
-    // Line Chart Logic
-    const points = data
-        .map((val, i) => {
-            const x = data.length > 1 ? (i / (data.length - 1)) * chartWidth : chartWidth / 2;
-            const y = chartHeight - (val / maxVal) * (chartHeight - 20);
-            return `${x},${y}`;
-        })
-        .join(" ");
+    const pointCoords = data.map((val, i) => {
+        const x = data.length > 1 ? (i / (data.length - 1)) * chartWidth : chartWidth / 2;
+        const y = chartHeight - (val / maxVal) * (chartHeight - 20);
+        return { x, y };
+    });
+
+    // Line/Area Chart Logic
+    const points = pointCoords.map((point) => `${point.x},${point.y}`).join(" ");
 
     // Pie Chart Logic
     const total = data.reduce((a, b) => a + b, 0);
     let cumulativePercent = 0;
+    const pieStartOffset = -0.25;
 
     const getCoordinatesForPercent = (percent) => {
         const x = Math.cos(2 * Math.PI * percent);
@@ -88,9 +93,65 @@ export default function AnimatedChart({ type = 'line', data = [10, 20, 30], labe
                         </>
                     )}
 
+                    {type === 'area' && (
+                        <>
+                            <line x1="0" y1={chartHeight} x2={chartWidth} y2={chartHeight} stroke="#e5e7eb" strokeWidth="1" />
+                            <motion.polyline
+                                points={points}
+                                fill="none"
+                                stroke={accentColor || "#000"}
+                                strokeWidth="3"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                initial={{ pathLength: 0 }}
+                                animate={{ pathLength: 1 }}
+                                transition={{ duration: 1.5, ease: "easeInOut" }}
+                            />
+                            <motion.polyline
+                                points={`${points} ${chartWidth},${chartHeight} 0,${chartHeight}`}
+                                fill={accentColor ? `${accentColor}30` : "#00000020"}
+                                stroke="none"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 1.5, delay: 0.4 }}
+                            />
+                            {pointCoords.map((point, i) => (
+                                <motion.circle
+                                    key={i}
+                                    cx={point.x}
+                                    cy={point.y}
+                                    r="3"
+                                    fill={colors?.[i] || accentColor || "#000"}
+                                    initial={{ opacity: 0, scale: 0 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.2 + (i * 0.05) }}
+                                />
+                            ))}
+                        </>
+                    )}
+
+                    {type === 'scatter' && (
+                        <>
+                            <line x1="0" y1={chartHeight} x2={chartWidth} y2={chartHeight} stroke="#e5e7eb" strokeWidth="1" />
+                            {pointCoords.map((point, i) => (
+                                <motion.circle
+                                    key={i}
+                                    cx={point.x}
+                                    cy={point.y}
+                                    r="6"
+                                    fill={colors?.[i] || accentColor || "#000"}
+                                    initial={{ opacity: 0, scale: 0 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.2 + (i * 0.05) }}
+                                    onClick={() => analytics.track('chart_point_click', { index: i, value: data[i], label: labels[i] || '' })}
+                                />
+                            ))}
+                        </>
+                    )}
+
                     {type === 'bar' && (
                                 <g>
-                                    <line x1="0" y1={chartHeight} x2={chartWidth} y2={chartHeight} stroke="#e5e7eb" strokeWidth="1" />
+                                    <line x1="0" y1={barBaseline} x2={chartWidth} y2={barBaseline} stroke="#e5e7eb" strokeWidth="1" />
                                     {data.map((val, i) => {
                                 // Support multi-series if data[i] is an object { values: [v1, v2] }
                                 const isMulti = typeof val === 'object' && val.values;
@@ -101,17 +162,17 @@ export default function AnimatedChart({ type = 'line', data = [10, 20, 30], labe
                                 return (
                                     <g key={i}>
                                         {values.map((v, seriesIdx) => {
-                                            const h = (v / maxVal) * (chartHeight - 20);
+                                            const h = (v / maxVal) * barMaxHeight;
                                             const w = groupW / values.length;
                                             const x = groupX + (seriesIdx * w);
                                             return (
                                                 <motion.rect
                                                     key={seriesIdx}
                                                     x={x}
-                                                    y={chartHeight}
+                                                    y={barBaseline}
                                                     width={w * 0.9} // Slight gap between bars in group
-                                                    initial={{ height: 0, y: chartHeight }}
-                                                    animate={{ height: h, y: chartHeight - h }}
+                                                    initial={{ height: 0, y: barBaseline }}
+                                                    animate={{ height: h, y: barBaseline - h }}
                                                     fill={isMulti ? (val.colors?.[seriesIdx] || getSegmentColor(seriesIdx)) : getSegmentColor(i)}
                                                     transition={{ duration: 1, delay: (i * 0.1) + (seriesIdx * 0.05), ease: "circOut" }}
                                                     rx="2"
@@ -126,18 +187,17 @@ export default function AnimatedChart({ type = 'line', data = [10, 20, 30], labe
                     )}
 
                     {type === 'pie' && (
-                        <g transform={`translate(${chartWidth / 2}, ${chartHeight / 2})`}>
+                        <g transform={`translate(${pieCenter.x}, ${pieCenter.y})`}>
                             {data.map((val, i) => {
                                 const percent = val / (total || 1);
-                                const [startX, startY] = getCoordinatesForPercent(cumulativePercent);
+                                const [startX, startY] = getCoordinatesForPercent(cumulativePercent + pieStartOffset);
                                 cumulativePercent += percent;
-                                const [endX, endY] = getCoordinatesForPercent(cumulativePercent);
+                                const [endX, endY] = getCoordinatesForPercent(cumulativePercent + pieStartOffset);
                                 const largeArcFlag = percent > 0.5 ? 1 : 0;
-                                const radius = 80;
 
                                 const pathData = [
-                                    `M ${startX * radius} ${startY * radius}`,
-                                    `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${endX * radius} ${endY * radius}`,
+                                    `M ${startX * pieRadius} ${startY * pieRadius}`,
+                                    `A ${pieRadius} ${pieRadius} 0 ${largeArcFlag} 1 ${endX * pieRadius} ${endY * pieRadius}`,
                                     `L 0 0`,
                                 ].join(' ');
 

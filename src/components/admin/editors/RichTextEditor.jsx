@@ -44,7 +44,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
 
     const updateValue = () => {
         if (!editorRef.current) return;
-        const rawHtml = editorRef.current.innerHTML;
+        const rawHtml = editorRef.current.innerHTML.replace(/&nbsp;/g, ' ');
         const textContent = editorRef.current.textContent || '';
         const cleaned = textContent.trim().length === 0 ? '' : sanitizeHtml(rawHtml);
         onChange(cleaned);
