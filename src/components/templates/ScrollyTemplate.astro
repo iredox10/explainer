@@ -8,6 +8,7 @@ import BeforeAfter from "../../components/ui/BeforeAfter.jsx";
 import ShareButtons from "../../components/ui/ShareButtons.jsx";
 import PersistentAudioPlayer from "../../components/ui/PersistentAudioPlayer.jsx";
 import Timeline from "../../components/ui/Timeline.jsx";
+const TimelineComponent = /** @type {any} */ (Timeline);
 import { Bookmark } from "lucide-react";
 import { Image } from "astro:assets";
 
@@ -200,8 +201,8 @@ const readTime = serverStoryService.calculateReadTime(blocks);
               }
               if (block.type === "timeline") {
                 return (
-                  <div class="my-12 bg-gray-50 border border-gray-100 rounded-3xl overflow-hidden">
-                    <Timeline
+                  <div class="my-12 bg-gray-50 border border-gray-100 rounded-3xl">
+                    <TimelineComponent
                       client:only="react"
                       label={block.label}
                       highlight={block.highlight}

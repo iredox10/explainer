@@ -224,6 +224,10 @@ function BlockRenderer({ block, index }) {
             label={block.label}
             highlight={block.highlight}
             steps={block.timelineSteps || []}
+            variant={block.style || 'track'}
+            animated={false}
+            showContextLabel={false}
+            hud={false}
           />
         </div>
       );

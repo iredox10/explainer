@@ -41,6 +41,7 @@ const stories = defineCollection({
           label: z.string().optional(),
           highlight: z.string().optional(),
           timelineSteps: z.array(z.object({ year: z.string(), label: z.string() })).optional(),
+          style: z.enum(['track', 'stacked', 'cards']).optional(),
           layout: z.enum(['standard', 'full-width']).optional()
         }),
         z.object({

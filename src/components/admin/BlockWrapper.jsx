@@ -506,8 +506,23 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                             </select>
                         </div>
 
+                        <div className="space-y-2">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Timeline Style</span>
+                            <div className="grid grid-cols-3 gap-2">
+                                {['track', 'stacked', 'cards'].map((style) => (
+                                    <button
+                                        key={style}
+                                        onClick={() => !isLocked && onUpdate({ ...block, style })}
+                                        className={`p-2 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${block.style === style ? 'bg-black text-white border-black' : 'bg-white text-gray-400 border-gray-200 hover:text-black'}`}
+                                    >
+                                        {style}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
                         <div className="h-[320px] bg-gray-50 border border-gray-100 rounded-2xl overflow-hidden">
-                            <Timeline label={block.label} highlight={block.highlight} steps={block.timelineSteps || []} />
+                            <Timeline label={block.label} highlight={block.highlight} steps={block.timelineSteps || []} variant={block.style || 'track'} />
                         </div>
                     </div>
                 )}
