@@ -355,7 +355,7 @@ const displayReadTime = `${readTime} min read`;
 
                 if (block.type === "timeline") {
                   return (
-                    <div class={`my-16 ${block.layout === "full-width" ? "-mx-6 md:-mx-12 lg:-mx-24" : ""} bg-gray-50 border border-gray-200 rounded-sm`}>
+                    <div key={`timeline-${index}`} class={`my-16 ${block.layout === "full-width" ? "-mx-6 md:-mx-12 lg:-mx-24" : ""} bg-gray-50 border border-gray-200 rounded-sm`}>
                       <Timeline
                         client:only="react"
                         label={block.label}

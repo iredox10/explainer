@@ -113,7 +113,7 @@ const readTime = serverStoryService.calculateReadTime(blocks);
           </div>
 
           <section class="lg:col-span-8 lg:col-start-3 py-12 md:py-24 text-xl md:text-2xl font-serif leading-relaxed text-gray-900">
-            {group.blocks.map((block: any) => {
+            {group.blocks.map((block: any, blockIdx: number) => {
               if (block.type === "p") {
                 return <p class="mb-8"><Fragment set:html={block.text} /></p>;
               }
@@ -217,7 +217,7 @@ const readTime = serverStoryService.calculateReadTime(blocks);
               }
               if (block.type === "timeline") {
                 return (
-                  <div class="my-12 bg-gray-50 border border-gray-100 rounded-3xl">
+                  <div key={`timeline-${blockIdx}`} class="my-12 bg-gray-50 border border-gray-100 rounded-3xl">
                     <Timeline
                       client:only="react"
                       label={block.label}

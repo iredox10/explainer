@@ -220,7 +220,7 @@ function BlockRenderer({ block, index }) {
       );
     case 'timeline':
       return (
-        <div className="my-12 bg-gray-50 border border-gray-200 rounded-2xl overflow-hidden min-h-[320px]">
+        <div key={`timeline-${block.id || index}`} className="my-12 bg-gray-50 border border-gray-200 rounded-2xl overflow-auto max-h-[400px] custom-scrollbar">
           <Timeline
             label={block.label}
             highlight={block.highlight}

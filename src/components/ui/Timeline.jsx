@@ -9,9 +9,10 @@ import { motion } from 'framer-motion';
  *  animated?: boolean;
  *  showContextLabel?: boolean;
  *  hud?: boolean;
+ *  maxHeight?: string;
  * }} props
  */
-export default function Timeline({ label, highlight, steps = [], variant = 'track', animated = true, showContextLabel = true, hud = true }) {
+export default function Timeline({ label, highlight, steps = [], variant = 'track', animated = true, showContextLabel = true, hud = true, maxHeight }) {
     const dates = steps.length > 0 ? steps : [
         { year: '1984', label: 'AFCON Final' },
         { year: '1988', label: 'AFCON Final' },
@@ -20,8 +21,9 @@ export default function Timeline({ label, highlight, steps = [], variant = 'trac
     ];
 
     const currentIndex = dates.findIndex((d) => d.year === highlight);
-    const scrollClass = 'w-full h-[70vh] md:h-[640px] overflow-auto pr-3 pb-2 custom-scrollbar overscroll-contain pointer-events-auto';
+    const baseScrollClass = 'w-full overflow-auto pr-3 pb-2 custom-scrollbar overscroll-contain pointer-events-auto';
     const scrollStyle = { touchAction: 'pan-x pan-y', WebkitOverflowScrolling: 'touch' };
+    const scrollClass = maxHeight ? `${baseScrollClass}` : `${baseScrollClass} max-h-[70vh] md:max-h-[640px]`;
     const trackScrollClass = `w-full overflow-auto ${scrollClass}`;
 
     const Header = () => (
@@ -39,8 +41,8 @@ export default function Timeline({ label, highlight, steps = [], variant = 'trac
         return (
             <div className="relative w-full bg-gray-50 p-8 md:p-12">
                 <Header />
-                <div className={`mt-8 ${scrollClass}`} style={scrollStyle}>
-                    <div className="space-y-5 min-w-[680px]">
+                <div className={`mt-8 ${scrollClass}`} style={{ ...scrollStyle, maxHeight: maxHeight || 'auto' }}>
+                    <div className="space-y-5">
                         {dates.map((d, i) => {
                             const isActive = d.year === highlight;
                             return (
@@ -64,8 +66,8 @@ export default function Timeline({ label, highlight, steps = [], variant = 'trac
         return (
             <div className="relative w-full bg-gray-50 p-8 md:p-12">
                 <Header />
-                <div className={`mt-8 ${scrollClass}`} style={scrollStyle}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 min-w-[720px]">
+                <div className={`mt-8 ${scrollClass}`} style={{ ...scrollStyle, maxHeight: maxHeight || 'auto' }}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         {dates.map((d, i) => {
                             const isActive = d.year === highlight;
                             return (
@@ -103,8 +105,8 @@ export default function Timeline({ label, highlight, steps = [], variant = 'trac
             )}
 
             <div className={`relative w-full ${hud ? 'h-full' : 'mt-8'} flex items-center justify-center ${hud ? 'pt-20' : ''}`}>
-                <div className={trackScrollClass} style={scrollStyle}>
-                    <div className="relative min-h-[280px] py-12">
+                <div className={trackScrollClass} style={{ ...scrollStyle, maxHeight: maxHeight || 'auto' }}>
+                    <div className="relative min-h-[200px] py-8">
                         <div className="absolute w-full h-1 bg-gray-200 top-1/2 -translate-y-1/2 rounded-full overflow-hidden">
                             <ProgressTag
                                 className="absolute h-full bg-black"
@@ -119,8 +121,8 @@ export default function Timeline({ label, highlight, steps = [], variant = 'trac
                         </div>
 
                         <div
-                            className="relative w-full flex justify-between min-w-[640px]"
-                            style={{ minWidth: `${Math.max(640, dates.length * 140)}px` }}
+                            className="relative w-full flex justify-between px-4"
+                            style={{ minWidth: `${Math.max(400, dates.length * 120)}px` }}
                         >
                             {dates.map((d, i) => {
                                 const isActive = d.year === highlight;
@@ -142,7 +144,7 @@ export default function Timeline({ label, highlight, steps = [], variant = 'trac
                                             className="w-4 h-4 rounded-full border-2 bg-white z-10 transition-colors"
                                         />
                                         <div className="absolute top-8 text-center whitespace-nowrap">
-                                            <span className={`block font-black text-xl md:text-3xl ${isActive ? 'text-black' : 'text-gray-300'}`}>
+                                            <span className={`block font-black text-lg md:text-2xl ${isActive ? 'text-black' : 'text-gray-300'}`}>
                                                 {d.year}
                                             </span>
                                             <LabelTag
@@ -150,7 +152,7 @@ export default function Timeline({ label, highlight, steps = [], variant = 'trac
                                                     initial: { opacity: 0, y: 10 },
                                                     animate: { opacity: 1, y: 0 }
                                                 } : {})}
-                                                className={`block text-[10px] font-bold uppercase tracking-widest mt-1 ${isActive ? 'text-gray-700' : 'text-gray-300'}`}
+                                                className={`block text-[9px] md:text-[10px] font-bold uppercase tracking-widest mt-1 max-w-[100px] ${isActive ? 'text-gray-700' : 'text-gray-300'}`}
                                             >
                                                 {d.label}
                                             </LabelTag>
