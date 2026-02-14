@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Type, X, AlertCircle, Loader2, Upload, Send, CheckSquare, Eye, Clock, History, Search, ChevronRight, ExternalLink, BookOpen, Zap, Settings2, Video, Layers, Map as MapIcon, BarChart3, Smartphone, MoveHorizontal } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import BlockWrapper from './BlockWrapper';
+import ImageCropper from './ImageCropper';
 import { getCurrentUser, ROLES } from '../../lib/authStore';
 import { storyService, categoryService } from '../../lib/services';
 
@@ -19,6 +20,8 @@ export default function StoryEditor({ storyId }) {
     const [focusedStepIndex, setFocusedStepIndex] = useState(null);
     const [activeBlockId, setActiveBlockId] = useState(null);
     const [categories, setCategories] = useState([]);
+    const [pendingImageFile, setPendingImageFile] = useState(null);
+    const [showImageCropper, setShowImageCropper] = useState(false);
 
     const fileInputRef = useRef(null);
     const previewIframeRef = useRef(null);
@@ -324,8 +327,22 @@ export default function StoryEditor({ storyId }) {
 
         const actualTargetRaw = window._currentUploadTarget || target;
         const actualTarget = String(actualTargetRaw || '');
-        console.log('StoryEditor: handleFileUpload', { actualTarget, file: file.name });
+        console.log('StoryEditor: handleFileUpload', { actualTarget, file: file.name, type: file.type });
 
+        const isImage = file.type.startsWith('image/');
+        console.log('StoryEditor: isImage?', isImage);
+        
+        if (isImage) {
+            console.log('StoryEditor: Showing image cropper');
+            setPendingImageFile({ file, target: actualTarget });
+            setShowImageCropper(true);
+            return;
+        }
+        
+        await uploadFile(file, actualTarget);
+    };
+
+    const uploadFile = async (file, actualTarget) => {
         setUploadingField(actualTarget);
         try {
             const url = await storyService.uploadImage(file);
@@ -340,6 +357,20 @@ export default function StoryEditor({ storyId }) {
             else updateContent(content.map(b => String(b.id) === actualTarget ? { ...b, url } : b));
         } catch (err) { alert("Upload failed: " + err.message); }
         finally { setUploadingField(null); window._currentUploadTarget = null; }
+    };
+
+    const handleCropComplete = async (croppedFile) => {
+        setShowImageCropper(false);
+        if (pendingImageFile) {
+            await uploadFile(croppedFile, pendingImageFile.target);
+            setPendingImageFile(null);
+        }
+    };
+
+    const handleCropCancel = () => {
+        setShowImageCropper(false);
+        setPendingImageFile(null);
+        window._currentUploadTarget = null;
     };
 
     const performSave = async (newStatus) => {
@@ -815,10 +846,24 @@ export default function StoryEditor({ storyId }) {
                                     </div>
                                 )}
                                 {!isLocked && (
-                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                        <button onClick={() => fileInputRef.current?.click()} className="bg-[#FAFF00] text-black px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                                            <Upload className="w-4 h-4" /> {story.layout === 'scrolly' ? 'Upload Video' : 'Replace Image'}
+                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                                        <button 
+                                            onClick={() => {
+                                                window._currentUploadTarget = 'hero';
+                                                fileInputRef.current?.click();
+                                            }} 
+                                            className="bg-[#FAFF00] text-black px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-black hover:text-white transition-all"
+                                        >
+                                            <Upload className="w-4 h-4" /> {story.heroImage ? 'Replace' : 'Upload'}
                                         </button>
+                                        {story.heroImage && (
+                                            <button 
+                                                onClick={() => handleChange('heroImage', '')}
+                                                className="bg-white/20 text-white px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-red-500 transition-all"
+                                            >
+                                                <X className="w-4 h-4" /> Remove
+                                            </button>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -919,6 +964,15 @@ export default function StoryEditor({ storyId }) {
                 const target = window._currentUploadTarget || 'hero';
                 handleFileUpload(e, target);
             }} />
+
+            {/* Image Cropper Modal - Uses portal to render at document body */}
+            {showImageCropper && pendingImageFile && (
+                <ImageCropper
+                    imageFile={pendingImageFile.file}
+                    onCrop={handleCropComplete}
+                    onCancel={handleCropCancel}
+                />
+            )}
         </div>
     );
 }

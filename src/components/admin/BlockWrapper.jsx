@@ -194,16 +194,28 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                                     ) : (
                                         <Upload className="w-6 h-6 text-gray-200" />
                                     )}
-                                    <button
-                                        onClick={() => {
-                                            if (isLocked) return;
-                                            console.log('BlockWrapper: Upload triggered for', `${block.id}_left`);
-                                            onTriggerUpload(`${block.id}_left`);
-                                        }}
-                                        className="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-black uppercase tracking-widest"
-                                    >
-                                        {uploadingField === `${block.id}_left` ? <Loader2 className="animate-spin" /> : 'Choose Primary'}
-                                    </button>
+                                    {!isLocked && (
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    console.log('BlockWrapper: Upload triggered for', `${block.id}_left`);
+                                                    onTriggerUpload(`${block.id}_left`);
+                                                }}
+                                                className="bg-[#FAFF00] text-black px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1 hover:bg-black hover:text-white transition-all"
+                                            >
+                                                {uploadingField === `${block.id}_left` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                                                {block.leftImage ? 'Replace' : 'Upload'}
+                                            </button>
+                                            {block.leftImage && (
+                                                <button
+                                                    onClick={() => onUpdate({ ...block, leftImage: '' })}
+                                                    className="bg-white/20 text-white px-2 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500 transition-all"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             <div className="space-y-3">
@@ -217,16 +229,28 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                                     ) : (
                                         <Upload className="w-6 h-6 text-gray-200" />
                                     )}
-                                    <button
-                                        onClick={() => {
-                                            if (isLocked) return;
-                                            console.log('BlockWrapper: Upload triggered for', `${block.id}_right`);
-                                            onTriggerUpload(`${block.id}_right`);
-                                        }}
-                                        className="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-black uppercase tracking-widest"
-                                    >
-                                        {uploadingField === `${block.id}_right` ? <Loader2 className="animate-spin" /> : 'Choose Secondary'}
-                                    </button>
+                                    {!isLocked && (
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    console.log('BlockWrapper: Upload triggered for', `${block.id}_right`);
+                                                    onTriggerUpload(`${block.id}_right`);
+                                                }}
+                                                className="bg-[#FAFF00] text-black px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1 hover:bg-black hover:text-white transition-all"
+                                            >
+                                                {uploadingField === `${block.id}_right` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                                                {block.rightImage ? 'Replace' : 'Upload'}
+                                            </button>
+                                            {block.rightImage && (
+                                                <button
+                                                    onClick={() => onUpdate({ ...block, rightImage: '' })}
+                                                    className="bg-white/20 text-white px-2 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-500 transition-all"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -306,12 +330,22 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                             <div className="relative group/img aspect-video rounded-3xl overflow-hidden bg-gray-50 border border-gray-100">
                                 <img src={block.url} className="w-full h-full object-cover" />
                                 {!isLocked && (
-                                    <button
-                                        onClick={() => onUpdate({ ...block, url: '' })}
-                                        className="absolute top-4 right-4 bg-black/50 text-white p-3 rounded-full opacity-0 group-hover/img:opacity-100 transition-opacity"
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </button>
+                                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={() => onTriggerUpload(block.id)}
+                                            className="bg-[#FAFF00] text-black p-3 rounded-full hover:bg-black hover:text-white transition-all"
+                                            title="Replace Image"
+                                        >
+                                            <Upload className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => onUpdate({ ...block, url: '' })}
+                                            className="bg-black/50 text-white p-3 rounded-full hover:bg-red-500 transition-all"
+                                            title="Remove Image"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         ) : (
