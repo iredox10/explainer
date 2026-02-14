@@ -141,7 +141,7 @@ export default function Timeline({ label, highlight, steps = [], variant = 'trac
                                                     borderColor: isActive ? '#000' : '#D1D5DB'
                                                 }
                                             })}
-                                            className="w-4 h-4 rounded-full border-2 bg-white z-10 transition-colors"
+                                            className={`w-4 h-4 rounded-full border-2 z-10 transition-colors ${!isActive ? 'bg-white' : ''}`}
                                         />
                                         <div className="absolute top-8 text-center whitespace-nowrap">
                                             <span className={`block font-black text-lg md:text-2xl ${isActive ? 'text-black' : 'text-gray-300'}`}>
@@ -152,7 +152,7 @@ export default function Timeline({ label, highlight, steps = [], variant = 'trac
                                                     initial: { opacity: 0, y: 10 },
                                                     animate: { opacity: 1, y: 0 }
                                                 } : {})}
-                                                className={`block text-[9px] md:text-[10px] font-bold uppercase tracking-widest mt-1 max-w-[100px] ${isActive ? 'text-gray-700' : 'text-gray-300'}`}
+                                                className={`block text-[9px] md:text-[10px] font-bold uppercase tracking-widest mt-1 max-w-[100px] overflow-hidden text-ellipsis ${isActive ? 'text-gray-700' : 'text-gray-300'}`}
                                             >
                                                 {d.label}
                                             </LabelTag>

@@ -1,3 +1,5 @@
+const plugin = require('tailwindcss/plugin');
+
 module.exports = {
     content: [
         './src/pages/**/*.{astro,js,jsx,ts,tsx}',
@@ -17,5 +19,19 @@ module.exports = {
             }
         }
     },
-    plugins: [require('@tailwindcss/aspect-ratio')]
+    plugins: [
+        require('@tailwindcss/aspect-ratio'),
+        plugin(function({ addBase }) {
+            addBase({
+                '::selection': {
+                    backgroundColor: '#FAFF00',
+                    color: '#000',
+                },
+                '::-moz-selection': {
+                    backgroundColor: '#FAFF00',
+                    color: '#000',
+                },
+            })
+        })
+    ]
 };

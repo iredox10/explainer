@@ -1,3 +1,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+::selection {
+  background: #FAFF00 !important;
+  background-color: #FAFF00 !important;
+  color: #000 !important;
+}
+
+::-moz-selection {
+  background: #FAFF00 !important;
+  background-color: #FAFF00 !important;
+  color: #000 !important;
+}
+
+*::selection {
+  background: #FAFF00 !important;
+  background-color: #FAFF00 !important;
+  color: #000 !important;
+}
+
+*::-moz-selection {
+  background: #FAFF00 !important;
+  background-color: #FAFF00 !important;
+  color: #000 !important;
+}

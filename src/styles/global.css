@@ -6,7 +6,7 @@
 }
 
 body {
-  background-color: #f8f9fa; /* Slightly cooler/cleaner off-white */
+  background-color: #f8f9fa;
   font-family: var(--font-sans);
   color: #121212;
   -webkit-font-smoothing: antialiased;
@@ -14,8 +14,27 @@ body {
 }
 
 ::selection {
-  background-color: var(--color-vox-yellow);
-  color: black;
+  background: #FAFF00 !important;
+  background-color: #FAFF00 !important;
+  color: #000 !important;
+}
+
+::-moz-selection {
+  background: #FAFF00 !important;
+  background-color: #FAFF00 !important;
+  color: #000 !important;
+}
+
+*::selection {
+  background: #FAFF00 !important;
+  background-color: #FAFF00 !important;
+  color: #000 !important;
+}
+
+*::-moz-selection {
+  background: #FAFF00 !important;
+  background-color: #FAFF00 !important;
+  color: #000 !important;
 }
 
 /* Smooth scrolling */
