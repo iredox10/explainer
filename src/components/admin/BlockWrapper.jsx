@@ -521,7 +521,7 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                             </div>
                         </div>
 
-                        <div className="h-[320px] bg-gray-50 border border-gray-100 rounded-2xl overflow-hidden">
+                        <div className="h-[420px] bg-gray-50 border border-gray-100 rounded-2xl overflow-hidden">
                             <Timeline label={block.label} highlight={block.highlight} steps={block.timelineSteps || []} variant={block.style || 'track'} />
                         </div>
                     </div>
