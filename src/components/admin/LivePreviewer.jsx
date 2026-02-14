@@ -7,6 +7,7 @@ import ScrollyIsland from '../ScrollyIsland';
 import AnimatedMap from '../ui/AnimatedMap';
 import AnimatedChart from '../ui/AnimatedChart';
 import Timeline from '../ui/Timeline';
+import BottleneckGraphic from '../ui/BottleneckGraphic';
 
 export default function LivePreviewer() {
   const [story, setStory] = useState(null);
@@ -228,6 +229,21 @@ function BlockRenderer({ block, index }) {
             animated={false}
             showContextLabel={false}
             hud={false}
+          />
+        </div>
+      );
+    case 'bottleneck':
+      return (
+        <div className="my-12">
+          <BottleneckGraphic
+            sourceLabel={block.sourceLabel}
+            sourceValue={block.sourceValue}
+            outputLabel={block.outputLabel}
+            outputValue={block.outputValue}
+            unit={block.unit}
+            bottleneckLabel={block.bottleneckLabel}
+            bottleneckSubLabel={block.bottleneckSubLabel}
+            caption={block.caption}
           />
         </div>
       );

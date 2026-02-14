@@ -8,7 +8,7 @@ import BeforeAfter from "../../components/ui/BeforeAfter.jsx";
 import ShareButtons from "../../components/ui/ShareButtons.jsx";
 import PersistentAudioPlayer from "../../components/ui/PersistentAudioPlayer.jsx";
 import Timeline from "../../components/ui/Timeline.jsx";
-const TimelineComponent = /** @type {any} */ (Timeline);
+import BottleneckGraphic from "../../components/ui/BottleneckGraphic.jsx";
 import { Bookmark } from "lucide-react";
 import { Image } from "astro:assets";
 
@@ -199,10 +199,26 @@ const readTime = serverStoryService.calculateReadTime(blocks);
                   </div>
                 );
               }
+              if (block.type === "bottleneck") {
+                return (
+                  <div class="my-12">
+                    <BottleneckGraphic
+                      sourceLabel={block.sourceLabel}
+                      sourceValue={block.sourceValue}
+                      outputLabel={block.outputLabel}
+                      outputValue={block.outputValue}
+                      unit={block.unit}
+                      bottleneckLabel={block.bottleneckLabel}
+                      bottleneckSubLabel={block.bottleneckSubLabel}
+                      caption={block.caption}
+                    />
+                  </div>
+                );
+              }
               if (block.type === "timeline") {
                 return (
                   <div class="my-12 bg-gray-50 border border-gray-100 rounded-3xl">
-                    <TimelineComponent
+                    <Timeline
                       client:only="react"
                       label={block.label}
                       highlight={block.highlight}

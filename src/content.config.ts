@@ -76,6 +76,18 @@ const stories = defineCollection({
           layout: z.enum(['standard', 'full-width']).optional()
         }),
         z.object({
+          type: z.literal('bottleneck'),
+          sourceLabel: z.string().optional(),
+          sourceValue: z.number().optional(),
+          outputLabel: z.string().optional(),
+          outputValue: z.number().optional(),
+          unit: z.string().optional(),
+          bottleneckLabel: z.string().optional(),
+          bottleneckSubLabel: z.string().optional(),
+          caption: z.string().optional(),
+          layout: z.enum(['standard', 'full-width']).optional()
+        }),
+        z.object({
           type: z.literal('scrolly-group'),
           steps: z.array(
             z.object({

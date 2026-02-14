@@ -5,6 +5,7 @@ import MapConfigurator from './editors/MapConfigurator';
 import ChartConfigurator from './editors/ChartConfigurator';
 import RichTextEditor from './editors/RichTextEditor';
 import Timeline from '../ui/Timeline';
+import BottleneckGraphic from '../ui/BottleneckGraphic';
 
 export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uploadingField, onTriggerUpload, isActive, onActivate }) {
     const dragControls = useDragControls();
@@ -414,6 +415,109 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                             onFocus={onActivate}
                             disabled={isLocked}
                         />
+                    </div>
+                )}
+                {block.type === 'bottleneck' && (
+                    <div className="bg-white border border-gray-100 p-6 rounded-3xl space-y-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <MoveHorizontal className="w-4 h-4 text-gray-400" />
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Bottleneck</span>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Source Label</label>
+                                <input
+                                    className="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl text-xs font-bold"
+                                    value={block.sourceLabel || ''}
+                                    onChange={(e) => onUpdate({ ...block, sourceLabel: e.target.value })}
+                                    disabled={isLocked}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Source Value</label>
+                                <input
+                                    type="number"
+                                    className="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl text-xs font-bold"
+                                    value={block.sourceValue ?? ''}
+                                    onChange={(e) => onUpdate({ ...block, sourceValue: Number(e.target.value) })}
+                                    disabled={isLocked}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Output Label</label>
+                                <input
+                                    className="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl text-xs font-bold"
+                                    value={block.outputLabel || ''}
+                                    onChange={(e) => onUpdate({ ...block, outputLabel: e.target.value })}
+                                    disabled={isLocked}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Output Value</label>
+                                <input
+                                    type="number"
+                                    className="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl text-xs font-bold"
+                                    value={block.outputValue ?? ''}
+                                    onChange={(e) => onUpdate({ ...block, outputValue: Number(e.target.value) })}
+                                    disabled={isLocked}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Unit</label>
+                                <input
+                                    className="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl text-xs font-bold"
+                                    value={block.unit || ''}
+                                    onChange={(e) => onUpdate({ ...block, unit: e.target.value })}
+                                    disabled={isLocked}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Caption</label>
+                                <input
+                                    className="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl text-xs font-bold"
+                                    value={block.caption || ''}
+                                    onChange={(e) => onUpdate({ ...block, caption: e.target.value })}
+                                    disabled={isLocked}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Bottleneck Label</label>
+                                <input
+                                    className="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl text-xs font-bold"
+                                    value={block.bottleneckLabel || ''}
+                                    onChange={(e) => onUpdate({ ...block, bottleneckLabel: e.target.value })}
+                                    disabled={isLocked}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Bottleneck Sub-Label</label>
+                                <input
+                                    className="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl text-xs font-bold"
+                                    value={block.bottleneckSubLabel || ''}
+                                    onChange={(e) => onUpdate({ ...block, bottleneckSubLabel: e.target.value })}
+                                    disabled={isLocked}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
+                            <BottleneckGraphic
+                                sourceLabel={block.sourceLabel}
+                                sourceValue={block.sourceValue}
+                                outputLabel={block.outputLabel}
+                                outputValue={block.outputValue}
+                                unit={block.unit}
+                                bottleneckLabel={block.bottleneckLabel}
+                                bottleneckSubLabel={block.bottleneckSubLabel}
+                                caption={block.caption}
+                            />
+                        </div>
                     </div>
                 )}
                 {block.type === 'timeline' && (

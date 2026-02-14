@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Type, X, AlertCircle, Loader2, Upload, Send, CheckSquare, Eye, Clock, History, Search, ChevronRight, ExternalLink, BookOpen, Zap, Settings2, Video, Layers, Map as MapIcon, BarChart3, Smartphone } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Type, X, AlertCircle, Loader2, Upload, Send, CheckSquare, Eye, Clock, History, Search, ChevronRight, ExternalLink, BookOpen, Zap, Settings2, Video, Layers, Map as MapIcon, BarChart3, Smartphone, MoveHorizontal } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import BlockWrapper from './BlockWrapper';
 import { getCurrentUser, ROLES } from '../../lib/authStore';
@@ -258,6 +258,19 @@ export default function StoryEditor({ storyId }) {
                     chartLabels: [], 
                     chartColors: [], 
                     text: '' 
+                };
+                break;
+            case 'bottleneck':
+                newBlock = {
+                    ...newBlock,
+                    sourceLabel: 'Source',
+                    sourceValue: 13000,
+                    outputLabel: 'Output',
+                    outputValue: 4000,
+                    unit: 'MW',
+                    bottleneckLabel: 'Transmission',
+                    bottleneckSubLabel: 'Distribution',
+                    caption: 'Generation vs delivered capacity'
                 };
                 break;
             case 'quote':
@@ -604,6 +617,9 @@ export default function StoryEditor({ storyId }) {
                                         </button>
                                         <button onClick={() => handleInsertBlock('chart')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
                                             <BarChart3 className="w-4 h-4" /> Chart
+                                        </button>
+                                        <button onClick={() => handleInsertBlock('bottleneck')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
+                                            <MoveHorizontal className="w-4 h-4" /> Bottleneck
                                         </button>
                                         <button onClick={() => handleInsertBlock('timeline')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
                                             <ArrowLeft className="w-4 h-4" /> Timeline
