@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { Plus, Trash2, BarChart2, PieChart, Activity, FileJson, X, Loader2, AreaChart, ScatterChart } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Plus, Trash2, BarChart2, PieChart, Activity, FileJson, X, Loader2, AreaChart, ScatterChart, Upload } from 'lucide-react';
+import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
 import AnimatedChart from '../../ui/AnimatedChart';
 
 export default function ChartConfigurator({ value, onChange }) {
@@ -17,13 +19,14 @@ export default function ChartConfigurator({ value, onChange }) {
 
     // Merge provided value with defaults to ensure structure exists
     const config = { ...defaultConfig, ...(value || {}) };
-    
+
     // Ensure annotations exist
     if (!config.annotations) config.annotations = [];
 
     const [isAnnotating, setIsAnnotating] = useState(false);
     const [bulkData, setBulkData] = useState('');
     const [showBulk, setShowBulk] = useState(false);
+    const fileInputRef = useRef(null);
 
     // Update helper
     const updateConfig = (updates) => {
@@ -32,11 +35,11 @@ export default function ChartConfigurator({ value, onChange }) {
 
     const handleChartClick = (e) => {
         if (!isAnnotating) return;
-        
+
         const rect = e.currentTarget.getBoundingClientRect();
         const x = parseFloat(((e.clientX - rect.left) / rect.width * 100).toFixed(2));
         const y = parseFloat(((e.clientY - rect.top) / rect.height * 100).toFixed(2));
-        
+
         updateConfig({
             annotations: [...config.annotations, { x, y, text: 'New Label' }]
         });
@@ -89,7 +92,7 @@ export default function ChartConfigurator({ value, onChange }) {
                     return { label: label || 'Imported', value: isNaN(value) ? 0 : value, color: config.accentColor || '#FAFF00' };
                 });
             }
-            
+
             if (imported.length > 0) {
                 updateConfig({
                     data: imported.map(d => ({
@@ -106,6 +109,60 @@ export default function ChartConfigurator({ value, onChange }) {
         }
     };
 
+    const handleFileUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        if (file.name.endsWith('.csv')) {
+            reader.onload = (evt) => {
+                Papa.parse(evt.target.result, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: (results) => {
+                        const parsedData = results.data.map((row, i) => {
+                            const keys = Object.keys(row);
+                            return {
+                                label: row[keys[0]] || `Row ${i + 1}`,
+                                value: Number(row[keys[1]]) || 0,
+                                color: config.accentColor || '#FAFF00'
+                            };
+                        });
+                        if (parsedData.length > 0) {
+                            updateConfig({ data: parsedData });
+                            setShowBulk(false);
+                        }
+                    }
+                });
+            };
+            reader.readAsText(file);
+        } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+            reader.onload = (evt) => {
+                const data = new Uint8Array(evt.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                // Assume first row is header, skip it
+                const dataRows = json.slice(1).filter(row => row.length >= 2).map((row, i) => ({
+                    label: String(row[0] || `Row ${i + 1}`),
+                    value: Number(row[1]) || 0,
+                    color: config.accentColor || '#FAFF00'
+                }));
+                if (dataRows.length > 0) {
+                    updateConfig({ data: dataRows });
+                    setShowBulk(false);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Reset input
+        e.target.value = null;
+    };
+
     // Prepare data for AnimatedChart
     const chartData = config.data.map(d => Number(d.value) || 0);
     const chartLabels = config.data.map(d => d.label);
@@ -119,7 +176,7 @@ export default function ChartConfigurator({ value, onChange }) {
                     <h3 className="text-sm font-black uppercase tracking-widest text-gray-900">Data Visualization</h3>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-1">Configure your chart data</p>
                 </div>
-                
+
                 <div className="flex flex-wrap gap-1 bg-white p-1 rounded-xl border border-gray-200 shadow-sm">
                     {[
                         { id: 'line', icon: Activity, label: 'Line' },
@@ -131,11 +188,10 @@ export default function ChartConfigurator({ value, onChange }) {
                         <button
                             key={type.id}
                             onClick={() => updateConfig({ type: type.id })}
-                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                                config.type === type.id 
-                                    ? 'bg-black text-white shadow-md' 
+                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${config.type === type.id
+                                    ? 'bg-black text-white shadow-md'
                                     : 'text-gray-400 hover:text-black hover:bg-gray-50'
-                            }`}
+                                }`}
                         >
                             <type.icon className="w-4 h-4" />
                             <span className="hidden sm:inline">{type.label}</span>
@@ -156,11 +212,11 @@ export default function ChartConfigurator({ value, onChange }) {
                         </div>
                     </div>
                 )}
-                <div 
+                <div
                     className={`h-[300px] w-full ${isAnnotating ? 'cursor-crosshair' : ''}`}
                     onClick={handleChartClick}
                 >
-                    <AnimatedChart 
+                    <AnimatedChart
                         type={config.type}
                         data={chartData}
                         labels={chartLabels}
@@ -210,7 +266,7 @@ export default function ChartConfigurator({ value, onChange }) {
 
                     {/* Annotations Section */}
                     <div className="space-y-2 border-t border-gray-100 pt-4">
-                         <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between">
                             <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Annotations</label>
                             <button
                                 onClick={() => setIsAnnotating(!isAnnotating)}
@@ -231,7 +287,7 @@ export default function ChartConfigurator({ value, onChange }) {
                                             onChange={(e) => updateAnnotation(i, e.target.value)}
                                             className="flex-1 bg-transparent border-none p-0 text-xs font-bold focus:ring-0"
                                         />
-                                        <button 
+                                        <button
                                             onClick={() => removeAnnotation(i)}
                                             className="text-gray-300 hover:text-red-500 p-1"
                                         >
@@ -253,13 +309,13 @@ export default function ChartConfigurator({ value, onChange }) {
                     <div className="flex items-center justify-between">
                         <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Data Points</label>
                         <div className="flex gap-2">
-                            <button 
+                            <button
                                 onClick={() => setShowBulk(!showBulk)}
                                 className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-gray-600 hover:text-black bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg transition-colors"
                             >
                                 <FileJson className="w-3 h-3" /> {showBulk ? 'Hide Import' : 'Bulk Import'}
                             </button>
-                            <button 
+                            <button
                                 onClick={addRow}
                                 className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
                             >
@@ -272,26 +328,39 @@ export default function ChartConfigurator({ value, onChange }) {
                         <div className="bg-black text-white p-6 rounded-2xl space-y-4 shadow-2xl">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-yellow-400">Bulk Data Importer</h4>
-                                <div className="flex gap-2 text-[8px] font-bold text-gray-400">
-                                    <span>CSV (Label,Value)</span>
-                                    <span>•</span>
-                                    <span>JSON Array</span>
+                                <div className="flex items-center gap-4">
+                                    <div className="flex gap-2 text-[8px] font-bold text-gray-400">
+                                        <span>CSV/XLSX Upload or Paste Data</span>
+                                    </div>
+                                    <input
+                                        type="file"
+                                        accept=".csv,.xlsx,.xls"
+                                        className="hidden"
+                                        ref={fileInputRef}
+                                        onChange={handleFileUpload}
+                                    />
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="text-[9px] font-bold uppercase tracking-widest bg-yellow-400 text-black hover:bg-yellow-300 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                                    >
+                                        <Upload className="w-3 h-3" /> Upload File
+                                    </button>
                                 </div>
                             </div>
-                            <textarea 
+                            <textarea
                                 className="w-full h-32 bg-white/10 border border-white/10 rounded-xl p-3 text-xs font-mono focus:outline-none focus:border-yellow-400 transition-colors"
                                 placeholder={"Lagos, 45\nAbuja, 30\nKano, 25"}
                                 value={bulkData}
                                 onChange={(e) => setBulkData(e.target.value)}
                             />
                             <div className="flex justify-end gap-2">
-                                <button 
+                                <button
                                     onClick={() => setShowBulk(false)}
                                     className="px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest text-white/50 hover:text-white"
                                 >
                                     Cancel
                                 </button>
-                                <button 
+                                <button
                                     onClick={handleBulkImport}
                                     className="bg-yellow-400 text-black px-6 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest hover:scale-105 transition-transform"
                                 >
@@ -308,7 +377,7 @@ export default function ChartConfigurator({ value, onChange }) {
                             <div className="col-span-4">Value</div>
                             <div className="col-span-1 text-center">Act</div>
                         </div>
-                        
+
                         <div className="divide-y divide-gray-100 max-h-[300px] overflow-y-auto custom-scrollbar">
                             {config.data.map((row, idx) => (
                                 <div key={idx} className="grid grid-cols-12 gap-2 p-2 items-center hover:bg-gray-50 transition-colors group">
@@ -342,7 +411,7 @@ export default function ChartConfigurator({ value, onChange }) {
                                         />
                                     </div>
                                     <div className="col-span-1 flex justify-center">
-                                        <button 
+                                        <button
                                             onClick={() => removeRow(idx)}
                                             className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                                             title="Remove Row"
@@ -352,7 +421,7 @@ export default function ChartConfigurator({ value, onChange }) {
                                     </div>
                                 </div>
                             ))}
-                            
+
                             {config.data.length === 0 && (
                                 <div className="p-8 text-center text-gray-400 text-xs flex flex-col items-center gap-2">
                                     <p>No data points defined.</p>

@@ -150,9 +150,9 @@ export default function AnimatedChart({ type = 'line', data = [10, 20, 30], labe
                     )}
 
                     {type === 'bar' && (
-                                <g>
-                                    <line x1="0" y1={barBaseline} x2={chartWidth} y2={barBaseline} stroke="#e5e7eb" strokeWidth="1" />
-                                    {data.map((val, i) => {
+                        <g>
+                            <line x1="0" y1={barBaseline} x2={chartWidth} y2={barBaseline} stroke="#e5e7eb" strokeWidth="1" />
+                            {data.map((val, i) => {
                                 // Support multi-series if data[i] is an object { values: [v1, v2] }
                                 const isMulti = typeof val === 'object' && val.values;
                                 const values = isMulti ? val.values : [val];
@@ -169,7 +169,6 @@ export default function AnimatedChart({ type = 'line', data = [10, 20, 30], labe
                                                 <motion.rect
                                                     key={seriesIdx}
                                                     x={x}
-                                                    y={barBaseline}
                                                     width={w * 0.9} // Slight gap between bars in group
                                                     initial={{ height: 0, y: barBaseline }}
                                                     animate={{ height: h, y: barBaseline - h }}
