@@ -1,5 +1,10 @@
 import { databases, storage, teams, DB_ID, COLLECTIONS, MEDIA_BUCKET_ID } from './appwrite';
 import { Query, ID } from 'appwrite';
+export { analyticsService, useAnalytics } from './analytics';
+export { mediaService, useImageOptimizer } from './media';
+export { emailService, emailTemplates } from './email';
+export { commentService, assignmentService, notificationService, activityService, activityTypes } from './collaboration';
+export { seoService, useSeoChecklist } from './seo';
 
 export const storyService = {
     async uploadImage(file) {

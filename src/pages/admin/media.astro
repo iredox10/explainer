@@ -1,0 +1,52 @@
+---
+import MediaLibrary from '../../components/admin/MediaLibrary';
+
+const title = 'Media Library';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title} | Explainer Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="min-h-screen flex">
+        <div class="hidden lg:block lg:w-64 bg-white border-r border-gray-200 fixed inset-y-0 left-0">
+            <nav class="p-6">
+                <a href="/admin" class="flex items-center gap-2 mb-8">
+                    <div class="w-10 h-10 bg-black rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6 text-[#FAFF00]" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <span class="font-black text-lg tracking-tighter">EXPLAIN</span>
+                </a>
+                <div class="space-y-1">
+                    <a href="/admin" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-50 hover:text-black transition-all text-xs font-bold uppercase tracking-widest">Dashboard</a>
+                    <a href="/admin/stories" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-50 hover:text-black transition-all text-xs font-bold uppercase tracking-widest">Stories</a>
+                    <a href="/admin/media" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-black text-[#FAFF00] text-xs font-bold uppercase tracking-widest">Media</a>
+                    <a href="/admin/categories" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-50 hover:text-black transition-all text-xs font-bold uppercase tracking-widest">Categories</a>
+                    <a href="/admin/authors" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-50 hover:text-black transition-all text-xs font-bold uppercase tracking-widest">Authors</a>
+                    <a href="/admin/newsletters" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-50 hover:text-black transition-all text-xs font-bold uppercase tracking-widest">Newsletters</a>
+                    <a href="/admin/settings" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-gray-50 hover:text-black transition-all text-xs font-bold uppercase tracking-widest">Settings</a>
+                </div>
+            </nav>
+        </div>
+        
+        <main class="lg:ml-64 flex-1 p-4 md:p-8 pt-24 lg:pt-8">
+            <header class="mb-8">
+                <h1 class="text-3xl font-black text-gray-900 uppercase tracking-tighter">Media Library</h1>
+                <p class="text-gray-500 text-sm font-medium">Manage and organize your visual assets.</p>
+            </header>
+            
+            <div class="h-[calc(100vh-200px)]">
+                <MediaLibrary client:only="react" mode="browse" />
+            </div>
+        </main>
+    </div>
+</body>
+</html>
