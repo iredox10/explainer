@@ -24,7 +24,7 @@ try {
             .setEndpoint(ENDPOINT)
             .setProject(PROJECT_ID)
             .setKey(API_KEY);
-        
+
         serverDatabases = new Databases(client);
         serverUsers = new Users(client);
         serverTeams = new Teams(client);
@@ -55,11 +55,11 @@ async function resilientFetch(action, name = "Operation", retries = 5) {
             return await action();
         } catch (e) {
             lastError = e;
-            const isTimeout = e.message?.includes('fetch failed') || 
-                             e.code === 'ETIMEDOUT' || 
-                             e.message?.includes('timeout') ||
-                             e.name === 'AbortError';
-            
+            const isTimeout = e.message?.includes('fetch failed') ||
+                e.code === 'ETIMEDOUT' ||
+                e.message?.includes('timeout') ||
+                e.name === 'AbortError';
+
             if (isTimeout && i < retries - 1) {
                 const delay = 1000 * (i + 1);
                 console.warn(`[SERVER-APPWRITE] ${name} timed out (${e.message || e.code}). Retry ${i + 1}/${retries} in ${delay}ms...`);
@@ -80,7 +80,7 @@ export const serverAuthService = {
             console.error("[SERVER-APPWRITE] Services not initialized. Key loaded?", !!API_KEY);
             throw new Error('Appwrite services not initialized - Check Server Logs for Missing Key');
         }
-        
+
         try {
             let mId = membershipId;
 
@@ -97,7 +97,7 @@ export const serverAuthService = {
 
             // 1. SKIP Accept Membership (Now done on Client)
             // We proceed directly to fetching membership details using the API Key
-            
+
             // 2. Fetch membership to get assigned roles (sections)
             const membership = await serverTeams.getMembership(teamId, mId);
             const assignedCategorySlugs = membership.roles
@@ -123,7 +123,7 @@ export const serverAuthService = {
 
             // 3. Update the password
             await serverUsers.updatePassword(userId, password);
-            
+
             // 4. Update user preferences with assigned category names
             await serverUsers.updatePrefs(userId, {
                 categories: assignedCategoryNames
@@ -155,7 +155,7 @@ export const serverAuthService = {
             } catch (profileErr) {
                 console.warn('Profile sync during onboarding failed:', profileErr.message);
             }
-            
+
             return {
                 success: true,
                 email: user.email
@@ -214,8 +214,10 @@ export const serverStoryService = {
         if (!serverDatabases) return [];
         return resilientFetch(async () => {
             const response = await serverDatabases.listDocuments(DB_ID, COLLECTIONS.STORIES, [
-                Query.search('headline', queryText),
-                Query.search('subhead', queryText),
+                Query.or([
+                    Query.contains('headline', queryText),
+                    Query.contains('subhead', queryText)
+                ]),
                 Query.equal('status', 'Published'),
                 Query.lessThanEqual('publishedAt', new Date().toISOString()),
                 Query.limit(10)

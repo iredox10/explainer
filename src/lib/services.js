@@ -142,8 +142,10 @@ export const storyService = {
     async searchAllStories(queryText) {
         try {
             const response = await databases.listDocuments(DB_ID, COLLECTIONS.STORIES, [
-                Query.search('headline', queryText),
-                Query.search('subhead', queryText),
+                Query.or([
+                    Query.contains('headline', queryText),
+                    Query.contains('subhead', queryText)
+                ]),
                 Query.limit(10)
             ]);
             return response.documents;
@@ -155,8 +157,10 @@ export const storyService = {
     async searchStories(queryText) {
         try {
             const response = await databases.listDocuments(DB_ID, COLLECTIONS.STORIES, [
-                Query.search('headline', queryText),
-                Query.search('subhead', queryText),
+                Query.or([
+                    Query.contains('headline', queryText),
+                    Query.contains('subhead', queryText)
+                ]),
                 Query.equal('status', 'Published'),
                 Query.lessThanEqual('publishedAt', new Date().toISOString()),
                 Query.limit(5)
@@ -289,7 +293,7 @@ export const teamService = {
     async inviteMember(email, name, role, categories = []) {
         try {
             const teamId = import.meta.env.PUBLIC_APPWRITE_TEAM_ID;
-            
+
             // Construct roles array: [base_role, s_slug1, s_slug2, ...]
             const roles = [role.toLowerCase()];
             if (role === 'editor' && categories.length > 0) {
