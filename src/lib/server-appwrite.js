@@ -324,3 +324,16 @@ export const serverCategoryService = {
         });
     }
 };
+
+export const serverNewsletterService = {
+    async subscribe(email) {
+        if (!serverDatabases) throw new Error('Server databases not initialized.');
+        return resilientFetch(async () => {
+            return await serverDatabases.createDocument(DB_ID, 'subscribers', ID.unique(), {
+                email,
+                subscribedAt: new Date().toISOString(),
+                status: 'active'
+            });
+        }, "subscribeNewsletter");
+    }
+};

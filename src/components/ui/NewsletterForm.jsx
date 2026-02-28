@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Mail, CheckCircle, Loader2, ArrowRight } from 'lucide-react';
-import { newsletterService } from '../../lib/services.js';
 
 export default function NewsletterForm() {
     const [email, setEmail] = useState('');
@@ -13,7 +12,18 @@ export default function NewsletterForm() {
 
         setStatus('loading');
         try {
-            await newsletterService.subscribe(email);
+            const res = await fetch('/api/subscribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Subscription failed. Please try again.');
+            }
+
             setStatus('success');
             setEmail('');
         } catch (error) {
