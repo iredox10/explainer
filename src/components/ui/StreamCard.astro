@@ -6,6 +6,7 @@ interface Props {
   article: {
     title?: string;
     headline?: string;
+    subhead?: string;
     category?: string;
     author?: string;
     imageUrl?: string;
@@ -18,7 +19,8 @@ interface Props {
 
 const { article } = Astro.props;
 const displayTitle = article.headline || article.title;
-const displayImage = article.imageUrl || article.heroImage || "/social-preview.jpg";
+const displayImage =
+  article.imageUrl || article.heroImage || "/social-preview.jpg";
 const displayCategory = article.category || "General";
 const readTime = article.content
   ? serverStoryService.calculateReadTime(article.content)
@@ -27,53 +29,79 @@ const displayReadTime = `${readTime} min read`;
 ---
 
 <article
-  class="group flex flex-col md:flex-row gap-6 items-start py-8 border-t border-dashed border-gray-300 first:border-t-0"
+  class="group flex flex-col w-full bg-white border border-gray-100 overflow-hidden hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-500 rounded-2xl relative"
 >
-  <!-- Content -->
-  <div class="flex-1 order-2 md:order-1">
-    <div class="flex items-center gap-2 mb-3">
+  <!-- Glowing Hover Border -->
+  <div
+    class="absolute inset-0 border-2 border-transparent group-hover:border-[#FAFF00] rounded-2xl transition-colors duration-500 pointer-events-none z-10"
+  >
+  </div>
+
+  <!-- Image -->
+  <div class="w-full aspect-[4/3] overflow-hidden relative bg-gray-50">
+    <Image
+      src={displayImage}
+      alt={displayTitle || "Story image"}
+      width={600}
+      height={450}
+      class="w-full h-full object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-110"
+    />
+    <div
+      class="absolute top-4 left-4 z-10 hidden group-hover:block animate-in fade-in duration-300"
+    >
       <span
-        class="text-xs font-black uppercase tracking-widest text-black bg-yellow-300 px-1"
+        class="px-3 py-1 bg-white/90 backdrop-blur-sm text-black text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg"
+        >Read Now</span
+      >
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="p-6 md:p-8 flex flex-col flex-1">
+    <div class="flex items-center gap-3 mb-4">
+      <span
+        class="text-[10px] font-black uppercase tracking-[0.2em] text-black bg-[#FAFF00] px-2 py-1 rounded-sm shadow-sm decoration-clone"
       >
         {displayCategory}
       </span>
-      <span class="text-xs text-gray-400 uppercase tracking-wider font-bold"
-        >{article.readTime || displayReadTime}</span
+      <span
+        class="text-[10px] text-gray-400 uppercase tracking-widest font-bold"
       >
+        {article.readTime || displayReadTime}
+      </span>
     </div>
 
     <h3
-      class="font-serif-display text-2xl md:text-3xl font-bold leading-tight text-black mb-3"
+      class="font-serif-display text-2xl lg:text-3xl font-bold leading-tight text-black mb-4 line-clamp-3"
     >
       <a
         href={article.slug ? `/article/${article.slug}` : "#"}
-        class="group-hover:text-gray-600 transition-colors"
+        class="before:absolute before:inset-0"
       >
         {displayTitle}
       </a>
     </h3>
 
-    <p class="text-gray-500 text-sm leading-relaxed line-clamp-2 mb-3">
-      Detailed analysis on why this matters now and how it affects the broader
-      landscape of global events.
+    <p class="text-gray-500 text-sm leading-relaxed line-clamp-2 mt-auto">
+      {
+        article.subhead ||
+          "Detailed analysis on why this matters now and how it affects the broader landscape of global events."
+      }
     </p>
 
-    <a
-      href={article.slug ? `/article/${article.slug}` : "#"}
-      class="text-xs font-bold uppercase tracking-widest border-b-2 border-black pb-0.5 hover:bg-yellow-300 hover:border-transparent transition-colors"
+    <!-- Author block appended at bottom -->
+    <div
+      class="flex items-center gap-3 mt-6 pt-6 border-t border-dashed border-gray-200"
     >
-      Read Story
-    </a>
-  </div>
-
-  <!-- Image -->
-  <div class="w-full md:w-48 aspect-[4/3] overflow-hidden order-1 md:order-2">
-    <Image
-      src={displayImage}
-      alt={displayTitle || "Story image"}
-      width={320}
-      height={240}
-      class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 group-hover:scale-105"
-    />
+      <div
+        class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-500"
+      >
+        {(article.author || "Explainer").charAt(0)}
+      </div>
+      <span
+        class="text-[10px] uppercase font-bold text-gray-400 tracking-widest"
+        >{article.author || "Explainer"}</span
+      >
+    </div>
   </div>
 </article>

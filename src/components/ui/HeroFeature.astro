@@ -13,7 +13,8 @@ interface Props {
 }
 
 const { article } = Astro.props;
-const displayImage = article.heroImage || article.imageUrl || "/social-preview.jpg";
+const displayImage =
+  article.heroImage || article.imageUrl || "/social-preview.jpg";
 
 import { serverStoryService } from "../../lib/server-appwrite.js";
 import { Image } from "astro:assets";
