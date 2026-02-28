@@ -8,6 +8,16 @@ import {
     Type,
     CheckCircle,
     Shield,
+    LayoutDashboard,
+    FileText,
+    Tags,
+    Users,
+    Mail,
+    Inbox,
+    Settings,
+    Activity,
+    Layers,
+    Eye,
 } from "lucide-react";
 import "../../styles/base.css";
 import "../../styles/global.css";
@@ -24,9 +34,13 @@ import "../../styles/global.css";
         <div class="min-h-screen flex font-sans text-gray-900">
             <AdminSidebar activePage="guide" client:only="react" />
 
-            <main class="lg:ml-64 flex-1 p-4 md:p-8 lg:p-12 pt-24 lg:pt-12 max-w-5xl">
+            <main
+                class="lg:ml-64 flex-1 p-4 md:p-8 lg:p-12 pt-24 lg:pt-12 max-w-5xl"
+            >
                 <header class="mb-12 md:mb-16">
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
+                    <div
+                        class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6"
+                    >
                         <div class="bg-black p-3 rounded-2xl text-[#FAFF00]">
                             <BookOpen className="w-6 h-6 md:w-8 md:h-8" />
                         </div>
@@ -34,265 +48,471 @@ import "../../styles/global.css";
                             <h1
                                 class="text-3xl md:text-4xl font-black text-gray-900 uppercase tracking-tighter"
                             >
-                                Editorial Guide
+                                Systems Manual
                             </h1>
-                            <p class="text-gray-500 text-sm md:text-base font-medium">
-                                Mastering the Visual Journalism Stack
+                            <p
+                                class="text-gray-500 text-sm md:text-base font-medium"
+                            >
+                                The complete guide to operating Explainer.OS
                             </p>
                         </div>
                     </div>
                 </header>
 
-                <div class="space-y-8 md:space-y-12">
-                    <!-- Section 1 -->
-                    <section
-                        class="bg-white p-6 md:p-10 rounded-3xl md:rounded-[2.5rem] shadow-xl border border-gray-100 relative overflow-hidden"
+                <div class="space-y-12">
+                    <div
+                        class="bg-black text-white p-8 rounded-3xl md:rounded-[2.5rem] relative overflow-hidden"
                     >
                         <div
-                            class="absolute top-0 left-0 w-1.5 h-full bg-[#FAFF00]"
+                            class="absolute top-0 right-0 w-64 h-64 bg-[#FAFF00] rounded-full mix-blend-overlay blur-[100px] opacity-20"
                         >
                         </div>
-                        <div class="flex flex-col md:flex-row items-start gap-6">
-                            <div class="bg-gray-50 p-4 rounded-2xl text-black shrink-0">
-                                <Video className="w-6 h-6" />
+                        <h2
+                            class="font-serif-display text-4xl mb-4 text-[#FAFF00]"
+                        >
+                            Welcome to the Command Center
+                        </h2>
+                        <p
+                            class="text-lg text-gray-400 font-serif leading-relaxed max-w-2xl"
+                        >
+                            This system is designed modularly. You manage
+                            Content, the Engine handles Presentation. Here is
+                            how your newsroom fits together.
+                        </p>
+                    </div>
+
+                    <!-- Core Modules -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Dashboard -->
+                        <div
+                            class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex items-start gap-4"
+                        >
+                            <div class="shrink-0 bg-gray-50 p-3 rounded-xl">
+                                <LayoutDashboard class="w-6 h-6 text-black" />
                             </div>
                             <div>
-                                <h2
-                                    class="text-xl md:text-2xl font-black uppercase tracking-tighter mb-4"
+                                <h3
+                                    class="text-lg font-black uppercase tracking-tighter mb-2"
                                 >
-                                    1. The Video Header
-                                </h2>
+                                    Command Center (Dashboard)
+                                </h3>
                                 <p
-                                    class="text-sm md:text-base text-gray-600 leading-relaxed mb-6 italic"
+                                    class="text-sm text-gray-500 leading-relaxed"
                                 >
-                                    The silent narrative that sets the mood.
+                                    Your high-level dashboard. View real-time
+                                    aggregated stats of pending vs published
+                                    articles, recent draft alerts, and overall
+                                    system health.
                                 </p>
-                                <div
-                                    class="bg-gray-50 p-4 md:p-6 rounded-2xl border border-gray-100 space-y-4"
+                            </div>
+                        </div>
+                        <!-- Article Desk -->
+                        <div
+                            class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm border-l-4 border-l-[#FAFF00] flex items-start gap-4"
+                        >
+                            <div
+                                class="shrink-0 bg-[#FAFF00]/20 p-3 rounded-xl"
+                            >
+                                <FileText class="w-6 h-6 text-black" />
+                            </div>
+                            <div>
+                                <h3
+                                    class="text-lg font-black uppercase tracking-tighter mb-2"
                                 >
-                                    <p class="text-xs md:text-sm font-medium">
-                                        <strong class="text-black"
-                                            >Video URL:</strong
-                                        > Use a direct MP4 link. This plays in a continuous
-                                        loop behind your headline.
+                                    Article Desk
+                                </h3>
+                                <p
+                                    class="text-sm text-gray-500 leading-relaxed"
+                                >
+                                    The beating heart of the CMS. Where you
+                                    write, drag-and-drop interactive components,
+                                    assign Series, and set article states from
+                                    Draft to Published.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="border-gray-200" />
+
+                    <!-- Part 2: Blocks -->
+                    <div>
+                        <h3
+                            class="text-sm font-black uppercase tracking-widest text-gray-400 mb-6 border-b border-gray-200 pb-2"
+                        >
+                            The Building Blocks
+                        </h3>
+                        <div class="space-y-6">
+                            <div
+                                class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-6 hover:shadow-md transition-shadow"
+                            >
+                                <div
+                                    class="bg-gray-50 p-4 rounded-2xl shrink-0"
+                                >
+                                    <Video class="w-6 h-6 text-black" />
+                                </div>
+                                <div>
+                                    <h4
+                                        class="text-lg font-black uppercase tracking-tighter mb-2"
+                                    >
+                                        1. Video Backgrounds & Scrolly Blocks
+                                    </h4>
+                                    <p class="text-sm text-gray-600 mb-4">
+                                        You can set a direct MP4 link as the
+                                        hero area of an article. Within the
+                                        article, inserting a "Scrolly Group"
+                                        creates a full-screen interactive
+                                        progression relying on Map or Timeline
+                                        blocks.
                                     </p>
-                                    <p class="text-xs md:text-sm font-medium">
-                                        <strong class="text-black"
-                                            >Typography:</strong
-                                        > Headlines are rendered in high-contrast
-                                        Black Serif to command attention.
+                                </div>
+                            </div>
+
+                            <div
+                                class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-6 hover:shadow-md transition-shadow"
+                            >
+                                <div
+                                    class="bg-gray-50 p-4 rounded-2xl shrink-0"
+                                >
+                                    <Map class="w-6 h-6 text-black" />
+                                </div>
+                                <div>
+                                    <h4
+                                        class="text-lg font-black uppercase tracking-tighter mb-2"
+                                    >
+                                        2. The Geographic Map "Fly-To"
+                                    </h4>
+                                    <p class="text-sm text-gray-600 mb-2">
+                                        When chaining <strong>Map blocks</strong
+                                        > in a Scrolly Group, set progressive Coordinates
+                                        (Longitude, Latitude) and Zoom levels (1 for
+                                        Continent, 8 for Country, 12+ for City).
+                                    </p>
+                                    <p class="text-xs text-gray-400">
+                                        Pro-Tip: Use the "Highlight" parameter
+                                        with lowercase country names to
+                                        selectively mask regions.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div
+                                class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-6 hover:shadow-md transition-shadow"
+                            >
+                                <div
+                                    class="bg-gray-50 p-4 rounded-2xl shrink-0"
+                                >
+                                    <BarChart2 class="w-6 h-6 text-black" />
+                                </div>
+                                <div>
+                                    <h4
+                                        class="text-lg font-black uppercase tracking-tighter mb-2"
+                                    >
+                                        3. Data Pulses (Charts)
+                                    </h4>
+                                    <p class="text-sm text-gray-600 mb-2">
+                                        Insert interactive standard arrays <code
+                                            class="bg-gray-100 px-1 rounded text-red-600"
+                                            >[10, 45, 90, 32]</code
+                                        > and define their Type (Line, Bar) to have
+                                        them auto-animate as the user scrolls them
+                                        into view.
                                     </p>
                                 </div>
                             </div>
                         </div>
-                    </section>
+                    </div>
 
-                    <!-- Section 2 -->
-                    <section
-                        class="bg-white p-6 md:p-10 rounded-3xl md:rounded-[2.5rem] shadow-xl border border-gray-100 relative overflow-hidden"
-                    >
-                        <div
-                            class="absolute top-0 left-0 w-1.5 h-full bg-black"
+                    <hr class="border-gray-200" />
+
+                    <!-- Part 3: Protocols -->
+                    <div>
+                        <h3
+                            class="text-sm font-black uppercase tracking-widest text-gray-400 mb-6 border-b border-gray-200 pb-2"
                         >
-                        </div>
-                        <div class="flex flex-col md:flex-row items-start gap-6">
-                            <div class="bg-gray-50 p-4 rounded-2xl text-black shrink-0">
-                                <Map className="w-6 h-6" />
-                            </div>
+                            Editorial Protocols & Series
+                        </h3>
+                        <div
+                            class="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-8 hover:shadow-md transition-shadow"
+                        >
                             <div>
-                                <h2
-                                    class="text-xl md:text-2xl font-black uppercase tracking-tighter mb-4"
+                                <h4
+                                    class="text-lg font-black uppercase tracking-tighter mb-2 flex items-center gap-2"
                                 >
-                                    2. The Map "Fly-To"
-                                </h2>
-                                <p class="text-sm md:text-base text-gray-600 leading-relaxed mb-6">
-                                    Cinematic geographic transitions using
-                                    real-world coordinates.
+                                    <Layers class="w-5 h-5 text-blue-500" /> Core
+                                    Layout Protocols
+                                </h4>
+                                <p class="text-sm text-gray-600 mb-6">
+                                    Select these from the editor's right-hand
+                                    configuration panel:
                                 </p>
                                 <div
                                     class="grid grid-cols-1 md:grid-cols-2 gap-4"
                                 >
                                     <div
-                                        class="p-4 md:p-6 rounded-2xl bg-black text-white"
+                                        class="bg-gray-50 p-4 rounded-xl border border-gray-100"
                                     >
-                                        <h4
-                                            class="text-[10px] font-black uppercase tracking-widest text-[#FAFF00] mb-2"
+                                        <div
+                                            class="text-[10px] font-black uppercase tracking-widest text-black mb-1"
                                         >
-                                            Coordinates
-                                        </h4>
-                                        <p class="text-[10px] md:text-xs font-mono opacity-80">
-                                            Center: [3.37, 6.52]<br
-                                            />(Longitude, Latitude)
-                                        </p>
+                                            Standard
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            Traditional article layout. Best for
+                                            standard reporting.
+                                        </div>
                                     </div>
                                     <div
-                                        class="p-4 md:p-6 rounded-2xl bg-gray-50 border border-gray-100"
+                                        class="bg-[#FAFF00]/10 p-4 rounded-xl border border-[#FAFF00]"
                                     >
-                                        <h4
-                                            class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2"
+                                        <div
+                                            class="text-[10px] font-black uppercase tracking-widest text-black mb-1"
                                         >
-                                            Zoom Levels
-                                        </h4>
-                                        <p
-                                            class="text-[10px] md:text-xs font-bold text-gray-900"
+                                            Explainer (Scrolly)
+                                        </div>
+                                        <div
+                                            class="text-xs text-black font-medium"
                                         >
-                                            1: Continent<br />8: Country<br
-                                            />12+: City Density
-                                        </p>
+                                            Activates the immersive engine for
+                                            full-viewport scroll storytelling.
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="bg-red-50 p-4 rounded-xl border border-red-200"
+                                    >
+                                        <div
+                                            class="text-[10px] font-black uppercase tracking-widest text-red-600 mb-1"
+                                        >
+                                            Briefing
+                                        </div>
+                                        <div class="text-xs text-gray-600">
+                                            Fast news. Uses a narrow center
+                                            column. No complex blocks allowed.
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="bg-black p-4 rounded-xl border border-gray-800"
+                                    >
+                                        <div
+                                            class="text-[10px] font-black uppercase tracking-widest text-[#FAFF00] mb-1"
+                                        >
+                                            Photo Essay
+                                        </div>
+                                        <div class="text-xs text-gray-400">
+                                            Total immersion. Forces a dark-theme
+                                            system and edge-to-edge grayscale
+                                            imagery.
+                                        </div>
                                     </div>
                                 </div>
-                                <p class="mt-6 text-xs md:text-sm text-gray-500">
-                                    The map will automatically glide between
-                                    steps. Use the <strong class="text-black"
-                                        >Highlight</strong
-                                    > field with lowercase country names (e.g. "nigeria")
-                                    to toggle regions.
-                                </p>
                             </div>
-                        </div>
-                    </section>
 
-                    <!-- Section 3 -->
-                    <section
-                        class="bg-white p-6 md:p-10 rounded-3xl md:rounded-[2.5rem] shadow-xl border border-gray-100 relative overflow-hidden"
-                    >
-                        <div
-                            class="absolute top-0 left-0 w-1.5 h-full bg-[#FAFF00]"
-                        >
-                        </div>
-                        <div class="flex flex-col md:flex-row items-start gap-6">
-                            <div class="bg-gray-50 p-4 rounded-2xl text-black shrink-0">
-                                <BarChart2 className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <h2
-                                    class="text-xl md:text-2xl font-black uppercase tracking-tighter mb-4"
+                            <div class="pt-6 border-t border-gray-100">
+                                <h4
+                                    class="text-lg font-black uppercase tracking-tighter mb-2 flex items-center gap-2"
                                 >
-                                    3. Data Pulses
-                                </h2>
-                                <p class="text-sm md:text-base text-gray-600 leading-relaxed mb-6">
-                                    Animating numbers into patterns.
+                                    <BookOpen class="w-5 h-5 text-green-500" /> Managing
+                                    Series
+                                </h4>
+                                <p class="text-sm text-gray-600 mb-4">
+                                    To group articles together into a cohesive
+                                    package (like "The Tech Boom"):
                                 </p>
-                                <div
-                                    class="bg-black text-white p-4 md:p-6 rounded-2xl font-mono text-[10px] md:text-xs overflow-x-auto"
+                                <ul
+                                    class="text-sm text-gray-600 space-y-2 list-disc pl-5"
                                 >
-                                    {
-                                        `{ type: 'chart', data: [10, 45, 90, 32] }`
-                                    }
-                                </div>
-                                <p class="mt-4 text-xs md:text-sm text-gray-500">
-                                    Provide a comma-separated list. The line
-                                    will "draw" itself as the step becomes
-                                    active.
-                                </p>
+                                    <li>
+                                        Assign the <strong>Series Slug</strong> in
+                                        the sidebar (e.g. <code
+                                            class="bg-gray-100 px-1 rounded"
+                                            >tech-boom</code
+                                        >). Keep this identical across all
+                                        related articles.
+                                    </li>
+                                    <li>
+                                        Assign the <strong
+                                            >Series Part Number</strong
+                                        > (e.g. <code
+                                            class="bg-gray-100 px-1 rounded"
+                                            >1</code
+                                        >, <code
+                                            class="bg-gray-100 px-1 rounded"
+                                            >2</code
+                                        >). This generates the automated "Up
+                                        Next" navigator.
+                                    </li>
+                                    <li>
+                                        For standard inline linking (not a
+                                        series), use the <strong
+                                            >Inline Related</strong
+                                        > block inside the main text editor instead.
+                                    </li>
+                                </ul>
                             </div>
-                        </div>
-                    </section>
 
-                    <!-- Section 4 -->
-                    <section
-                        class="bg-white p-6 md:p-10 rounded-3xl md:rounded-[2.5rem] shadow-xl border border-gray-100 relative overflow-hidden"
-                    >
-                        <div
-                            class="absolute top-0 left-0 w-1.5 h-full bg-red-500"
-                        >
-                        </div>
-                        <div class="flex flex-col md:flex-row items-start gap-6">
-                            <div class="bg-red-50 p-4 rounded-2xl text-red-600 shrink-0">
-                                <Shield className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <h2
-                                    class="text-xl md:text-2xl font-black uppercase tracking-tighter mb-4"
-                                >
-                                    4. Newsroom Permissions
-                                </h2>
-                                <p class="text-sm md:text-base text-gray-600 leading-relaxed mb-6">
-                                    Managing the editorial hierarchy.
-                                </p>
-                                <div
-                                    class="bg-red-50 p-4 md:p-6 rounded-2xl border border-red-100 space-y-4"
-                                >
-                                    <h4
-                                        class="text-[10px] font-black uppercase tracking-widest text-red-700"
+                            <div
+                                class="bg-gray-100 p-4 rounded-xl flex items-start gap-4"
+                            >
+                                <Eye class="w-6 h-6 text-black shrink-0" />
+                                <div>
+                                    <h5
+                                        class="text-xs font-black uppercase tracking-widest"
                                     >
-                                        Troubleshooting Invitations
-                                    </h4>
-                                    <p
-                                        class="text-xs font-medium text-red-900 leading-relaxed"
-                                    >
-                                        If you see <code
-                                            class="bg-white px-1 rounded"
-                                            >User is not allowed to send
-                                            invitations</code
-                                        >, you must ensure your account has the <strong
-                                            class="uppercase text-black"
-                                            >Owner</strong
-                                        > role in the Appwrite Console.
-                                        <br /><br />
-                                        Go to <strong
-                                            class="font-black"
-                                            >Teams > Editorial Staff</strong
-                                        > and verify your account is listed as an
-                                        owner. Simply being a "Superadmin" in the
-                                        dashboard is not enough for browser-side invitations.
+                                        Ghost Live Preview
+                                    </h5>
+                                    <p class="text-xs text-gray-600 mt-1">
+                                        Click the Eye icon in the editor toolbar
+                                        to open Ghost Preview. This splits your
+                                        screen and runs the actual frontend
+                                        engine so you can verify exactly how
+                                        Protocols, Scrolly blocks, and Series UI
+                                        look in real-time.
                                     </p>
                                 </div>
-                                <p class="mt-6 text-xs md:text-sm text-gray-500">
-                                    This security layer ensures that only
-                                    authorized administrators can expand the
-                                    newsroom team.
-                                </p>
                             </div>
                         </div>
-                    </section>
+                    </div>
 
-                    <!-- Best Practices -->
-                    <section
-                        class="bg-gray-900 text-white p-6 md:p-10 rounded-3xl md:rounded-[2.5rem] shadow-2xl relative overflow-hidden"
-                    >
-                        <h2
-                            class="text-xl md:text-2xl font-black uppercase tracking-tighter mb-8 flex items-center gap-3"
+                    <hr class="border-gray-200" />
+
+                    <!-- Newsroom Management -->
+                    <div>
+                        <h3
+                            class="text-sm font-black uppercase tracking-widest text-gray-400 mb-6 border-b border-gray-200 pb-2"
                         >
-                            <CheckCircle className="text-[#FAFF00] w-6 h-6" /> Best
-                            Editorial Practices
-                        </h2>
-                        <ul class="space-y-6">
-                            <li class="flex gap-4">
-                                <span
-                                    class="bg-[#FAFF00] text-black w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0"
-                                    >1</span
-                                >
-                                <p class="text-sm font-medium opacity-80 leading-relaxed">
-                                    Keep scrollytext cards under 50 words. Let
-                                    the visuals do the heavy lifting.
-                                </p>
-                            </li>
-                            <li class="flex gap-4">
-                                <span
-                                    class="bg-[#FAFF00] text-black w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0"
-                                    >2</span
-                                >
-                                <p class="text-sm font-medium opacity-80 leading-relaxed">
-                                    Use "Fly-To" rhythm: start wide (continent
-                                    index), then zoom into the specific
-                                    geographic point of interest.
-                                </p>
-                            </li>
-                            <li class="flex gap-4">
-                                <span
-                                    class="bg-[#FAFF00] text-black w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black shrink-0"
-                                    >3</span
-                                >
-                                <p class="text-sm font-medium opacity-80 leading-relaxed">
-                                    Always verify in <strong
-                                        class="text-[#FAFF00]"
-                                        >Live Preview</strong
-                                    > to feel the transition speed.
-                                </p>
-                            </li>
-                        </ul>
-                    </section>
+                            Newsroom Management
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div
+                                class="bg-white p-6 rounded-3xl border border-gray-100 flex items-start gap-4 hover:shadow-md transition-shadow"
+                            >
+                                <Tags class="w-6 h-6 text-black shrink-0" />
+                                <div>
+                                    <h4
+                                        class="text-sm font-black uppercase tracking-widest text-black mb-1"
+                                    >
+                                        Verticals (Categories)
+                                    </h4>
+                                    <p class="text-xs text-gray-500">
+                                        Create the primary sections of your
+                                        website (Politics, Tech). This controls
+                                        main navigation grouping.
+                                    </p>
+                                </div>
+                            </div>
+                            <div
+                                class="bg-white p-6 rounded-3xl border border-gray-100 flex items-start gap-4 hover:shadow-md transition-shadow"
+                            >
+                                <Users class="w-6 h-6 text-black shrink-0" />
+                                <div>
+                                    <h4
+                                        class="text-sm font-black uppercase tracking-widest text-black mb-1"
+                                    >
+                                        Directory (Authors)
+                                    </h4>
+                                    <p class="text-xs text-gray-500">
+                                        Maintain author profiles, bios, and
+                                        headshots for the global staff
+                                        directory.
+                                    </p>
+                                </div>
+                            </div>
+                            <div
+                                class="bg-white p-6 rounded-3xl border border-gray-100 flex items-start gap-4 hover:shadow-md transition-shadow"
+                            >
+                                <Mail class="w-6 h-6 text-black shrink-0" />
+                                <div>
+                                    <h4
+                                        class="text-sm font-black uppercase tracking-widest text-black mb-1"
+                                    >
+                                        Newsletters
+                                    </h4>
+                                    <p class="text-xs text-gray-500">
+                                        Manage audience email connections and
+                                        external distribution channels.
+                                    </p>
+                                </div>
+                            </div>
+                            <div
+                                class="bg-white p-6 rounded-3xl border border-gray-100 flex items-start gap-4 hover:shadow-md transition-shadow"
+                            >
+                                <Inbox class="w-6 h-6 text-black shrink-0" />
+                                <div>
+                                    <h4
+                                        class="text-sm font-black uppercase tracking-widest text-black mb-1"
+                                    >
+                                        Guest Queue (Submissions)
+                                    </h4>
+                                    <p class="text-xs text-gray-500">
+                                        Review pitches and drafts submitted by
+                                        freelancers through the external
+                                        submission portal.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="border-gray-200" />
+
+                    <!-- Enterprise Control -->
+                    <div>
+                        <h3
+                            class="text-sm font-black uppercase tracking-widest text-red-500 mb-6 border-b border-gray-200 pb-2 flex items-center gap-2"
+                        >
+                            <Shield class="w-4 h-4" /> Enterprise Security
+                        </h3>
+                        <div
+                            class="bg-red-50 border border-red-100 p-8 rounded-3xl space-y-6 hover:shadow-md transition-shadow"
+                        >
+                            <div class="flex items-start gap-4">
+                                <Users
+                                    class="w-6 h-6 text-red-600 shrink-0 mt-1"
+                                />
+                                <div>
+                                    <h4
+                                        class="text-sm font-black uppercase tracking-widest text-red-900 mb-2"
+                                    >
+                                        Team & Access (Invitations)
+                                    </h4>
+                                    <p
+                                        class="text-sm text-red-800 leading-relaxed"
+                                    >
+                                        Only Superadmins can invite new
+                                        journalists. If an invitation fails with <code
+                                            class="bg-red-100 px-1 rounded"
+                                            >User is not allowed to send
+                                            invitations</code
+                                        >, ensure the Superadmin account also
+                                        holds the 'Owner' rule in the backend
+                                        Appwrite Team settings.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <Settings
+                                    class="w-6 h-6 text-red-600 shrink-0 mt-1"
+                                />
+                                <div>
+                                    <h4
+                                        class="text-sm font-black uppercase tracking-widest text-red-900 mb-2"
+                                    >
+                                        Global Protocols & Logs
+                                    </h4>
+                                    <p
+                                        class="text-sm text-red-800 leading-relaxed"
+                                    >
+                                        <strong>Settings:</strong> Maintain system-wide
+                                        constants, master API keys, and global feature
+                                        flags. <br /><strong
+                                            >System Logs:</strong
+                                        > Provide an audit trail of who published
+                                        what, and when, for security compliance.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <footer
@@ -301,7 +521,7 @@ import "../../styles/global.css";
                     <div
                         class="text-[10px] font-black uppercase tracking-widest text-gray-400"
                     >
-                        Explainer Systems v2.4
+                        Explainer Systems OS
                     </div>
                     <button
                         onclick="window.location.href = '/admin'"
