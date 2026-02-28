@@ -97,38 +97,85 @@ const displayStories =
     })}
   </script>
   <main class="min-h-screen bg-[#fdfdfd]">
-    <div class="relative pt-20 pb-12 px-6 overflow-hidden">
-      <div
-        class={`absolute top-0 left-0 w-full h-[60%] ${color} opacity-30 -skew-y-2 transform origin-top-left scale-110`}
-      >
+    {/* Vox-style Bold Solid Color Header */}
+    <div class={`w-full py-16 md:py-28 px-6 border-b-8 border-black ${color} relative overflow-hidden transition-colors duration-500`}>
+      <div class="max-w-[1400px] mx-auto relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-12">
+        <div class="flex-1">
+          <div class="flex items-center gap-3 mb-8">
+            <span class="w-3 h-3 bg-black rounded-full"></span>
+            <span class="font-black uppercase tracking-[0.25em] text-xs text-black">Section</span>
+          </div>
+          <h1
+            class="font-serif-display font-black text-6xl md:text-8xl lg:text-[9rem] mb-6 text-black tracking-tighter leading-[0.85]"
+          >
+            {title}
+          </h1>
+          <p
+            class="text-2xl md:text-3xl font-serif text-black max-w-2xl text-balance leading-snug"
+          >
+            {description}
+          </p>
+        </div>
       </div>
-      <div class="relative max-w-7xl mx-auto">
-        <span
-          class={`font-black uppercase tracking-[0.2em] text-xs ${accent} mb-4 block`}
-          >Section</span
-        >
-        <h1
-          class="font-serif-display font-black text-6xl md:text-8xl mb-6 text-black tracking-tighter uppercase italic"
-        >
-          {title}
-        </h1>
-        <p
-          class="text-xl md:text-2xl font-serif text-gray-600 max-w-2xl leading-relaxed border-l-4 border-black pl-6"
-        >
-          {description}
-        </p>
+      {/* Decorative background typography */}
+      <div class="absolute -bottom-20 -right-10 opacity-[0.05] pointer-events-none select-none">
+          <span class="font-serif-display font-black text-[20rem] leading-none text-black break-none whitespace-nowrap overflow-hidden block">
+            {title}
+          </span>
       </div>
     </div>
 
-    <div
-      class="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-12 gap-12"
-    >
-      <div class="lg:col-span-9 lg:col-start-4">
-        <div class="space-y-12">
-          {displayStories.map((story: any) => <StreamCard article={story} />)}
+    <div class="max-w-[1400px] mx-auto px-6 py-16 md:py-24">
+      {displayStories.length > 0 && (
+        <div class="mb-24">
+            <div class="flex items-center justify-between mb-8 border-b-4 border-black pb-4">
+                <h2 class="text-3xl md:text-4xl font-serif-display font-black text-black tracking-tighter">
+                    Featured
+                </h2>
+            </div>
+            {/* Featured Story (First Item) */}
+            <article class="group relative w-full border border-gray-200 hover:border-black transition-colors bg-white hover:shadow-2xl flex flex-col md:flex-row">
+                <div class="w-full md:w-[60%] aspect-[4/3] md:aspect-auto md:min-h-[500px] overflow-hidden relative bg-gray-100">
+                    <a href={`/article/${displayStories[0].slug}`} class="block w-full h-full">
+                        <img 
+                            src={displayStories[0].heroImage || displayStories[0].imageUrl || 'https://images.unsplash.com/photo-1585829365294-111320e7588e?w=1200'} 
+                            alt={displayStories[0].headline || displayStories[0].title} 
+                            class="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-[1.5s] ease-out group-hover:scale-105"
+                        />
+                    </a>
+                </div>
+                <div class="w-full md:w-[40%] p-8 md:p-12 xl:p-16 flex flex-col justify-center bg-white relative z-10 border-t md:border-t-0 md:border-l border-gray-200">
+                    <span class={`inline-block mb-6 text-[10px] font-black uppercase tracking-[0.2em] bg-black text-[#FAFF00] px-3 py-1 self-start shadow-sm`}>
+                        {displayStories[0].category || title}
+                    </span>
+                    <h3 class="font-serif-display font-black text-4xl md:text-5xl leading-[1.05] mb-6 text-black tracking-tight group-hover:underline decoration-yellow-400 decoration-4 underline-offset-4">
+                        <a href={`/article/${displayStories[0].slug}`}>
+                        {displayStories[0].headline || displayStories[0].title}
+                        </a>
+                    </h3>
+                    <p class="text-lg text-gray-600 font-serif leading-relaxed mb-8 border-l-4 border-yellow-400 pl-4">
+                        {displayStories[0].subhead || "A deep dive into the underlying metrics shaping our contemporary understanding of this sector."}
+                    </p>
+                    <div class="flex items-center gap-3 mt-auto">
+                        <span class="text-xs font-black uppercase tracking-widest text-black">By {displayStories[0].author || "Staff"}</span>
+                    </div>
+                </div>
+            </article>
         </div>
+      )}
 
-      </div>
+      {/* The Rest of the Grid */}
+      {displayStories.length > 1 && (
+          <div>
+            <div class="flex items-center justify-between mb-10">
+                <h2 class="text-xs font-black uppercase tracking-widest text-gray-400">More in {title}</h2>
+                <div class="h-px flex-1 bg-gray-200 ml-4"></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                {displayStories.slice(1).map((story: any) => <StreamCard article={story} />)}
+            </div>
+          </div>
+      )}
     </div>
   </main>
   <Footer />

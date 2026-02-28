@@ -2,6 +2,7 @@
 import MainLayout from "../../layouts/MainLayout.astro";
 import VoxNav from "../../components/ui/VoxNav.astro";
 import ProgressBar from "../../components/ui/ProgressBar.jsx";
+import StickyTOC from "../../components/ui/StickyTOC.jsx";
 import BeforeAfter from "../../components/ui/BeforeAfter.jsx";
 import ScrollyIsland from "../../components/ScrollyIsland.jsx";
 import AnimatedMap from "../../components/ui/AnimatedMap.jsx";
@@ -70,7 +71,11 @@ const displayReadTime = `${readTime} min read`;
   <div
     class="bg-[#fff] text-[#121212] font-sans antialiased min-h-screen selection:bg-yellow-300 selection:text-black"
   >
-    <ProgressBar client:load />
+    <ProgressBar
+      client:load
+      title={ARTICLE_DATA.headline}
+      author={ARTICLE_DATA.author}
+    />
     <VoxNav />
 
     <main>
@@ -223,6 +228,8 @@ const displayReadTime = `${readTime} min read`;
               <Bookmark className="w-4 h-4 group-hover:fill-black" />
               Save
             </button>
+
+            <StickyTOC client:idle />
           </div>
         </aside>
 
@@ -442,6 +449,29 @@ const displayReadTime = `${readTime} min read`;
                       caption={block.caption}
                       displayMode={block.displayMode}
                     />
+                  );
+                }
+
+                {
+                  /* Inline Related Article Injects */
+                }
+                if (block.type === "inline-related") {
+                  return (
+                    <div class="my-10 bg-gray-50 border-l-4 border-black p-6 pl-8 transform hover:translate-x-1 transition-transform cursor-pointer group">
+                      <a href={`/article/${block.slug}`} class="block">
+                        <span class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2 block">
+                          Related Intel
+                        </span>
+                        <h4 class="font-serif-display font-black text-2xl text-black group-hover:underline decoration-yellow-400 decoration-4">
+                          {block.title}
+                        </h4>
+                        {block.description && (
+                          <p class="font-sans text-sm text-gray-600 mt-2 line-clamp-2">
+                            {block.description}
+                          </p>
+                        )}
+                      </a>
+                    </div>
                   );
                 }
               })
