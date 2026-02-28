@@ -1,0 +1,123 @@
+---
+// src/components/templates/PhotoGalleryTemplate.astro
+import MainLayout from "../../layouts/MainLayout.astro";
+import VoxNav from "../../components/ui/VoxNav.astro";
+import { Image } from "astro:assets";
+
+const { story } = Astro.props;
+const ARTICLE_DATA = story;
+
+const getBlocks = (content: any) => {
+    if (!content) return [];
+    if (Array.isArray(content)) return content;
+    if (typeof content === "string") {
+        try {
+            return JSON.parse(content);
+        } catch (e) {
+            return [];
+        }
+    }
+    return [];
+};
+
+const blocks = getBlocks(ARTICLE_DATA.content);
+---
+
+<MainLayout
+    title={ARTICLE_DATA.seo?.ogTitle || ARTICLE_DATA.headline}
+    description={ARTICLE_DATA.seo?.ogDescription || ARTICLE_DATA.subhead}
+    showNav={false}
+>
+    <div
+        class="bg-black text-white font-sans antialiased min-h-screen selection:bg-yellow-300"
+    >
+        <VoxNav />
+
+        <main>
+            {/* Intro hero for the photo essay */}
+            <section
+                class="min-h-screen flex flex-col justify-center max-w-4xl mx-auto px-6 py-32 text-center"
+            >
+                <h1
+                    class="font-serif-display font-black text-5xl md:text-8xl tracking-tight leading-none mb-8 text-white"
+                >
+                    {ARTICLE_DATA.headline}
+                </h1>
+                <p
+                    class="text-xl md:text-2xl text-gray-400 font-serif leading-relaxed mb-12"
+                >
+                    {ARTICLE_DATA.subhead}
+                </p>
+                <p
+                    class="text-xs font-black uppercase tracking-[0.2em] text-[#FAFF00]"
+                >
+                    Photography By {ARTICLE_DATA.author}
+                </p>
+                <div class="mt-20 animate-bounce text-gray-500 mx-auto w-max">
+                    <svg
+                        class="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        ><path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg
+                    >
+                </div>
+            </section>
+
+            {/* The Gallery Strip */}
+            <section class="space-y-0 w-full overflow-hidden">
+                {
+                    blocks.map((block: any, index: number) => {
+                        if (block.type === "image") {
+                            return (
+                                <figure class="relative w-full h-screen group">
+                                    <img
+                                        src={block.url}
+                                        alt={block.caption || ""}
+                                        class="w-full h-full object-cover grayscale opacity-90 transition-all duration-700 hover:grayscale-0 hover:opacity-100"
+                                    />
+                                    {block.caption && (
+                                        <figcaption class="absolute bottom-12 left-6 md:left-24 max-w-xl bg-black/80 backdrop-blur p-6 border-l-4 border-[#FAFF00] transform transition-transform group-hover:-translate-y-2 opacity-0 group-hover:opacity-100 duration-500">
+                                            <p class="font-sans text-lg md:text-2xl text-white font-medium leading-snug">
+                                                {block.caption}
+                                            </p>
+                                        </figcaption>
+                                    )}
+                                </figure>
+                            );
+                        }
+                        if (block.type === "p") {
+                            return (
+                                <div class="max-w-3xl mx-auto px-6 py-24 md:py-32 self-center">
+                                    <p class="font-serif text-2xl md:text-3xl text-gray-300 leading-relaxed indent-12">
+                                        <Fragment set:html={block.text} />
+                                    </p>
+                                </div>
+                            );
+                        }
+                    })
+                }
+            </section>
+
+            {/* Outro */}
+            <section
+                class="max-w-3xl mx-auto px-6 py-32 text-center border-t border-gray-900 mt-20"
+            >
+                <h3
+                    class="font-serif-display font-black text-4xl text-white mb-6"
+                >
+                    Enjoyed this visual essay?
+                </h3>
+                <button
+                    class="bg-[#FAFF00] text-black px-8 py-3 text-sm font-black uppercase tracking-widest hover:scale-105 transition-transform shadow-[0_0_20px_rgba(250,255,0,0.2)]"
+                >
+                    Explore More Photography
+                </button>
+            </section>
+        </main>
+    </div>
+</MainLayout>

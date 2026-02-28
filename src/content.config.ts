@@ -4,7 +4,7 @@ import { glob } from 'astro/loaders';
 const stories = defineCollection({
   loader: glob({ pattern: "**/*.json", base: "./src/content/stories" }),
   schema: z.object({
-    layout: z.enum(['standard', 'scrolly']).default('standard'),
+    layout: z.enum(['standard', 'scrolly', 'briefing', 'photo']).default('standard'),
     headline: z.string(),
     subhead: z.string(),
     category: z.string(),
@@ -12,6 +12,8 @@ const stories = defineCollection({
     role: z.string().optional(),
     date: z.string().optional(),
     readTime: z.string().optional(),
+    seriesSlug: z.string().optional(),
+    seriesPart: z.number().optional(),
     heroImage: z.string().optional(),
     videoUrl: z.string().optional(),
     leftVideoUrl: z.string().optional(),
@@ -24,7 +26,8 @@ const stories = defineCollection({
         z.object({ type: z.literal('heading'), text: z.string() }),
         z.object({ type: z.literal('p'), text: z.string() }),
         z.object({ type: z.literal('quote'), text: z.string(), author: z.string().optional(), layout: z.enum(['standard', 'full-width']).optional() }),
-        z.object({ type: z.literal('callout'), title: z.string(), text: z.string(), layout: z.enum(['standard', 'full-width']).optional() }),
+        z.object({ type: z.literal('callout'), title: z.string().optional(), text: z.string(), layout: z.enum(['standard', 'full-width']).optional() }),
+        z.object({ type: z.literal('inline-related'), title: z.string(), description: z.string().optional(), slug: z.string() }),
         z.object({ type: z.literal('image'), url: z.string(), caption: z.string().optional(), layout: z.enum(['standard', 'full-width']).optional() }),
         z.object({
           type: z.literal('beforeAfter'),

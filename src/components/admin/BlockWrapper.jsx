@@ -108,17 +108,17 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
             }}
         >
             {/* Control Bar - Floating Top Right */}
-                {!isLocked && (
-                    <div className="absolute -top-3 right-4 z-50 flex items-center gap-1 bg-white shadow-sm border border-gray-200 rounded-lg p-1 opacity-0 group-hover:opacity-100 transition-all">
-                        {/* Drag Handle */}
-                        <div
-                            className="p-1.5 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded"
-                            onPointerDown={(e) => dragControls.start(e)}
-                            title="Drag to reorder"
-                            data-no-dnd="true"
-                        >
-                            <GripVertical className="w-3.5 h-3.5" />
-                        </div>
+            {!isLocked && (
+                <div className="absolute -top-3 right-4 z-50 flex items-center gap-1 bg-white shadow-sm border border-gray-200 rounded-lg p-1 opacity-0 group-hover:opacity-100 transition-all">
+                    {/* Drag Handle */}
+                    <div
+                        className="p-1.5 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded"
+                        onPointerDown={(e) => dragControls.start(e)}
+                        title="Drag to reorder"
+                        data-no-dnd="true"
+                    >
+                        <GripVertical className="w-3.5 h-3.5" />
+                    </div>
 
                     {/* Layout Toggle */}
                     {isLayoutBlock && (
@@ -319,6 +319,36 @@ export default function BlockWrapper({ block, onUpdate, onDelete, isLocked, uplo
                             onChange={(value) => onUpdate({ ...block, text: value })}
                             placeholder="Factual highlight or insight..."
                             className="w-full text-lg font-bold outline-none border-none bg-transparent"
+                            onFocus={onActivate}
+                            disabled={isLocked}
+                        />
+                    </div>
+                )}
+                {block.type === 'inline-related' && (
+                    <div className="bg-gray-50 p-8 rounded-3xl border-l-4 border-black space-y-4 shadow-sm relative">
+                        <div className="absolute top-4 right-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Inline Related Story</div>
+                        <input
+                            className="w-full text-2xl font-black outline-none border-none text-black bg-transparent placeholder-gray-300"
+                            placeholder="Related Story Title"
+                            value={block.title}
+                            onChange={(e) => onUpdate({ ...block, title: e.target.value })}
+                            onFocus={onActivate}
+                            disabled={isLocked}
+                        />
+                        <textarea
+                            className="w-full text-sm font-sans text-gray-600 outline-none resize-none border-none placeholder-gray-300 bg-transparent"
+                            placeholder="Brief description (optional)..."
+                            rows="2"
+                            value={block.description || ''}
+                            onChange={(e) => onUpdate({ ...block, description: e.target.value })}
+                            onFocus={onActivate}
+                            disabled={isLocked}
+                        />
+                        <input
+                            className="w-full text-xs font-mono outline-none border border-gray-200 p-2 rounded text-gray-500 bg-white placeholder-gray-300 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100 transition-all font-bold"
+                            placeholder="article-slug"
+                            value={block.slug || ''}
+                            onChange={(e) => onUpdate({ ...block, slug: e.target.value })}
                             onFocus={onActivate}
                             disabled={isLocked}
                         />

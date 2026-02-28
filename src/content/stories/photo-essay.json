@@ -1,0 +1,33 @@
+{
+    "layout": "photo",
+    "headline": "Vanishing Horizons",
+    "subhead": "A visual journey through the eroding coastlines of the world's most vulnerable islands.",
+    "category": "Environment",
+    "author": "Sarah Jenkins",
+    "date": "Dec 05, 2025",
+    "content": [
+        {
+            "type": "image",
+            "url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=2600&q=80",
+            "caption": "The Maldives at low tide. For now."
+        },
+        {
+            "type": "p",
+            "text": "It happens gradually, then suddenly. The creeping oceans claim millimeters of sand a year until a storm surge takes the rest. For the inhabitants of low-lying island nations, climate change isn't an abstract scientific projection; it is the water at their doorstep."
+        },
+        {
+            "type": "image",
+            "url": "https://images.unsplash.com/photo-1518552669466-9ab86716a4f9?w=2600&q=80",
+            "caption": "Seawalls built in Tuvalu to hold back the king tides."
+        },
+        {
+            "type": "p",
+            "text": "Adaptation takes many forms. Reinforced concrete barriers rise where mangroves used to flourish. Whole communities plan relocations. The culture is forced to shift as the geography dictates."
+        },
+        {
+            "type": "image",
+            "url": "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=2600&q=80",
+            "caption": "A lone fisherman casts a net where his village once stood."
+        }
+    ]
+}

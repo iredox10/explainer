@@ -1,0 +1,129 @@
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+import Footer from "../../components/Footer.astro";
+import { VOX_HOME_DATA } from "../../data/mock";
+import { Image } from "astro:assets";
+
+export const prerender = false;
+const { slug } = Astro.params;
+
+// In a real app we'd fetch from Appwrite, using mock data for the structure
+const seriesData = slug && VOX_HOME_DATA.series[slug];
+
+if (!seriesData) {
+    return Astro.redirect("/404");
+}
+---
+
+<MainLayout
+    title={`${seriesData.title} | Explainer Feature Series`}
+    description={seriesData.description}
+>
+    <main class="min-h-screen bg-[#fdfdfd]">
+        {/* Series Hero */}
+        <div
+            class="relative w-full min-h-[65vh] xl:min-h-[75vh] flex flex-col items-center justify-center pt-32 pb-24 px-6 bg-black overflow-hidden border-b-8 border-[#FAFF00]"
+        >
+            <div class="absolute inset-0 z-0">
+                <Image
+                    src={seriesData.heroImage ||
+                        "https://images.unsplash.com/photo-1518432031352-d6fc5c10da5a"}
+                    alt={seriesData.title}
+                    width={1920}
+                    height={1080}
+                    class="w-full h-full object-cover opacity-40 mix-blend-luminosity scale-105"
+                />
+                <div
+                    class="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent"
+                >
+                </div>
+            </div>
+
+            <div
+                class="relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center"
+            >
+                <span
+                    class="bg-[#FAFF00] text-black px-4 py-1.5 font-black uppercase text-xs tracking-[0.2em] mb-8 shadow-[0_0_20px_rgba(250,255,0,0.4)]"
+                >
+                    The Explainer Guide
+                </span>
+                <h1
+                    class="font-serif-display font-black text-6xl md:text-8xl lg:text-[7rem] leading-[0.9] text-white tracking-tighter mb-8 drop-shadow-2xl"
+                >
+                    {seriesData.title}
+                </h1>
+                <p
+                    class="text-xl md:text-3xl text-gray-300 font-serif leading-relaxed max-w-2xl text-balance"
+                >
+                    {seriesData.description}
+                </p>
+            </div>
+        </div>
+
+        {/* Table of Contents Roadmap */}
+        <div class="max-w-4xl mx-auto px-6 py-24">
+            <div class="text-center mb-16">
+                <h2
+                    class="font-black uppercase tracking-[0.2em] text-sm text-gray-400 border-b-2 border-black inline-block pb-2"
+                >
+                    Series Roadmap
+                </h2>
+            </div>
+
+            <div class="relative">
+                {/* The vertical connector line */}
+                <div
+                    class="absolute left-6 md:left-8 top-10 bottom-10 w-1 bg-gray-200"
+                >
+                </div>
+
+                <div class="space-y-12">
+                    {
+                        seriesData.articles.map(
+                            (article: any, index: number) => (
+                                <a
+                                    href={`/article/${article.slug}`}
+                                    class="group relative flex gap-6 md:gap-10 items-start"
+                                >
+                                    {/* Number Indicator */}
+                                    <div class="relative z-10 w-12 h-12 md:w-16 md:h-16 flex-shrink-0 bg-white border-4 border-gray-200 group-hover:border-[#FAFF00] rounded-full flex items-center justify-center transition-colors">
+                                        <span class="font-black font-sans text-xl md:text-2xl text-gray-400 group-hover:text-black">
+                                            {article.partNumber}
+                                        </span>
+                                    </div>
+
+                                    {/* Content Box */}
+                                    <div class="flex-1 bg-white border border-gray-100 p-6 md:p-8 rounded-2xl group-hover:shadow-2xl group-hover:border-black transition-all transform group-hover:-translate-y-1 duration-300">
+                                        <span class="text-[10px] font-black uppercase tracking-widest text-[#FAFF00] bg-black px-2 py-1 mb-4 inline-block">
+                                            Part {article.partNumber}
+                                        </span>
+                                        <h3 class="font-serif-display font-black text-3xl md:text-4xl text-black leading-tight mb-2 group-hover:underline decoration-4 decoration-yellow-400 underline-offset-4">
+                                            {article.title}
+                                        </h3>
+                                        <div class="mt-6 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-400 group-hover:text-black transition-colors">
+                                            Read Chapter{" "}
+                                            <svg
+                                                class="w-4 h-4"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                                                />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </a>
+                            ),
+                        )
+                    }
+                </div>
+            </div>
+        </div>
+    </main>
+    <Footer />
+</MainLayout>

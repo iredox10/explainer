@@ -55,8 +55,17 @@ const fullText = blocks
   .join(". ");
 
 import { serverStoryService } from "../../lib/server-appwrite.js";
+import { VOX_HOME_DATA } from "../../data/mock.js";
+
 const readTime = serverStoryService.calculateReadTime(blocks);
 const displayReadTime = `${readTime} min read`;
+
+const parentSeries =
+  ARTICLE_DATA.seriesSlug && VOX_HOME_DATA.series
+    ? VOX_HOME_DATA.series[
+        ARTICLE_DATA.seriesSlug as keyof typeof VOX_HOME_DATA.series
+      ]
+    : null;
 ---
 
 <MainLayout
@@ -88,12 +97,27 @@ const displayReadTime = `${readTime} min read`;
         >
           {/* Header Text */}
           <div class="lg:col-span-7 lg:pr-12">
-            <div class="flex items-center gap-3 mb-8">
-              <span
-                class="bg-black text-white px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-yellow-400 hover:text-black transition-colors cursor-pointer"
-              >
-                {ARTICLE_DATA.category}
-              </span>
+            <div class="flex flex-col gap-4 mb-8">
+              {
+                parentSeries && (
+                  <a
+                    href={`/series/${parentSeries.slug}`}
+                    class="group self-start flex items-center gap-2 border border-black px-4 py-1.5 hover:bg-[#FAFF00] hover:border-transparent transition-colors"
+                  >
+                    <span class="w-1.5 h-1.5 bg-black rounded-full block group-hover:scale-125 transition-transform" />
+                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-black">
+                      A Part of: {parentSeries.title}
+                    </span>
+                  </a>
+                )
+              }
+              <div class="flex items-center gap-3">
+                <span
+                  class="bg-black text-white px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-yellow-400 hover:text-black transition-colors cursor-pointer"
+                >
+                  {ARTICLE_DATA.category}
+                </span>
+              </div>
             </div>
 
             <h1
@@ -475,6 +499,61 @@ const displayReadTime = `${readTime} min read`;
                   );
                 }
               })
+            }
+
+            {/* Bottom Series Navigator */}
+            {
+              parentSeries &&
+                (() => {
+                  const currentIndex = parentSeries.articles.findIndex(
+                    (a: any) => a.slug === ARTICLE_DATA.slug,
+                  );
+                  const nextArticle =
+                    currentIndex !== -1 &&
+                    currentIndex < parentSeries.articles.length - 1
+                      ? parentSeries.articles[currentIndex + 1]
+                      : null;
+
+                  if (nextArticle) {
+                    return (
+                      <div class="mt-16 mb-8 bg-[#FAFF00] p-8 md:p-12 relative overflow-hidden group border border-black shadow-[8px_8px_0_0_#000]">
+                        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+                          <div class="flex-1">
+                            <span class="inline-block bg-black text-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] mb-4">
+                              Up Next in Series
+                            </span>
+                            <h3 class="font-serif-display font-black text-3xl md:text-5xl text-black leading-tight tracking-tight mb-2">
+                              {nextArticle.title}
+                            </h3>
+                            <p class="font-sans text-sm font-bold uppercase tracking-widest text-black/60">
+                              Part {nextArticle.partNumber} of{" "}
+                              {parentSeries.articles.length}
+                            </p>
+                          </div>
+                          <a
+                            href={`/article/${nextArticle.slug}`}
+                            class="flex items-center justify-center w-16 h-16 bg-black rounded-full flex-shrink-0 group-hover:scale-110 group-hover:bg-white border-2 border-black transition-all"
+                          >
+                            <svg
+                              class="w-6 h-6 text-[#FAFF00] group-hover:text-black"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2.5"
+                                d="M14 5l7 7m0 0l-7 7m7-7H3"
+                              />
+                            </svg>
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()
             }
 
             {/* Newsletter / Footer for Article */}

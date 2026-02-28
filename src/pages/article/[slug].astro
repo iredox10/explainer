@@ -2,6 +2,8 @@
 import { serverStoryService } from "../../lib/server-appwrite.js";
 import ScrollyTemplate from "../../components/templates/ScrollyTemplate.astro";
 import StandardTemplate from "../../components/templates/StandardTemplate.astro";
+import BriefingTemplate from "../../components/templates/BriefingTemplate.astro";
+import PhotoGalleryTemplate from "../../components/templates/PhotoGalleryTemplate.astro";
 import { VOX_HOME_DATA } from "../../data/mock";
 
 export const prerender = false;
@@ -11,16 +13,23 @@ let story;
 
 try {
   story = await serverStoryService.getStoryBySlug(slug);
-  console.log(`[ARTICLE DEBUG] Slug: ${slug}, Story ID: ${story?.$id}, Hero: ${story?.heroImage ? 'Found' : 'Missing'}`);
+  console.log(
+    `[ARTICLE DEBUG] Slug: ${slug}, Story ID: ${story?.$id}, Hero: ${story?.heroImage ? "Found" : "Missing"}`,
+  );
 } catch (e) {
   console.error(`[ARTICLE] Failed to fetch story for slug ${slug}:`, e);
 }
+
+import briefingData from "../../content/stories/briefing.json";
+import photoData from "../../content/stories/photo-essay.json";
 
 // Fallback to mock data for essential pages if DB fetch fails or is empty
 if (!story) {
   if (slug === "giant-wakes")
     story = { ...VOX_HOME_DATA.hero, layout: "scrolly", scrollySections: [] };
   if (slug === "fiber-optic-lagos") story = VOX_HOME_DATA.latest[0];
+  if (slug === "briefing") story = briefingData;
+  if (slug === "photo-essay") story = photoData;
 }
 
 if (!story) {
@@ -31,6 +40,10 @@ if (!story) {
 {
   story.layout === "scrolly" ? (
     <ScrollyTemplate story={story} />
+  ) : story.layout === "briefing" ? (
+    <BriefingTemplate story={story} />
+  ) : story.layout === "photo" ? (
+    <PhotoGalleryTemplate story={story} />
   ) : (
     <StandardTemplate story={story} />
   )

@@ -144,8 +144,8 @@ export default function StoryEditor({ storyId }) {
     const loadStory = async (currentUser) => {
         setIsLoading(true);
         if (storyId === 'new-story') {
-            const initialCategory = (currentUser.role === ROLES.EDITOR && currentUser.categories?.length > 0) 
-                ? currentUser.categories[0] 
+            const initialCategory = (currentUser.role === ROLES.EDITOR && currentUser.categories?.length > 0)
+                ? currentUser.categories[0]
                 : "Technology";
 
             setStory({
@@ -185,7 +185,7 @@ export default function StoryEditor({ storyId }) {
                     window.location.href = '/admin/stories';
                     return;
                 }
-                
+
                 // Migration: Move legacy scrollySections to a content block
                 const legacySections = typeof data.scrollySections === 'string' ? JSON.parse(data.scrollySections || '[]') : (data.scrollySections || []);
                 let content = typeof data.content === 'string' ? JSON.parse(data.content) : (data.content || []);
@@ -239,12 +239,12 @@ export default function StoryEditor({ storyId }) {
                 newBlock = { ...newBlock, url: '', caption: '', autoplay: false };
                 break;
             case 'map':
-                newBlock = { 
-                    ...newBlock, 
-                    center: [20, 0], 
-                    zoom: 1, 
-                    highlight: [], 
-                    label: 'New Map', 
+                newBlock = {
+                    ...newBlock,
+                    center: [20, 0],
+                    zoom: 1,
+                    highlight: [],
+                    label: 'New Map',
                     text: '',
                     markers: [],
                     overlayIcons: [],
@@ -252,15 +252,15 @@ export default function StoryEditor({ storyId }) {
                 };
                 break;
             case 'chart':
-                newBlock = { 
-                    ...newBlock, 
-                    chartType: 'line', 
-                    label: 'New Chart', 
-                    accentColor: '#FAFF00', 
-                    chartData: [], 
-                    chartLabels: [], 
-                    chartColors: [], 
-                    text: '' 
+                newBlock = {
+                    ...newBlock,
+                    chartType: 'line',
+                    label: 'New Chart',
+                    accentColor: '#FAFF00',
+                    chartData: [],
+                    chartLabels: [],
+                    chartColors: [],
+                    text: ''
                 };
                 break;
             case 'bottleneck':
@@ -282,6 +282,9 @@ export default function StoryEditor({ storyId }) {
             case 'callout':
                 newBlock = { ...newBlock, title: 'Context', text: '' };
                 break;
+            case 'inline-related':
+                newBlock = { ...newBlock, title: 'Related Story Title', description: 'Brief description...', slug: '' };
+                break;
             case 'beforeAfter':
                 newBlock = { ...newBlock, leftImage: '', rightImage: '', leftLabel: 'Before', rightLabel: 'After', caption: '' };
                 break;
@@ -299,9 +302,9 @@ export default function StoryEditor({ storyId }) {
                 };
                 break;
             case 'scrolly-group':
-                newBlock = { 
-                    ...newBlock, 
-                    steps: [{ type: 'map', center: [20, 0], zoom: 1, highlight: [], label: 'New Sequence', text: '' }] 
+                newBlock = {
+                    ...newBlock,
+                    steps: [{ type: 'map', center: [20, 0], zoom: 1, highlight: [], label: 'New Sequence', text: '' }]
                 };
                 break;
             default:
@@ -331,14 +334,14 @@ export default function StoryEditor({ storyId }) {
 
         const isImage = file.type.startsWith('image/');
         console.log('StoryEditor: isImage?', isImage);
-        
+
         if (isImage) {
             console.log('StoryEditor: Showing image cropper');
             setPendingImageFile({ file, target: actualTarget });
             setShowImageCropper(true);
             return;
         }
-        
+
         await uploadFile(file, actualTarget);
     };
 
@@ -397,6 +400,8 @@ export default function StoryEditor({ storyId }) {
                     layout: story.layout,
                     videoUrl: story.videoUrl,
                     isFeatured: story.isFeatured,
+                    seriesSlug: story.seriesSlug || '',
+                    seriesPart: story.seriesPart || null,
                     tags: story.tags || [],
                     sources: story.sources || [],
                     footnotes: story.footnotes || [],
@@ -552,7 +557,7 @@ export default function StoryEditor({ storyId }) {
                                         </button>
                                     </>
                                 )}
-                                
+
                                 {/* Editor can publish Drafts, Approved, or update Published */}
                                 {(story.workflow_status === 'draft' || story.workflow_status === 'approved' || story.workflow_status === 'published') && (
                                     <button onClick={() => performSave('published')} className="bg-[#FAFF00] text-black px-4 md:px-6 py-2.5 md:py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 md:gap-3 hover:bg-black hover:text-white transition-all shadow-[0_10px_20px_rgba(250,255,0,0.3)] shrink-0">
@@ -661,6 +666,9 @@ export default function StoryEditor({ storyId }) {
                                         <button onClick={() => handleInsertBlock('callout')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
                                             <AlertCircle className="w-4 h-4" /> Callout
                                         </button>
+                                        <button onClick={() => handleInsertBlock('inline-related')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
+                                            <ExternalLink className="w-4 h-4" /> Inline Related
+                                        </button>
                                         <button onClick={() => handleInsertBlock('beforeAfter')} className="flex items-center gap-3 px-6 py-3 bg-gray-50 hover:bg-black hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">
                                             <Plus className="w-4 h-4" /> Before/After
                                         </button>
@@ -719,6 +727,18 @@ export default function StoryEditor({ storyId }) {
                                 >
                                     Explainer
                                 </button>
+                                <button
+                                    onClick={() => handleChange('layout', 'briefing')}
+                                    className={`p-4 rounded-2xl border-2 text-[10px] font-black uppercase tracking-widest transition-all ${story.layout === 'briefing' ? 'bg-red-600 text-white border-red-600 shadow-lg' : 'bg-white text-gray-400 border-gray-100'}`}
+                                >
+                                    Briefing
+                                </button>
+                                <button
+                                    onClick={() => handleChange('layout', 'photo')}
+                                    className={`p-4 rounded-2xl border-2 text-[10px] font-black uppercase tracking-widest transition-all ${story.layout === 'photo' ? 'bg-black text-white border-black shadow-lg' : 'bg-white text-gray-400 border-gray-100'}`}
+                                >
+                                    Photo Essay
+                                </button>
                             </div>
                         </section>
                         <section className="space-y-4">
@@ -761,6 +781,26 @@ export default function StoryEditor({ storyId }) {
                                         value={story.scheduledAt ? new Date(story.scheduledAt).toISOString().slice(0, 16) : ''}
                                         onChange={(e) => handleChange('scheduledAt', e.target.value ? new Date(e.target.value).toISOString() : null)}
                                         className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-[10px] font-bold"
+                                    />
+                                </div>
+                                <div className="border-t border-gray-100 pt-4 mt-4">
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Series Slug (Optional)</label>
+                                    <input
+                                        type="text"
+                                        value={story.seriesSlug || ''}
+                                        onChange={(e) => handleChange('seriesSlug', e.target.value)}
+                                        className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-[10px] font-bold"
+                                        placeholder="e.g. africa-tech-boom"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Series Part Number</label>
+                                    <input
+                                        type="number"
+                                        value={story.seriesPart || ''}
+                                        onChange={(e) => handleChange('seriesPart', parseInt(e.target.value) || null)}
+                                        className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-[10px] font-bold"
+                                        placeholder="e.g. 1"
                                     />
                                 </div>
                             </div>
@@ -847,17 +887,17 @@ export default function StoryEditor({ storyId }) {
                                 )}
                                 {!isLocked && (
                                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                                        <button 
+                                        <button
                                             onClick={() => {
                                                 window._currentUploadTarget = 'hero';
                                                 fileInputRef.current?.click();
-                                            }} 
+                                            }}
                                             className="bg-[#FAFF00] text-black px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-black hover:text-white transition-all"
                                         >
                                             <Upload className="w-4 h-4" /> {story.heroImage ? 'Replace' : 'Upload'}
                                         </button>
                                         {story.heroImage && (
-                                            <button 
+                                            <button
                                                 onClick={() => handleChange('heroImage', '')}
                                                 className="bg-white/20 text-white px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-red-500 transition-all"
                                             >
@@ -958,7 +998,7 @@ export default function StoryEditor({ storyId }) {
                     </div>
                 </aside>
             )}
-            
+
             {/* Global File Input - Moved outside conditional rendering to ensure it works even when meta panel is closed */}
             <input ref={fileInputRef} type="file" accept="image/*,video/*" className="hidden" onClick={(e) => { e.target.value = null; }} onChange={(e) => {
                 const target = window._currentUploadTarget || 'hero';

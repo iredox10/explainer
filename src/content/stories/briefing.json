@@ -1,0 +1,17 @@
+{
+  "layout": "briefing",
+  "headline": "The 5 Things You Need To Know Today",
+  "subhead": "A quick look at the global markets, the new AI regulations, and why your coffee is getting more expensive.",
+  "category": "News",
+  "author": "Vox Staff",
+  "date": "Nov 29, 2025",
+  "content": [
+    { "type": "p", "text": "<strong>1. European Union passes the Artificial Intelligence Act.</strong> The sweeping new legislation classifies AI systems by risk, outright banning 'unacceptable risk' applications like social scoring." },
+    { "type": "p", "text": "<strong>2. Global coffee yields down 14% year-over-year.</strong> An unprecedented drought in Brazil has severely impacted the Arabica bean harvest, driving up futures prices." },
+    { "type": "image", "url": "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=1600&q=80", "caption": "Coffee fields in Minas Gerais, Brazil." },
+    { "type": "p", "text": "<strong>3. SpaceX successfully lands Starship on its third attempt.</strong> The massive rocket completed a full orbital flight before touching down softly in the Gulf of Mexico." },
+    { "type": "callout", "text": "This is a historic moment for spaceflight. Reusability at this scale fundamentally changes the economics of reaching orbit." },
+    { "type": "p", "text": "<strong>4. The US Federal Reserve signals another rate hike.</strong> Citing persistent inflation in the services sector, Chairman Jerome Powell indicated that rates may stay 'higher for longer'." },
+    { "type": "p", "text": "<strong>5. Apple announces its entry into the smart ring market.</strong> Long rumored, the 'Apple Ring' aims to provide subtle health tracking without the bulk of a watch." }
+  ]
+}

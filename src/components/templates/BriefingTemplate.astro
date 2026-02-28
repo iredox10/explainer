@@ -1,0 +1,157 @@
+---
+// src/components/templates/BriefingTemplate.astro
+import MainLayout from "../../layouts/MainLayout.astro";
+import VoxNav from "../../components/ui/VoxNav.astro";
+import ProgressBar from "../../components/ui/ProgressBar.jsx";
+import ShareButtons from "../../components/ui/ShareButtons.jsx";
+import { Clock } from "lucide-react";
+
+const { story } = Astro.props;
+const ARTICLE_DATA = story;
+
+const getBlocks = (content: any) => {
+    if (!content) return [];
+    if (Array.isArray(content)) return content;
+    if (typeof content === "string") {
+        try {
+            return JSON.parse(content);
+        } catch (e) {
+            return [];
+        }
+    }
+    return [];
+};
+
+const blocks = getBlocks(ARTICLE_DATA.content);
+
+import { serverStoryService } from "../../lib/server-appwrite.js";
+const readTime = serverStoryService.calculateReadTime(blocks);
+---
+
+<MainLayout
+    title={ARTICLE_DATA.seo?.ogTitle || ARTICLE_DATA.headline}
+    description={ARTICLE_DATA.seo?.ogDescription || ARTICLE_DATA.subhead}
+    showNav={false}
+>
+    <div
+        class="bg-white text-black font-sans antialiased min-h-screen selection:bg-yellow-300"
+    >
+        <ProgressBar
+            client:load
+            title={ARTICLE_DATA.headline}
+            author={ARTICLE_DATA.author}
+        />
+        <VoxNav />
+
+        <main class="max-w-3xl mx-auto px-6 py-24 md:py-32">
+            <div class="mb-12">
+                <span
+                    class="inline-block bg-red-600 text-white font-black uppercase text-[10px] tracking-widest px-2 py-1 mb-6"
+                >
+                    Briefing
+                </span>
+                <h1
+                    class="font-sans font-black text-5xl md:text-6xl tracking-tight leading-[1.05] mb-6 text-balance"
+                >
+                    {ARTICLE_DATA.headline}
+                </h1>
+                <p
+                    class="text-xl md:text-2xl text-gray-500 font-serif leading-snug mb-8"
+                >
+                    {ARTICLE_DATA.subhead}
+                </p>
+
+                <div
+                    class="flex items-center justify-between border-y border-gray-200 py-4 mb-10"
+                >
+                    <div
+                        class="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-gray-500"
+                    >
+                        <span class="text-black">{ARTICLE_DATA.author}</span>
+                        <span>•</span>
+                        <span>{ARTICLE_DATA.date || "Just Now"}</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span
+                            class="text-[10px] font-black uppercase tracking-widest text-[#FAFF00] bg-black px-2 py-1 flex items-center gap-2"
+                        >
+                            <Clock className="w-3 h-3" />
+                            {readTime} Min Read
+                        </span>
+                        <ShareButtons
+                            client:load
+                            title={ARTICLE_DATA.headline}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <article
+                class="font-serif text-lg leading-relaxed text-gray-800 space-y-6"
+            >
+                {
+                    blocks.map((block: any) => {
+                        if (block.type === "heading") {
+                            return (
+                                <h2 class="font-sans font-black text-2xl text-black mt-10 mb-4 tracking-tight">
+                                    <Fragment set:html={block.text} />
+                                </h2>
+                            );
+                        }
+                        if (block.type === "p") {
+                            return (
+                                <p class="mb-6">
+                                    <Fragment set:html={block.text} />
+                                </p>
+                            );
+                        }
+                        if (block.type === "image") {
+                            return (
+                                <figure class="my-10 -mx-6 sm:mx-0">
+                                    <img
+                                        src={block.url}
+                                        class="w-full h-auto"
+                                    />
+                                    {block.caption && (
+                                        <figcaption class="text-[10px] text-gray-400 font-sans uppercase tracking-widest mt-2 px-6 sm:px-0">
+                                            {block.caption}
+                                        </figcaption>
+                                    )}
+                                </figure>
+                            );
+                        }
+                        if (block.type === "callout") {
+                            return (
+                                <div class="my-8 bg-gray-50 p-6 border-l-4 border-red-600">
+                                    <p class="font-sans font-medium text-gray-900 italic">
+                                        "{block.text}"
+                                    </p>
+                                </div>
+                            );
+                        }
+                    })
+                }
+            </article>
+
+            <div class="mt-16 pt-8 border-t border-gray-200 text-center">
+                <a
+                    href="/"
+                    class="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-black hover:text-red-600 transition-colors"
+                >
+                    <svg
+                        class="w-4 h-4 transform rotate-180"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        ><path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg
+                    >
+                    Back to Front Page
+                </a>
+            </div>
+        </main>
+    </div>
+</MainLayout>

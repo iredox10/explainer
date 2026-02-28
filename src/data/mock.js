@@ -84,6 +84,7 @@ export const VOX_HOME_DATA = {
             imageUrl: "https://images.unsplash.com/photo-1544197150-b99a580bbcbf?w=800&q=80",
             readTime: "8 min",
             slug: "fiber-optic-lagos",
+            seriesSlug: "africa-tech-boom",
             author: "Chioma Okereke",
             authorSlug: "chioma-okereke"
         },
@@ -207,5 +208,30 @@ export const VOX_HOME_DATA = {
             author: "Chioma Okereke",
             authorSlug: "chioma-okereke"
         }
-    ]
+    ],
+    series: {
+        "africa-tech-boom": {
+            title: "The Africa Tech Boom",
+            slug: "africa-tech-boom",
+            description: "A comprehensive guide to the infrastructure, startups, and culture shaping the continent's digital future.",
+            heroImage: "https://images.unsplash.com/photo-1518432031352-d6fc5c10da5a?q=80&w=2574",
+            articles: [
+                {
+                    title: "The hidden fiber optic cables connecting Lagos to the world",
+                    slug: "fiber-optic-lagos",
+                    partNumber: 1
+                },
+                {
+                    title: "The 50 most influential startups in Yaba",
+                    slug: "fiber-optic-lagos", // reusing slug so it doesn't 404
+                    partNumber: 2
+                },
+                {
+                    title: "Afrobeats is taking over the world. Here's why.",
+                    slug: "fiber-optic-lagos", // reusing slug
+                    partNumber: 3
+                }
+            ]
+        }
+    }
 };
