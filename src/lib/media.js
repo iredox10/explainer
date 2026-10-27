@@ -1,65 +1,32 @@
-import { databases, storage, DB_ID, COLLECTIONS, MEDIA_BUCKET_ID } from './appwrite';
-import { Query, ID } from 'appwrite';
+import { apiFetch, mediaUrl, unwrapDocuments, withQuery } from './api';
 
 export const mediaService = {
     async uploadMedia(file, metadata = {}) {
-        try {
-            const uploadedFile = await storage.createFile(MEDIA_BUCKET_ID, ID.unique(), file);
-            const fileUrl = `${import.meta.env.PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${MEDIA_BUCKET_ID}/files/${uploadedFile.$id}/view?project=${import.meta.env.PUBLIC_APPWRITE_PROJECT_ID}`;
-            
-            const mediaRecord = await databases.createDocument(
-                DB_ID,
-                COLLECTIONS.MEDIA,
-                ID.unique(),
-                {
-                    fileId: uploadedFile.$id,
-                    filename: file.name,
-                    originalName: file.name,
-                    mimeType: file.type,
-                    size: file.size,
-                    url: fileUrl,
-                    ...metadata,
-                    uploadedAt: new Date().toISOString()
-                }
-            );
-            
-            return {
-                url: fileUrl,
-                fileId: uploadedFile.$id,
-                record: mediaRecord
-            };
-        } catch (error) {
-            console.error('Error uploading media:', error);
-            throw error;
-        }
+        const form = new FormData();
+        form.append('file', file);
+        if (metadata.filename) form.append('filename', metadata.filename);
+        if (metadata.caption) form.append('caption', metadata.caption);
+        if (metadata.altText) form.append('altText', metadata.altText);
+        if (metadata.tags) form.append('tags', JSON.stringify(metadata.tags));
+        if (metadata.usage) form.append('usage', JSON.stringify(metadata.usage));
+
+        const payload = await apiFetch('/api/admin/media', { method: 'POST', body: form });
+        return {
+            url: mediaUrl(payload.url),
+            fileId: payload.fileId,
+            record: payload.record ?? payload
+        };
     },
 
     async getMediaLibrary(options = {}) {
         try {
-            const queries = [Query.orderDesc('uploadedAt')];
-            
-            if (options.tag) {
-                queries.push(Query.contains('tags', options.tag));
-            }
-            if (options.type) {
-                queries.push(Query.equal('mimeType', options.type));
-            }
-            if (options.search) {
-                queries.push(Query.search('filename', options.search));
-            }
-            if (options.limit) {
-                queries.push(Query.limit(options.limit));
-            } else {
-                queries.push(Query.limit(100));
-            }
-            
-            const response = await databases.listDocuments(
-                DB_ID,
-                COLLECTIONS.MEDIA,
-                queries
-            );
-            
-            return response.documents;
+            const payload = await apiFetch(withQuery('/api/admin/media', {
+                tag: options.tag,
+                type: options.type,
+                search: options.search,
+                limit: options.limit || 100
+            }));
+            return unwrapDocuments(payload).map(item => ({ ...item, url: mediaUrl(item.url) }));
         } catch (error) {
             console.error('Error fetching media library:', error);
             return [];
@@ -68,7 +35,8 @@ export const mediaService = {
 
     async getMediaById(id) {
         try {
-            return await databases.getDocument(DB_ID, COLLECTIONS.MEDIA, id);
+            const item = await apiFetch(`/api/admin/media/${encodeURIComponent(id)}`);
+            return { ...item, url: mediaUrl(item.url) };
         } catch (error) {
             console.error('Error fetching media:', error);
             return null;
@@ -76,18 +44,21 @@ export const mediaService = {
     },
 
     async updateMediaMetadata(id, metadata) {
-        try {
-            return await databases.updateDocument(DB_ID, COLLECTIONS.MEDIA, id, metadata);
-        } catch (error) {
-            console.error('Error updating media metadata:', error);
-            throw error;
-        }
+        const payload = await apiFetch(`/api/admin/media/${encodeURIComponent(id)}`, {
+            method: 'PATCH',
+            body: {
+                tags: metadata.tags,
+                usage: metadata.usage,
+                caption: metadata.caption,
+                altText: metadata.altText
+            }
+        });
+        return { ...payload, url: mediaUrl(payload.url) };
     },
 
-    async deleteMedia(id, fileId) {
+    async deleteMedia(id) {
         try {
-            await databases.deleteDocument(DB_ID, COLLECTIONS.MEDIA, id);
-            await storage.deleteFile(MEDIA_BUCKET_ID, fileId);
+            await apiFetch(`/api/admin/media/${encodeURIComponent(id)}`, { method: 'DELETE' });
             return true;
         } catch (error) {
             console.error('Error deleting media:', error);
@@ -124,16 +95,9 @@ export const mediaService = {
 
     async getPopularTags() {
         try {
-            const media = await this.getMediaLibrary({ limit: 500 });
-            const tagCounts = {};
-            media.forEach(m => {
-                (m.tags || []).forEach(tag => {
-                    tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-                });
-            });
-            return Object.entries(tagCounts)
-                .map(([tag, count]) => ({ tag, count }))
-                .sort((a, b) => b.count - a.count);
+            const payload = await apiFetch('/api/admin/media/tags');
+            const tags = Array.isArray(payload) ? payload : payload?.tags ?? [];
+            return tags.map(({ tag, uses, count }) => ({ tag, count: count ?? uses ?? 0 }));
         } catch (error) {
             console.error('Error fetching popular tags:', error);
             return [];
@@ -143,11 +107,10 @@ export const mediaService = {
     async trackUsage(mediaId, storyId) {
         try {
             const media = await this.getMediaById(mediaId);
+            if (!media) return;
             const usage = media.usage || [];
-            if (!usage.includes(storyId)) {
-                usage.push(storyId);
-                await this.updateMediaMetadata(mediaId, { usage });
-            }
+            if (usage.includes(storyId)) return;
+            await this.updateMediaMetadata(mediaId, { usage: [...usage, storyId] });
         } catch (error) {
             console.error('Error tracking media usage:', error);
         }
@@ -170,7 +133,7 @@ export function useImageOptimizer() {
 
             img.onload = () => {
                 let { width, height } = img;
-                
+
                 if (width > maxWidth) {
                     height = (height * maxWidth) / width;
                     width = maxWidth;
@@ -184,8 +147,8 @@ export function useImageOptimizer() {
                 canvas.height = height;
                 ctx.drawImage(img, 0, 0, width, height);
 
-                const mimeType = format === 'webp' ? 'image/webp' : 
-                                 format === 'jpeg' ? 'image/jpeg' : 
+                const mimeType = format === 'webp' ? 'image/webp' :
+                                 format === 'jpeg' ? 'image/jpeg' :
                                  'image/png';
 
                 canvas.toBlob(

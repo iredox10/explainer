@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Mail, Users, Send, Download, Search, Loader2, CheckCircle2, AlertCircle, Trash2, Eye, BarChart3, Clock, X } from 'lucide-react';
-import { databases, DB_ID, COLLECTIONS } from '../../lib/appwrite';
-import { Query, ID } from 'appwrite';
 import { emailService, emailTemplates } from '../../lib/email';
-import { storyService } from '../../lib/services';
+import { storyService, newsletterService } from '../../lib/services';
 
 export default function NewslettersPage() {
     const [subscribers, setSubscribers] = useState([]);
@@ -28,10 +26,7 @@ export default function NewslettersPage() {
 
     const fetchSubscribers = async () => {
         try {
-            const response = await databases.listDocuments(DB_ID, COLLECTIONS.SUBSCRIBERS, [
-                Query.orderDesc('$createdAt'),
-                Query.limit(500)
-            ]);
+            const response = await newsletterService.getSubscribers(500);
             setSubscribers(response.documents);
         } catch (error) {
             console.error('Error fetching subscribers:', error);
@@ -42,11 +37,8 @@ export default function NewslettersPage() {
 
     const fetchCampaigns = async () => {
         try {
-            const response = await databases.listDocuments(DB_ID, 'campaigns', [
-                Query.orderDesc('sentAt'),
-                Query.limit(20)
-            ]);
-            setCampaigns(response.documents);
+            const data = await emailService.getCampaigns();
+            setCampaigns(data);
         } catch (error) {
             console.error('Error fetching campaigns:', error);
         }
@@ -65,7 +57,7 @@ export default function NewslettersPage() {
         if (!confirm('Remove this subscriber?')) return;
         
         try {
-            await databases.deleteDocument(DB_ID, COLLECTIONS.SUBSCRIBERS, subscriberId);
+            await newsletterService.deleteSubscriber(subscriberId);
             setSubscribers(subscribers.filter(s => s.$id !== subscriberId));
         } catch (error) {
             console.error('Error deleting subscriber:', error);
@@ -320,7 +312,7 @@ export default function NewslettersPage() {
                                                 <div className="flex items-center justify-between mb-2">
                                                     <h3 className="text-sm font-bold truncate flex-1">{campaign.subject}</h3>
                                                     <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${
-                                                        campaign.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                                        campaign.status === 'sent' || campaign.status === 'completed' ? 'bg-green-100 text-green-700' :
                                                         campaign.status === 'sending' ? 'bg-blue-100 text-blue-700' :
                                                         'bg-gray-100 text-gray-600'
                                                     }`}>
@@ -330,7 +322,7 @@ export default function NewslettersPage() {
                                                 <div className="flex items-center gap-4 text-[10px] text-gray-400">
                                                     <span>{campaign.sentCount || 0} sent</span>
                                                     <span>·</span>
-                                                    <span>{new Date(campaign.sentAt).toLocaleDateString()}</span>
+                                                    <span>{campaign.sentAt ? new Date(campaign.sentAt).toLocaleDateString() : 'Draft'}</span>
                                                 </div>
                                             </div>
                                         )) : (
@@ -386,7 +378,7 @@ export default function NewslettersPage() {
                                                 <div className="flex-1 min-w-0">
                                                     <div className="font-bold text-xs text-gray-900 truncate">{sub.email}</div>
                                                     <div className="text-[9px] font-mono text-gray-400 mt-0.5">
-                                                        {new Date(sub.$createdAt).toLocaleDateString()}
+                                                        {new Date(sub.$createdAt || sub.subscribedAt).toLocaleDateString()}
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2">

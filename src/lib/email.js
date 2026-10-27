@@ -1,168 +1,35 @@
-import { databases, DB_ID, COLLECTIONS } from './appwrite';
-import { Query, ID } from 'appwrite';
-
-const RESEND_API_KEY = import.meta.env.RESEND_API_KEY;
-const SENDGRID_API_KEY = import.meta.env.SENDGRID_API_KEY;
-const EMAIL_FROM = import.meta.env.EMAIL_FROM || 'news@explainer.africa';
-const EMAIL_PROVIDER = import.meta.env.EMAIL_PROVIDER || 'resend';
+import { apiFetch, unwrapDocuments, withQuery } from './api';
 
 export const emailService = {
-    async sendEmail({ to, subject, html, text }) {
-        if (EMAIL_PROVIDER === 'resend' && RESEND_API_KEY) {
-            return this.sendViaResend({ to, subject, html, text });
-        } else if (EMAIL_PROVIDER === 'sendgrid' && SENDGRID_API_KEY) {
-            return this.sendViaSendgrid({ to, subject, html, text });
-        } else {
-            return this.simulateSend({ to, subject, html, text });
-        }
-    },
-
-    async sendViaResend({ to, subject, html, text }) {
-        try {
-            const response = await fetch('https://api.resend.com/emails', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${RESEND_API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    from: EMAIL_FROM,
-                    to: Array.isArray(to) ? to : [to],
-                    subject,
-                    html,
-                    text
-                })
-            });
-
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.message || 'Failed to send via Resend');
-            }
-
-            return { success: true, id: data.id, provider: 'resend' };
-        } catch (error) {
-            console.error('Resend error:', error);
-            return { success: false, error: error.message };
-        }
-    },
-
-    async sendViaSendgrid({ to, subject, html, text }) {
-        try {
-            const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${SENDGRID_API_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    personalizations: [{ to: Array.isArray(to) ? to.map(email => ({ email })) : [{ email: to }] }],
-                    from: { email: EMAIL_FROM },
-                    subject,
-                    content: [
-                        { type: 'text/plain', value: text },
-                        { type: 'text/html', value: html }
-                    ]
-                })
-            });
-
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.errors?.[0]?.message || 'Failed to send via SendGrid');
-            }
-
-            return { success: true, id: response.headers.get('X-Message-Id'), provider: 'sendgrid' };
-        } catch (error) {
-            console.error('SendGrid error:', error);
-            return { success: false, error: error.message };
-        }
-    },
-
-    simulateSend({ to, subject }) {
-        console.log('[EMAIL SIMULATION] Sending:', { to, subject, from: EMAIL_FROM });
-        return new Promise(resolve => {
-            setTimeout(() => {
-                resolve({ 
-                    success: true, 
-                    id: 'sim_' + Math.random().toString(36).substr(2, 9),
-                    provider: 'simulation',
-                    simulated: true
-                });
-            }, 500);
-        });
-    },
-
     async sendCampaign(campaignData) {
         const { subject, html, text, subscriberIds } = campaignData;
-        
-        const campaign = await databases.createDocument(
-            DB_ID,
-            COLLECTIONS.CAMPAIGNS,
-            ID.unique(),
-            {
-                ...campaignData,
-                status: 'sending',
-                sentAt: new Date().toISOString(),
-                totalRecipients: subscriberIds.length,
-                sentCount: 0,
-                failedCount: 0
+
+        const campaign = await apiFetch('/api/admin/campaigns', {
+            method: 'POST',
+            body: {
+                subject,
+                html,
+                text,
+                subscriberIds,
+                send: true
             }
-        );
-
-        const results = {
-            success: 0,
-            failed: 0,
-            errors: []
-        };
-
-        for (const subscriberId of subscriberIds) {
-            try {
-                const subscriber = await databases.getDocument(DB_ID, COLLECTIONS.SUBSCRIBERS, subscriberId);
-                
-                const personalizedHtml = html.replace('{{email}}', subscriber.email);
-                const personalizedText = (text || '').replace('{{email}}', subscriber.email);
-
-                const result = await this.sendEmail({
-                    to: subscriber.email,
-                    subject,
-                    html: personalizedHtml,
-                    text: personalizedText
-                });
-
-                if (result.success) {
-                    results.success++;
-                } else {
-                    results.failed++;
-                    results.errors.push({ email: subscriber.email, error: result.error });
-                }
-            } catch (error) {
-                results.failed++;
-                results.errors.push({ subscriberId, error: error.message });
-            }
-
-            await databases.updateDocument(DB_ID, COLLECTIONS.CAMPAIGNS, campaign.$id, {
-                sentCount: results.success,
-                failedCount: results.failed
-            });
-        }
-
-        await databases.updateDocument(DB_ID, COLLECTIONS.CAMPAIGNS, campaign.$id, {
-            status: 'completed',
-            sentCount: results.success,
-            failedCount: results.failed
         });
 
-        return { campaign, results };
+        return {
+            success: true,
+            campaign,
+            results: {
+                success: campaign.sentCount || 0,
+                failed: campaign.failedCount || 0,
+                errors: []
+            }
+        };
     },
 
     async getCampaigns() {
         try {
-            const response = await databases.listDocuments(
-                DB_ID,
-                COLLECTIONS.CAMPAIGNS,
-                [Query.orderDesc('sentAt'), Query.limit(50)]
-            );
-            return response.documents;
+            const payload = await apiFetch(withQuery('/api/admin/campaigns', { limit: 50 }));
+            return unwrapDocuments(payload);
         } catch (error) {
             console.error('Error fetching campaigns:', error);
             return [];
@@ -171,7 +38,7 @@ export const emailService = {
 
     async getCampaignStats(campaignId) {
         try {
-            const campaign = await databases.getDocument(DB_ID, COLLECTIONS.CAMPAIGNS, campaignId);
+            const campaign = await apiFetch(`/api/admin/campaigns/${encodeURIComponent(campaignId)}`);
             return {
                 totalRecipients: campaign.totalRecipients || 0,
                 sentCount: campaign.sentCount || 0,
@@ -187,23 +54,17 @@ export const emailService = {
         }
     },
 
-    async trackOpen(campaignId, subscriberId) {
+    async trackOpen(campaignId) {
         try {
-            const campaign = await databases.getDocument(DB_ID, COLLECTIONS.CAMPAIGNS, campaignId);
-            await databases.updateDocument(DB_ID, COLLECTIONS.CAMPAIGNS, campaignId, {
-                openCount: (campaign.openCount || 0) + 1
-            });
+            await apiFetch(`/api/campaigns/${encodeURIComponent(campaignId)}/open.gif`, { auth: false });
         } catch (error) {
             console.error('Error tracking open:', error);
         }
     },
 
-    async trackClick(campaignId, subscriberId, url) {
+    async trackClick(campaignId, url) {
         try {
-            const campaign = await databases.getDocument(DB_ID, COLLECTIONS.CAMPAIGNS, campaignId);
-            await databases.updateDocument(DB_ID, COLLECTIONS.CAMPAIGNS, campaignId, {
-                clickCount: (campaign.clickCount || 0) + 1
-            });
+            await apiFetch(withQuery(`/api/campaigns/${encodeURIComponent(campaignId)}/click`, { url }), { auth: false });
         } catch (error) {
             console.error('Error tracking click:', error);
         }
@@ -213,7 +74,7 @@ export const emailService = {
 export const emailTemplates = {
     newsletter: (stories, options = {}) => {
         const { siteName = 'Explainer', siteUrl = 'https://explainer.africa' } = options;
-        
+
         const storiesHtml = stories.map(story => `
             <div style="margin-bottom: 32px; border-bottom: 1px solid #eee; padding-bottom: 24px;">
                 ${story.heroImage ? `<img src="${story.heroImage}" alt="${story.headline}" style="width: 100%; max-width: 600px; border-radius: 12px; margin-bottom: 16px;" />` : ''}
@@ -242,7 +103,7 @@ export const emailTemplates = {
                     <footer style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #eee; text-align: center;">
                         <p style="margin: 0; color: #999; font-size: 11px;">
                             You received this email because you subscribed to ${siteName}.<br>
-                            <a href="{{unsubscribe_url}}" style="color: #999;">Unsubscribe</a> · 
+                            <a href="{{unsubscribe_url}}" style="color: #999;">Unsubscribe</a> ·
                             <a href="${siteUrl}" style="color: #999;">Visit Site</a>
                         </p>
                     </footer>

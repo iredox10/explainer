@@ -20,10 +20,9 @@ export const POST = async ({ request }) => {
     } catch (error) {
         console.error("API error during subscription:", error);
 
-        // Handle Appwrite specific "Document already exists" error
-        if (error.code === 409 || (error.message && error.message.includes('Document already exists'))) {
+        if (error.status === 409) {
             return new Response(JSON.stringify({ success: true, message: "You are already subscribed!" }), {
-                status: 200, // Still return 200 since the user's intent is met
+                status: 200,
                 headers: { 'Content-Type': 'application/json' }
             });
         }

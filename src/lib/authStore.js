@@ -1,209 +1,169 @@
-import { account, teams, databases, DB_ID, COLLECTIONS } from './appwrite';
-import { Query } from 'appwrite';
+import {
+    apiFetch,
+    clearAuthToken,
+    getAuthToken,
+    setAuthToken,
+} from './api';
 
 export const ROLES = {
     ADMIN: 'superadmin',
     EDITOR: 'editor',
-    WRITER: 'staff_writer'
+    WRITER: 'staff_writer',
 };
 
-const TEAM_ID = import.meta.env.PUBLIC_APPWRITE_TEAM_ID;
+const USER_KEY = 'explainer_admin_user';
+const SUSPENSION_POLL_MS = 5 * 60 * 1000;
 
-// This now returns a PROMISE to be used in useEffects
+function storeUser(user) {
+    if (typeof window === 'undefined') return;
+    if (user) window.localStorage.setItem(USER_KEY, JSON.stringify(user));
+    else window.localStorage.removeItem(USER_KEY);
+}
+
+function forceSignOut(redirectTo = '/admin/login?error=suspended') {
+    clearAuthToken();
+    storeUser(null);
+    if (typeof window !== 'undefined') window.location.href = redirectTo;
+}
+
 export const fetchSyncUser = async () => {
     if (typeof window === 'undefined') return null;
+    if (!getAuthToken()) {
+        storeUser(null);
+        return null;
+    }
 
     try {
-        const user = await account.get();
-
-        // 1. Fetch user's teams to verify membership
-        const userTeams = await teams.list();
-        console.log("[DEBUG] Configured Team ID:", TEAM_ID);
-        console.log("[DEBUG] User's Teams:", userTeams.teams);
-        
-        const editorialTeam = userTeams.teams.find(t => t.$id === TEAM_ID);
-
-        if (!editorialTeam) {
-            console.warn("User is not a member of the editorial team.");
-            localStorage.removeItem('explainer_admin_user');
-            try { await account.deleteSession('current'); } catch (e) { }
+        const payload = await apiFetch('/api/auth/me');
+        const user = payload?.user;
+        if (!user) {
+            clearAuthToken();
+            storeUser(null);
             return null;
-        }
-
-        // 1.B Fetch Membership Roles for the current user
-        let userRoles = [];
-        try {
-            const memberships = await teams.listMemberships(TEAM_ID);
-            const myMembership = memberships.memberships.find(m => m.userId === user.$id);
-            userRoles = myMembership?.roles || [];
-        } catch (e) {
-            console.error("Membership fetch error:", e);
-        }
-
-        // 2. Fetch User Profile from the 'profiles' collection (Step 5: Security check)
-        // We query by userId to ensure they are active in our database
-        let profile = null;
-        try {
-            const profileRes = await databases.listDocuments(DB_ID, 'profiles', [
-                Query.equal('userId', user.$id)
-            ]);
-            profile = profileRes.documents[0];
-        } catch (e) {
-            console.error("Profile fetch error:", e);
-        }
-
-        // 3. ENFORCE KILL SWITCH (Step 5: Ghost Admin Protection)
-        if (profile && profile.status === 'suspended') {
-            console.error("CRITICAL: User is suspended.");
-            localStorage.removeItem('explainer_admin_user');
-            try { await account.deleteSession('current'); } catch (e) { }
-            window.location.href = '/admin/login?error=suspended';
-            return null;
-        }
-
-        // Map roles: Priority 1: Profile Role, Priority 2: Membership Role Labels
-        let internalRole = profile?.role || (
-            userRoles.includes('admin') ? 'superadmin' :
-                userRoles.includes('editor') ? 'editor' : 'staff_writer'
-        );
-
-        // 4. SELF-HEALING: If no profile exists, create one!
-        if (!profile) {
-            try {
-                await databases.createDocument(DB_ID, 'profiles', 'unique()', {
-                    userId: user.$id,
-                    email: user.email,
-                    name: user.name || user.email.split('@')[0],
-                    role: internalRole,
-                    status: 'active'
-                });
-                console.log("Self-healed: Profile created for", user.email);
-            } catch (e) {
-                console.warn("Profile self-healing failed:", e.message);
-            }
-        }
-
-        // 5. AUTHOR SYNC: Ensure every staff member has an Author record for article credits
-        try {
-            const authorRes = await databases.listDocuments(DB_ID, 'authors', [
-                Query.equal('email', user.email)
-            ]);
-
-            if (authorRes.total === 0) {
-                const authorName = user.name || user.email.split('@')[0];
-                await databases.createDocument(DB_ID, 'authors', 'unique()', {
-                    name: authorName,
-                    email: user.email,
-                    role: internalRole.replace('_', ' ').toUpperCase(),
-                    slug: authorName.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
-                    bio: `Editorial team member at EXPLAINER.`
-                });
-                console.log("Author record auto-created for", user.email);
-            }
-        } catch (authErr) {
-            console.warn("Author sync failed:", authErr.message);
         }
 
         const sessionUser = {
-            id: user.$id,
-            name: user.name || user.email.split('@')[0],
-            role: internalRole,
+            id: user.id,
+            name: user.name,
+            role: user.role,
             email: user.email,
-            status: profile?.status || 'active',
-            categories: user.prefs?.categories || []
+            status: user.status,
+            categories: user.categories || [],
         };
 
-        localStorage.setItem('explainer_admin_user', JSON.stringify(sessionUser));
+        if (sessionUser.status === 'suspended') {
+            forceSignOut();
+            return null;
+        }
+
+        storeUser(sessionUser);
         return sessionUser;
-    } catch (e) {
-        localStorage.removeItem('explainer_admin_user');
+    } catch (error) {
+        if (error.status === 401 || error.status === 403) {
+            clearAuthToken();
+            storeUser(null);
+        }
         return null;
     }
 };
 
-// Periodic Security Pulse (Step 5: Active Ghost Admin Protection)
 if (typeof window !== 'undefined') {
     setInterval(async () => {
-        const user = getCurrentUser();
-        if (user) {
-            try {
-                // Fetch JUST the profile status to be lightweight
-                const profileRes = await databases.listDocuments(DB_ID, 'profiles', [
-                    Query.equal('userId', user.id),
-                    Query.select(['status'])
-                ]);
-                const profile = profileRes.documents[0];
-                if (profile && profile.status === 'suspended') {
-                    console.error("Security Pulse: User suspended. Revoking access.");
-                    localStorage.removeItem('explainer_admin_user');
-                    try { await account.deleteSession('current'); } catch (e) { }
-                    window.location.href = '/admin/login?error=suspended';
-                }
-            } catch (e) {
-                // If network fails, don't kick them out immediately, just wait for next pulse
+        if (!getCurrentUser() || !getAuthToken()) return;
+        try {
+            const payload = await apiFetch('/api/auth/me');
+            if (payload?.user?.status === 'suspended') {
+                forceSignOut();
+            }
+        } catch (error) {
+            if (error.status === 401 || error.status === 403) {
+                forceSignOut('/admin/login');
             }
         }
-    }, 60000 * 5); // Every 5 minutes
+    }, SUSPENSION_POLL_MS);
 }
 
 export const loginWithEmail = async (email, password) => {
     try {
-        // Attempt to clear any existing "orphan" session before creating a new one
-        // This prevents the "Creation of a session is prohibited when a session is active" error
-        try {
-            await account.deleteSession('current');
-        } catch (e) {
-            // No active session, ignore
+        const { data, response } = await apiFetch('/api/auth/sign-in/email', {
+            method: 'POST',
+            auth: false,
+            body: { email, password },
+            returnResponse: true,
+        });
+
+        const token = response.headers.get('set-auth-token') || data?.token;
+        if (!token) {
+            throw new Error('Authentication succeeded but no session token was returned.');
         }
 
-        await account.createEmailPasswordSession(email, password);
+        setAuthToken(token);
         return await fetchSyncUser();
     } catch (error) {
-        console.error("Login error:", error);
+        console.error('Login error:', error);
         throw error;
     }
 };
 
-export const acceptInvite = async (teamId, membershipId, userId, secret) => {
+export const acceptInvite = async (token, password, name) => {
     try {
-        await teams.updateMembershipStatus(teamId, membershipId, userId, secret);
-        return true;
+        return await apiFetch('/api/auth/accept-invite', {
+            method: 'POST',
+            auth: false,
+            body: { token, password, name },
+        });
     } catch (error) {
-        console.error("Invite acceptance error:", error);
+        console.error('Invite acceptance error:', error);
         throw error;
     }
 };
 
 export const requestPasswordReset = async (email) => {
     try {
-        const url = `${window.location.origin}/admin/login`;
-        return await account.createRecovery(email, url);
+        return await apiFetch('/api/auth/request-password-reset', {
+            method: 'POST',
+            auth: false,
+            body: {
+                email,
+                redirectTo: `${window.location.origin}/admin/login`,
+            },
+        });
     } catch (error) {
-        console.error("Password reset request error:", error);
+        console.error('Password reset request error:', error);
         throw error;
     }
 };
 
-export const completePasswordReset = async (userId, secret, password) => {
+export const completePasswordReset = async (token, newPassword) => {
     try {
-        return await account.updateRecovery(userId, secret, password);
+        const result = await apiFetch('/api/auth/reset-password', {
+            method: 'POST',
+            auth: false,
+            body: { token, newPassword },
+        });
+        clearAuthToken();
+        storeUser(null);
+        return result;
     } catch (error) {
-        console.error("Password reset completion error:", error);
+        console.error('Password reset completion error:', error);
         throw error;
     }
 };
 
 export const getCurrentUser = () => {
     if (typeof window === 'undefined') return null;
-    const saved = localStorage.getItem('explainer_admin_user');
+    const saved = window.localStorage.getItem(USER_KEY);
     return saved ? JSON.parse(saved) : null;
 };
 
 export const logout = async () => {
     if (typeof window === 'undefined') return;
     try {
-        await account.deleteSession('current');
-    } catch (e) { }
-    localStorage.removeItem('explainer_admin_user');
+        await apiFetch('/api/auth/sign-out', { method: 'POST', body: {} });
+    } catch (error) {
+        // The local session is cleared regardless of the network result.
+    }
+    clearAuthToken();
+    storeUser(null);
     window.location.href = '/admin/login';
 };

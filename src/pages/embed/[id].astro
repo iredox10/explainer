@@ -13,7 +13,7 @@ const blockIndex = parseInt(Astro.url.searchParams.get("index") || "0");
 const story = await serverStoryService.getStoryById(id);
 if (!story) return Astro.redirect("/404");
 
-const content = JSON.parse(story.content || "[]");
+const content = typeof story.content === 'string' ? JSON.parse(story.content || '[]') : (story.content || []);
 const block = content[blockIndex];
 
 if (!block || !['map', 'chart'].includes(block.type)) {

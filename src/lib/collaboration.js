@@ -1,33 +1,38 @@
-import { databases, DB_ID, COLLECTIONS } from './appwrite';
-import { Query, ID } from 'appwrite';
+import { apiFetch, unwrapDocuments, withQuery } from './api';
+
+function randomId() {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+    return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+async function listDocuments(path, params = {}) {
+    const payload = await apiFetch(withQuery(path, params));
+    return unwrapDocuments(payload);
+}
 
 export const commentService = {
     async addComment(storyId, blockId, content, author) {
         try {
-            const comment = await databases.createDocument(
-                DB_ID,
-                COLLECTIONS.COMMENTS,
-                ID.unique(),
-                {
+            const comment = await apiFetch('/api/admin/comments', {
+                method: 'POST',
+                body: {
                     storyId,
                     blockId,
                     content,
-                    authorId: author.id,
-                    authorName: author.name,
-                    authorEmail: author.email,
-                    resolved: false,
-                    createdAt: new Date().toISOString()
+                    authorId: author?.id,
+                    authorName: author?.name,
+                    authorEmail: author?.email
                 }
-            );
-            
+            });
+
             await activityService.log({
                 type: 'comment_added',
                 storyId,
                 details: { blockId, commentId: comment.$id },
-                userId: author.id,
-                userName: author.name
+                userId: author?.id,
+                userName: author?.name
             });
-            
+
             return comment;
         } catch (error) {
             console.error('Error adding comment:', error);
@@ -37,15 +42,7 @@ export const commentService = {
 
     async getComments(storyId) {
         try {
-            const response = await databases.listDocuments(
-                DB_ID,
-                COLLECTIONS.COMMENTS,
-                [
-                    Query.equal('storyId', storyId),
-                    Query.orderAsc('createdAt')
-                ]
-            );
-            return response.documents;
+            return await listDocuments('/api/admin/comments', { storyId });
         } catch (error) {
             console.error('Error fetching comments:', error);
             return [];
@@ -54,26 +51,19 @@ export const commentService = {
 
     async resolveComment(commentId, resolvedBy) {
         try {
-            const comment = await databases.updateDocument(
-                DB_ID,
-                COLLECTIONS.COMMENTS,
-                commentId,
-                {
-                    resolved: true,
-                    resolvedAt: new Date().toISOString(),
-                    resolvedById: resolvedBy.id,
-                    resolvedByName: resolvedBy.name
-                }
-            );
-            
+            const comment = await apiFetch(`/api/admin/comments/${encodeURIComponent(commentId)}`, {
+                method: 'PATCH',
+                body: { resolved: true }
+            });
+
             await activityService.log({
                 type: 'comment_resolved',
                 storyId: comment.storyId,
                 details: { commentId },
-                userId: resolvedBy.id,
-                userName: resolvedBy.name
+                userId: resolvedBy?.id,
+                userName: resolvedBy?.name
             });
-            
+
             return comment;
         } catch (error) {
             console.error('Error resolving comment:', error);
@@ -81,19 +71,12 @@ export const commentService = {
         }
     },
 
-    async unresolveComment(commentId, unresolvedBy) {
+    async unresolveComment(commentId) {
         try {
-            return await databases.updateDocument(
-                DB_ID,
-                COLLECTIONS.COMMENTS,
-                commentId,
-                {
-                    resolved: false,
-                    resolvedAt: null,
-                    resolvedById: null,
-                    resolvedByName: null
-                }
-            );
+            return await apiFetch(`/api/admin/comments/${encodeURIComponent(commentId)}`, {
+                method: 'PATCH',
+                body: { resolved: false }
+            });
         } catch (error) {
             console.error('Error unresolving comment:', error);
             throw error;
@@ -102,7 +85,7 @@ export const commentService = {
 
     async deleteComment(commentId) {
         try {
-            await databases.deleteDocument(DB_ID, COLLECTIONS.COMMENTS, commentId);
+            await apiFetch(`/api/admin/comments/${encodeURIComponent(commentId)}`, { method: 'DELETE' });
             return true;
         } catch (error) {
             console.error('Error deleting comment:', error);
@@ -112,25 +95,20 @@ export const commentService = {
 
     async replyToComment(commentId, content, author) {
         try {
-            const parent = await databases.getDocument(DB_ID, COLLECTIONS.COMMENTS, commentId);
-            const replies = parent.replies || [];
-            
-            const reply = {
-                id: ID.unique(),
+            const parent = await apiFetch(`/api/admin/comments/${encodeURIComponent(commentId)}`);
+            const replies = Array.isArray(parent.replies) ? parent.replies : [];
+            replies.push({
+                id: randomId(),
                 content,
-                authorId: author.id,
-                authorName: author.name,
+                authorId: author?.id,
+                authorName: author?.name,
                 createdAt: new Date().toISOString()
-            };
-            
-            replies.push(reply);
-            
-            return await databases.updateDocument(
-                DB_ID,
-                COLLECTIONS.COMMENTS,
-                commentId,
-                { replies }
-            );
+            });
+
+            return await apiFetch(`/api/admin/comments/${encodeURIComponent(commentId)}`, {
+                method: 'PATCH',
+                body: { replies }
+            });
         } catch (error) {
             console.error('Error replying to comment:', error);
             throw error;
@@ -141,25 +119,20 @@ export const commentService = {
 export const assignmentService = {
     async createAssignment(data) {
         try {
-            const assignment = await databases.createDocument(
-                DB_ID,
-                COLLECTIONS.ASSIGNMENTS,
-                ID.unique(),
-                {
-                    ...data,
-                    status: 'assigned',
-                    createdAt: new Date().toISOString()
+            const assignment = await apiFetch('/api/admin/assignments', {
+                method: 'POST',
+                body: {
+                    storyId: data.storyId,
+                    storyTitle: data.storyTitle,
+                    assignedToId: data.assignedToId,
+                    assignedToName: data.assignedToName,
+                    assignedById: data.assignedById,
+                    assignedByName: data.assignedByName,
+                    deadline: data.deadline,
+                    notes: data.notes
                 }
-            );
-            
-            await activityService.log({
-                type: 'story_assigned',
-                storyId: data.storyId,
-                details: { assignedTo: data.assignedToName, deadline: data.deadline },
-                userId: data.assignedById,
-                userName: data.assignedByName
             });
-            
+
             await notificationService.create({
                 type: 'assignment',
                 userId: data.assignedToId,
@@ -167,7 +140,7 @@ export const assignmentService = {
                 message: `You've been assigned to "${data.storyTitle}"`,
                 link: `/admin/edit/${data.storyId}`
             });
-            
+
             return assignment;
         } catch (error) {
             console.error('Error creating assignment:', error);
@@ -177,24 +150,11 @@ export const assignmentService = {
 
     async getAssignments(filters = {}) {
         try {
-            const queries = [Query.orderAsc('deadline')];
-            
-            if (filters.assignedToId) {
-                queries.push(Query.equal('assignedToId', filters.assignedToId));
-            }
-            if (filters.status) {
-                queries.push(Query.equal('status', filters.status));
-            }
-            if (filters.storyId) {
-                queries.push(Query.equal('storyId', filters.storyId));
-            }
-            
-            const response = await databases.listDocuments(
-                DB_ID,
-                COLLECTIONS.ASSIGNMENTS,
-                queries
-            );
-            return response.documents;
+            return await listDocuments('/api/admin/assignments', {
+                assignedToId: filters.assignedToId,
+                status: filters.status,
+                storyId: filters.storyId
+            });
         } catch (error) {
             console.error('Error fetching assignments:', error);
             return [];
@@ -203,16 +163,11 @@ export const assignmentService = {
 
     async updateAssignmentStatus(assignmentId, status, userId, userName) {
         try {
-            const assignment = await databases.updateDocument(
-                DB_ID,
-                COLLECTIONS.ASSIGNMENTS,
-                assignmentId,
-                { 
-                    status,
-                    [status === 'completed' ? 'completedAt' : 'updatedAt']: new Date().toISOString()
-                }
-            );
-            
+            const assignment = await apiFetch(`/api/admin/assignments/${encodeURIComponent(assignmentId)}`, {
+                method: 'PATCH',
+                body: { status }
+            });
+
             await activityService.log({
                 type: 'assignment_updated',
                 storyId: assignment.storyId,
@@ -220,7 +175,7 @@ export const assignmentService = {
                 userId,
                 userName
             });
-            
+
             return assignment;
         } catch (error) {
             console.error('Error updating assignment:', error);
@@ -230,7 +185,7 @@ export const assignmentService = {
 
     async deleteAssignment(assignmentId) {
         try {
-            await databases.deleteDocument(DB_ID, COLLECTIONS.ASSIGNMENTS, assignmentId);
+            await apiFetch(`/api/admin/assignments/${encodeURIComponent(assignmentId)}`, { method: 'DELETE' });
             return true;
         } catch (error) {
             console.error('Error deleting assignment:', error);
@@ -240,21 +195,16 @@ export const assignmentService = {
 
     async getUpcomingDeadlines(days = 7) {
         try {
-            const now = new Date();
-            const future = new Date();
-            future.setDate(future.getDate() + days);
-            
-            const response = await databases.listDocuments(
-                DB_ID,
-                COLLECTIONS.ASSIGNMENTS,
-                [
-                    Query.greaterThanEqual('deadline', now.toISOString()),
-                    Query.lessThanEqual('deadline', future.toISOString()),
-                    Query.notEqual('status', 'completed'),
-                    Query.orderAsc('deadline')
-                ]
-            );
-            return response.documents;
+            const now = Date.now();
+            const future = now + days * 24 * 60 * 60 * 1000;
+            const assignments = await this.getAssignments();
+            return assignments
+                .filter(a => {
+                    if (!a.deadline || a.status === 'completed') return false;
+                    const time = new Date(a.deadline).getTime();
+                    return time >= now && time <= future;
+                })
+                .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
         } catch (error) {
             console.error('Error fetching upcoming deadlines:', error);
             return [];
@@ -263,17 +213,11 @@ export const assignmentService = {
 
     async getOverdueAssignments() {
         try {
-            const now = new Date().toISOString();
-            const response = await databases.listDocuments(
-                DB_ID,
-                COLLECTIONS.ASSIGNMENTS,
-                [
-                    Query.lessThan('deadline', now),
-                    Query.notEqual('status', 'completed'),
-                    Query.orderAsc('deadline')
-                ]
-            );
-            return response.documents;
+            const now = Date.now();
+            const assignments = await this.getAssignments();
+            return assignments
+                .filter(a => a.deadline && a.status !== 'completed' && new Date(a.deadline).getTime() < now)
+                .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
         } catch (error) {
             console.error('Error fetching overdue assignments:', error);
             return [];
@@ -284,16 +228,16 @@ export const assignmentService = {
 export const notificationService = {
     async create(data) {
         try {
-            return await databases.createDocument(
-                DB_ID,
-                COLLECTIONS.NOTIFICATIONS,
-                ID.unique(),
-                {
-                    ...data,
-                    read: false,
-                    createdAt: new Date().toISOString()
+            return await apiFetch('/api/admin/notifications', {
+                method: 'POST',
+                body: {
+                    userId: data.userId,
+                    type: data.type,
+                    title: data.title,
+                    message: data.message,
+                    link: data.link
                 }
-            );
+            });
         } catch (error) {
             console.error('Error creating notification:', error);
             throw error;
@@ -302,22 +246,9 @@ export const notificationService = {
 
     async getNotifications(userId, options = {}) {
         try {
-            const queries = [
-                Query.equal('userId', userId),
-                Query.orderDesc('createdAt'),
-                Query.limit(options.limit || 50)
-            ];
-            
-            if (options.unreadOnly) {
-                queries.push(Query.equal('read', false));
-            }
-            
-            const response = await databases.listDocuments(
-                DB_ID,
-                COLLECTIONS.NOTIFICATIONS,
-                queries
-            );
-            return response.documents;
+            const notifications = await listDocuments('/api/admin/notifications', { userId });
+            const limited = notifications.slice(0, options.limit || 50);
+            return options.unreadOnly ? limited.filter(n => !n.read) : limited;
         } catch (error) {
             console.error('Error fetching notifications:', error);
             return [];
@@ -326,12 +257,9 @@ export const notificationService = {
 
     async markAsRead(notificationId) {
         try {
-            return await databases.updateDocument(
-                DB_ID,
-                COLLECTIONS.NOTIFICATIONS,
-                notificationId,
-                { read: true, readAt: new Date().toISOString() }
-            );
+            return await apiFetch(`/api/admin/notifications/${encodeURIComponent(notificationId)}/read`, {
+                method: 'PATCH'
+            });
         } catch (error) {
             console.error('Error marking notification as read:', error);
             throw error;
@@ -341,9 +269,7 @@ export const notificationService = {
     async markAllAsRead(userId) {
         try {
             const notifications = await this.getNotifications(userId, { unreadOnly: true });
-            await Promise.all(
-                notifications.map(n => this.markAsRead(n.$id))
-            );
+            await Promise.all(notifications.map(n => this.markAsRead(n.$id)));
             return true;
         } catch (error) {
             console.error('Error marking all notifications as read:', error);
@@ -353,7 +279,7 @@ export const notificationService = {
 
     async deleteNotification(notificationId) {
         try {
-            await databases.deleteDocument(DB_ID, COLLECTIONS.NOTIFICATIONS, notificationId);
+            await apiFetch(`/api/admin/notifications/${encodeURIComponent(notificationId)}`, { method: 'DELETE' });
             return true;
         } catch (error) {
             console.error('Error deleting notification:', error);
@@ -365,15 +291,16 @@ export const notificationService = {
 export const activityService = {
     async log(data) {
         try {
-            return await databases.createDocument(
-                DB_ID,
-                COLLECTIONS.ACTIVITY_LOG,
-                ID.unique(),
-                {
-                    ...data,
-                    timestamp: new Date().toISOString()
+            return await apiFetch('/api/admin/activity', {
+                method: 'POST',
+                body: {
+                    type: data.type,
+                    storyId: data.storyId,
+                    userId: data.userId,
+                    userName: data.userName,
+                    details: data.details || {}
                 }
-            );
+            });
         } catch (error) {
             console.error('Error logging activity:', error);
             return null;
@@ -382,24 +309,11 @@ export const activityService = {
 
     async getActivities(filters = {}) {
         try {
-            const queries = [Query.orderDesc('timestamp'), Query.limit(100)];
-            
-            if (filters.storyId) {
-                queries.push(Query.equal('storyId', filters.storyId));
-            }
-            if (filters.userId) {
-                queries.push(Query.equal('userId', filters.userId));
-            }
-            if (filters.type) {
-                queries.push(Query.equal('type', filters.type));
-            }
-            
-            const response = await databases.listDocuments(
-                DB_ID,
-                COLLECTIONS.ACTIVITY_LOG,
-                queries
-            );
-            return response.documents;
+            return await listDocuments('/api/admin/activity', {
+                storyId: filters.storyId,
+                type: filters.type,
+                limit: 100
+            });
         } catch (error) {
             console.error('Error fetching activities:', error);
             return [];
@@ -408,19 +322,11 @@ export const activityService = {
 
     async getRecentActivity(hours = 24) {
         try {
-            const since = new Date();
-            since.setHours(since.getHours() - hours);
-            
-            const response = await databases.listDocuments(
-                DB_ID,
-                COLLECTIONS.ACTIVITY_LOG,
-                [
-                    Query.greaterThanEqual('timestamp', since.toISOString()),
-                    Query.orderDesc('timestamp'),
-                    Query.limit(50)
-                ]
-            );
-            return response.documents;
+            const since = Date.now() - hours * 60 * 60 * 1000;
+            const activities = await this.getActivities();
+            return activities
+                .filter(a => new Date(a.timestamp || a.$createdAt).getTime() >= since)
+                .slice(0, 50);
         } catch (error) {
             console.error('Error fetching recent activity:', error);
             return [];
@@ -428,13 +334,7 @@ export const activityService = {
     },
 
     async logStoryEvent(type, storyId, userId, userName, details = {}) {
-        return this.log({
-            type,
-            storyId,
-            userId,
-            userName,
-            details
-        });
+        return this.log({ type, storyId, userId, userName, details });
     }
 };
 

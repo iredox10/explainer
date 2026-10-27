@@ -57,7 +57,8 @@ export default function StoryEditor({ storyId }) {
                 canonicalUrl: '',
                 keywords: []
             }),
-            revisionSnapshots: parseJSONField(data.revisionSnapshots, [])
+            revisionSnapshots: parseJSONField(data.revisionSnapshots, []),
+            version_log: parseJSONField(data.version_log, [])
         };
     };
 
@@ -211,6 +212,7 @@ export default function StoryEditor({ storyId }) {
     if (!user || !story) return null;
 
     const content = typeof story.content === 'string' ? JSON.parse(story.content) : (story.content || []);
+    const versionLog = parseJSONField(story.version_log, []);
 
     const handleChange = (field, value) => {
         if (isLocked) return;
@@ -413,18 +415,18 @@ export default function StoryEditor({ storyId }) {
                 }
             };
 
-            const currentSnapshots = Array.isArray(story.revisionSnapshots)
-                ? story.revisionSnapshots
-                : (() => {
-                    try {
-                        return JSON.parse(story.revisionSnapshots || '[]');
-                    } catch (err) {
-                        return [];
-                    }
-                })();
+            const currentSnapshots = parseJSONField(story.revisionSnapshots, []);
+            const currentLogs = parseJSONField(story.version_log, []);
+            const newLog = { action: `Status changed to ${newStatus}`, user: user.name, timestamp: new Date().toISOString() };
+            const lastLog = currentLogs[currentLogs.length - 1];
+            const isDuplicateLog = lastLog
+                && lastLog.action === newLog.action
+                && (Date.now() - new Date(lastLog.timestamp).getTime() < 60000);
+            const nextLogs = isDuplicateLog ? currentLogs : [...currentLogs, newLog].slice(-10);
 
             const payload = {
                 ...story,
+                workflowStatus: newStatus,
                 workflow_status: newStatus,
                 status: newStatus === 'published' ? 'Published' : (newStatus === 'pending_review' ? 'Pending Review' : 'Draft'),
                 content: serializedContent,
@@ -433,16 +435,9 @@ export default function StoryEditor({ storyId }) {
                 footnotes: serializedFootnotes,
                 seo: serializedSeo,
                 scheduledAt: story.scheduledAt || null,
-                revisionSnapshots: JSON.stringify([...currentSnapshots, snapshotEntry].slice(-20)),
-                version_log: (() => {
-                    const currentLogs = JSON.parse(story.version_log || '[]');
-                    const newLog = { action: `Status changed to ${newStatus}`, user: user.name, timestamp: new Date().toISOString() };
-                    const lastLog = currentLogs[currentLogs.length - 1];
-                    if (lastLog && lastLog.action === newLog.action && (Date.now() - new Date(lastLog.timestamp).getTime() < 60000)) {
-                        return JSON.stringify(currentLogs);
-                    }
-                    return JSON.stringify([...currentLogs, newLog].slice(-10));
-                })()
+                revisionSnapshots: [...currentSnapshots, snapshotEntry].slice(-20),
+                versionLog: nextLogs,
+                version_log: nextLogs
             };
             const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...dataToSave } = payload;
 
@@ -839,7 +834,7 @@ export default function StoryEditor({ storyId }) {
                                 <History className="w-4 h-4 text-gray-300" />
                             </div>
                             <div className="space-y-3">
-                                {JSON.parse(story.version_log || '[]').reverse().map((log, i) => (
+                                {versionLog.slice().reverse().map((log, i) => (
                                     <div key={i} className="flex items-center justify-between p-4 bg-white border border-gray-50 rounded-2xl group cursor-pointer hover:border-black transition-all">
                                         <div>
                                             <p className="text-[10px] font-black uppercase tracking-tight text-gray-900">{log.action}</p>
@@ -848,7 +843,7 @@ export default function StoryEditor({ storyId }) {
                                         <ChevronRight className="w-4 h-4 text-gray-100 group-hover:text-black transition-colors" />
                                     </div>
                                 ))}
-                                {(!story.version_log || story.version_log === '[]') && (
+                                {versionLog.length === 0 && (
                                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-center py-4 italic">No history logged yet.</p>
                                 )}
                             </div>

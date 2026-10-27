@@ -38,6 +38,14 @@ const {
 } = Astro.props;
 
 const canonicalURL = canonical || Astro.url.href;
+const apiUrl = import.meta.env.PUBLIC_API_URL || 'http://localhost:8787';
+const apiOrigin = (() => {
+    try {
+        return new URL(apiUrl).origin;
+    } catch {
+        return apiUrl;
+    }
+})();
 const keywordsContent = Array.isArray(keywords) ? keywords.join(', ') : '';
 const articleData = article || null;
 const isArticle = !!articleData?.headline;
@@ -71,7 +79,7 @@ if (isArticle && articleData.category) {
         <meta name="theme-color" content="#FAFF00" />
 
         <!-- Resource Hints for Performance -->
-        <link rel="preconnect" href="https://cloud.appwrite.io" />
+        <link rel="preconnect" href={apiOrigin} />
         <link rel="preconnect" href="https://images.unsplash.com" />
         <link rel="preconnect" href="https://api.dicebear.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />

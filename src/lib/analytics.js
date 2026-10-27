@@ -1,20 +1,22 @@
-import { databases, DB_ID, COLLECTIONS } from './appwrite';
-import { Query, ID } from 'appwrite';
+import { apiFetch, unwrapDocuments, withQuery } from './api';
+
+async function fetchEvents(params = {}) {
+    const payload = await apiFetch(withQuery('/api/admin/analytics/events', params));
+    return unwrapDocuments(payload);
+}
 
 export const analyticsService = {
     async trackPageview(data) {
         try {
-            const pageview = await databases.createDocument(
-                DB_ID,
-                COLLECTIONS.ANALYTICS,
-                ID.unique(),
-                {
+            return await apiFetch('/api/analytics/pageview', {
+                method: 'POST',
+                auth: false,
+                body: {
                     ...data,
                     timestamp: new Date().toISOString(),
-                    date: new Date().toISOString().split('T')[0]
-                }
-            );
-            return pageview;
+                    date: new Date().toISOString().split('T')[0],
+                },
+            });
         } catch (error) {
             console.error('Error tracking pageview:', error);
             return null;
@@ -23,17 +25,15 @@ export const analyticsService = {
 
     async trackScrollDepth(storyId, data) {
         try {
-            const scrollData = await databases.createDocument(
-                DB_ID,
-                COLLECTIONS.SCROLL_DEPTH,
-                ID.unique(),
-                {
+            return await apiFetch('/api/analytics/scroll', {
+                method: 'POST',
+                auth: false,
+                body: {
                     storyId,
                     ...data,
-                    timestamp: new Date().toISOString()
-                }
-            );
-            return scrollData;
+                    timestamp: new Date().toISOString(),
+                },
+            });
         } catch (error) {
             console.error('Error tracking scroll depth:', error);
             return null;
@@ -42,21 +42,8 @@ export const analyticsService = {
 
     async getStoryAnalytics(storyId, days = 30) {
         try {
-            const startDate = new Date();
-            startDate.setDate(startDate.getDate() - days);
-            
-            const response = await databases.listDocuments(
-                DB_ID,
-                COLLECTIONS.ANALYTICS,
-                [
-                    Query.equal('storyId', storyId),
-                    Query.greaterThanEqual('timestamp', startDate.toISOString()),
-                    Query.orderDesc('timestamp'),
-                    Query.limit(1000)
-                ]
-            );
-            
-            return this.aggregateAnalytics(response.documents);
+            const documents = await fetchEvents({ storyId, days, limit: 5000 });
+            return this.aggregateAnalytics(documents);
         } catch (error) {
             console.error('Error fetching story analytics:', error);
             return this.getEmptyAnalytics();
@@ -65,20 +52,8 @@ export const analyticsService = {
 
     async getDashboardStats(days = 7) {
         try {
-            const startDate = new Date();
-            startDate.setDate(startDate.getDate() - days);
-            
-            const response = await databases.listDocuments(
-                DB_ID,
-                COLLECTIONS.ANALYTICS,
-                [
-                    Query.greaterThanEqual('timestamp', startDate.toISOString()),
-                    Query.orderDesc('timestamp'),
-                    Query.limit(5000)
-                ]
-            );
-            
-            return this.aggregateDashboardStats(response.documents);
+            const documents = await fetchEvents({ days, limit: 10000 });
+            return this.aggregateDashboardStats(documents);
         } catch (error) {
             console.error('Error fetching dashboard stats:', error);
             return this.getEmptyDashboardStats();
@@ -87,31 +62,19 @@ export const analyticsService = {
 
     async getTopStories(limit = 10, days = 7) {
         try {
-            const startDate = new Date();
-            startDate.setDate(startDate.getDate() - days);
-            
-            const response = await databases.listDocuments(
-                DB_ID,
-                COLLECTIONS.ANALYTICS,
-                [
-                    Query.greaterThanEqual('timestamp', startDate.toISOString()),
-                    Query.limit(5000)
-                ]
-            );
-            
+            const documents = await fetchEvents({ days, limit: 10000 });
+
             const storyViews = {};
-            response.documents.forEach(doc => {
+            documents.forEach((doc) => {
                 if (doc.storyId) {
                     storyViews[doc.storyId] = (storyViews[doc.storyId] || 0) + 1;
                 }
             });
-            
-            const sorted = Object.entries(storyViews)
+
+            return Object.entries(storyViews)
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, limit)
                 .map(([storyId, views]) => ({ storyId, views }));
-            
-            return sorted;
         } catch (error) {
             console.error('Error fetching top stories:', error);
             return [];
@@ -120,25 +83,14 @@ export const analyticsService = {
 
     async getTrafficByDay(days = 30) {
         try {
-            const startDate = new Date();
-            startDate.setDate(startDate.getDate() - days);
-            
-            const response = await databases.listDocuments(
-                DB_ID,
-                COLLECTIONS.ANALYTICS,
-                [
-                    Query.greaterThanEqual('timestamp', startDate.toISOString()),
-                    Query.orderAsc('timestamp'),
-                    Query.limit(10000)
-                ]
-            );
-            
+            const documents = await fetchEvents({ days, limit: 10000 });
+
             const byDay = {};
-            response.documents.forEach(doc => {
-                const day = doc.date || doc.timestamp.split('T')[0];
+            documents.forEach((doc) => {
+                const day = doc.eventDate || doc.date || doc.timestamp.split('T')[0];
                 byDay[day] = (byDay[day] || 0) + 1;
             });
-            
+
             return Object.entries(byDay)
                 .map(([date, views]) => ({ date, views }))
                 .sort((a, b) => a.date.localeCompare(b.date));
@@ -150,24 +102,14 @@ export const analyticsService = {
 
     async getReferralSources(days = 30) {
         try {
-            const startDate = new Date();
-            startDate.setDate(startDate.getDate() - days);
-            
-            const response = await databases.listDocuments(
-                DB_ID,
-                COLLECTIONS.ANALYTICS,
-                [
-                    Query.greaterThanEqual('timestamp', startDate.toISOString()),
-                    Query.limit(5000)
-                ]
-            );
-            
+            const documents = await fetchEvents({ days, limit: 10000 });
+
             const sources = {};
-            response.documents.forEach(doc => {
+            documents.forEach((doc) => {
                 const source = this.parseReferrer(doc.referrer);
                 sources[source] = (sources[source] || 0) + 1;
             });
-            
+
             return Object.entries(sources)
                 .map(([source, count]) => ({ source, count }))
                 .sort((a, b) => b.count - a.count);
@@ -179,17 +121,8 @@ export const analyticsService = {
 
     async getScrollDepthStats(storyId) {
         try {
-            const response = await databases.listDocuments(
-                DB_ID,
-                COLLECTIONS.SCROLL_DEPTH,
-                [
-                    Query.equal('storyId', storyId),
-                    Query.orderDesc('timestamp'),
-                    Query.limit(1000)
-                ]
-            );
-            
-            return this.aggregateScrollDepth(response.documents);
+            const payload = await apiFetch(withQuery('/api/admin/analytics/scroll', { storyId, limit: 1000 }));
+            return this.aggregateScrollDepth(unwrapDocuments(payload));
         } catch (error) {
             console.error('Error fetching scroll depth stats:', error);
             return null;

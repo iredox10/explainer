@@ -13,35 +13,31 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isAccepting, setIsAccepting] = useState(false);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
 
   // URL Params for Invite / Reset
-  const [params, setParams] = useState({ userId: '', secret: '', teamId: '', membershipId: '' });
+  const [params, setParams] = useState({ inviteToken: '', resetToken: '' });
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
-    const userId = p.get('userId');
-    const secret = p.get('secret');
-    const teamId = p.get('teamId') || p.get('teamID');
-    const membershipId = p.get('membershipId') || p.get('membershipID');
+    const inviteToken = p.get('inviteToken') || '';
+    const resetToken = p.get('resetToken') || '';
 
-    setParams({ userId, secret, teamId, membershipId });
+    setParams({ inviteToken, resetToken });
 
     if (p.get('error') === 'suspended') {
       setView('suspended');
       return;
     }
 
-    if (userId && secret) {
-      if (teamId) {
-        console.log("[AUTH] Invitation detected. Mode: Onboard");
-        setView('onboard');
-      } else {
-        console.log("[AUTH] Recovery detected. Mode: Reset");
-        setView('reset');
-      }
+    if (inviteToken) {
+      setView('onboard');
+      return;
+    }
+
+    if (resetToken) {
+      setView('reset');
       return;
     }
 
@@ -53,20 +49,6 @@ export default function LoginPage() {
     };
     checkSession();
   }, []);
-
-  const handleAcceptance = async (tId, mId, uId, sec) => {
-    setIsAccepting(true);
-    try {
-      await acceptInvite(tId, mId, uId, sec);
-      setSuccessMsg("Invitation accepted! You've been successfully added to the Newsroom. Please sign in with your credentials.");
-      setView('login');
-    } catch (err) {
-      console.error("Acceptance failed:", err);
-      setError("Your invitation link may have expired or is invalid.");
-    } finally {
-      setIsAccepting(false);
-    }
-  };
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
@@ -94,9 +76,10 @@ export default function LoginPage() {
     setError(null);
     setSuccessMsg(null);
     try {
-      await completePasswordReset(params.userId, params.secret, password);
+      await completePasswordReset(params.resetToken, password);
       setSuccessMsg("Password successfully reset! You can now sign in.");
       setView('login');
+      window.history.replaceState({}, '', '/admin/login');
     } catch (err) {
       setError(err.message || "Failed to reset password. Link may have expired.");
     } finally {
@@ -113,36 +96,24 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
     try {
-      // 1. Client-side acceptance of invite (verifies secret)
-      try {
-        await acceptInvite(params.teamId, params.membershipId, params.userId, params.secret);
-      } catch (acceptErr) {
-        console.warn("Invite acceptance warning (might be already accepted):", acceptErr);
+      const accepted = await acceptInvite(params.inviteToken, password);
+      const invitedEmail = accepted?.user?.email;
+
+      setSuccessMsg("Account activated! Authenticating...");
+      if (!invitedEmail) {
+        setView('login');
+        setSuccessMsg("Account activated! Please sign in with your credentials.");
+        return;
       }
 
-      // 2. Server-side onboarding (password setup & profile creation)
-      const response = await fetch('/api/auth/onboard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: params.userId,
-          teamId: params.teamId,
-          membershipId: params.membershipId,
-          // We still send secret for validation if needed, but acceptance is done
-          secret: params.secret, 
-          password
-        })
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Onboarding failed");
-
-      // Successful onboarding! Now log them in.
-      setSuccessMsg("Account activated! Authenticating...");
-      const user = await loginWithEmail(data.email, password);
+      const user = await loginWithEmail(invitedEmail, password);
       if (user) {
         window.location.href = '/admin';
+        return;
       }
+
+      setView('login');
+      setSuccessMsg("Account activated! Please sign in with your credentials.");
     } catch (err) {
       setError(err.message || "Failed to complete onboarding.");
     } finally {
@@ -206,15 +177,9 @@ export default function LoginPage() {
               </div>
             )}
 
-            {isAccepting && (
-              <div className="flex flex-col items-center justify-center py-10 gap-4">
-                <Loader2 className="animate-spin w-8 h-8 text-[#FAFF00]" />
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Joining Newsroom...</p>
-              </div>
-            )}
           </div>
 
-          {view === 'login' && !isAccepting && (
+          {view === 'login' && (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-1">
                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Work Email</label>

@@ -54,7 +54,7 @@ export default function AdminDashboard() {
             setStats([
                 { label: "Dispatch Volume", value: data.filter(st => st.status === 'Published' || st.workflow_status === 'published').length.toString(), sub: "Live Stories", icon: FileText, color: "text-[#FAFF00]" },
                 { label: "Reader Depth", value: subsCount.toLocaleString(), sub: "Active Subscribers", icon: Users, color: "text-[#FAFF00]" },
-                { label: "System Health", value: "100%", sub: "Appwrite Online", icon: Shield, color: "text-[#FAFF00]" },
+                { label: "System Health", value: "100%", sub: "API Online", icon: Shield, color: "text-[#FAFF00]" },
                 { label: "Network Impact", value: authCount.toString(), sub: "Team Members", icon: Zap, color: "text-[#FAFF00]" },
             ]);
         } catch (e) {

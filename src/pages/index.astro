@@ -34,13 +34,13 @@ try {
     publishedStories = (rawStories || []) as CleanArticle[];
     
     if (publishedStories.length === 0) {
-        console.warn(`[HOME] Appwrite (${import.meta.env.PUBLIC_APPWRITE_DATABASE_ID || 'vox_cms'}) returned 0 published stories. Check status field values.`);
+        console.warn("[HOME] The API returned 0 published stories. Check story status values.");
     } else {
-        console.log(`[HOME] successfully loaded ${publishedStories.length} stories from Appwrite.`);
+        console.log(`[HOME] successfully loaded ${publishedStories.length} stories from the API.`);
     }
 } catch (e: any) {
     fetchError = true;
-    console.error("[HOME] Failed to fetch stories from Appwrite:", e.message);
+    console.error("[HOME] Failed to fetch stories from the API:", e.message);
 }
 
 // Logic to determine which stories go where
@@ -174,7 +174,7 @@ const displayVideos = liveVideos.length > 0 ? liveVideos : VOX_HOME_DATA.videos;
                                 <StreamCard article={article as any} />
                             ))
                         ) : (
-                            <p class="text-gray-400 italic">No live stories found. Check your Appwrite connection.</p>
+                            <p class="text-gray-400 italic">No live stories found. Check your API connection.</p>
                         )
                     }
                 </div>
