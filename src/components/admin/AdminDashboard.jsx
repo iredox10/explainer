@@ -3,6 +3,7 @@ import { Layout, FileText, Settings, PenTool, TrendingUp, Users, Clock, ArrowUpR
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminSidebar from './AdminSidebar';
 import AnalyticsPanel from './AnalyticsPanel';
+import ContentAuditDashboard from './ContentAuditDashboard';
 import { getCurrentUser, fetchSyncUser, ROLES } from '../../lib/authStore';
 import { storyService, adminService, newsletterService, authorService, assignmentService, activityService } from '../../lib/services';
 import CommandMenu from '../ui/CommandMenu';
@@ -220,6 +221,14 @@ export default function AdminDashboard() {
                             )}
                         </div>
                     </div>
+                </div>
+
+                <div className="mt-12">
+                    <h2 className="text-lg font-black text-gray-900 uppercase tracking-tighter flex items-center gap-2 mb-6">
+                        <BarChart3 className="w-5 h-5 text-[#FAFF00]" />
+                        Content Health
+                    </h2>
+                    <ContentAuditDashboard />
                 </div>
             </main>
         </div>

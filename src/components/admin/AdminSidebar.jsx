@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, FileText, Settings, PenTool, Tags, Shield, LogOut, Loader2, Zap, UserPlus, Inbox, BookOpen, Menu, X } from 'lucide-react';
+import { Layout, FileText, Settings, PenTool, Tags, Shield, LogOut, Loader2, Zap, UserPlus, Inbox, BookOpen, Menu, X, Images, CalendarDays } from 'lucide-react';
 import { fetchSyncUser, ROLES, logout } from '../../lib/authStore';
 
 export default function AdminSidebar({ activePage }) {
@@ -87,6 +87,18 @@ export default function AdminSidebar({ activePage }) {
               active={activePage === 'stories'}
               icon={<FileText className="w-4 h-4" />}
               label="Article Desk"
+            />
+            <SidebarLink
+              href="/admin/media"
+              active={activePage === 'media'}
+              icon={<Images className="w-4 h-4" />}
+              label="Media Library"
+            />
+            <SidebarLink
+              href="/admin/calendar"
+              active={activePage === 'calendar'}
+              icon={<CalendarDays className="w-4 h-4" />}
+              label="Editorial Calendar"
             />
 
             {isEditor && (

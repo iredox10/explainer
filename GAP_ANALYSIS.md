@@ -27,7 +27,8 @@
 - [x] **F7 — Author pipeline.** `ensureAuthor()` keeps the authors table in step with story bylines (plus `db:backfill-authors`); `author/[slug]` reads `/api/authors` with a slug-derived soft-404 fallback; the editor has an author picker; all four layouts link bylines to author pages.
 - [ ] **F8 — Series pipeline.** Make `series/[slug]` data-driven from published stories instead of `VOX_HOME_DATA`; link series parts from articles.
 - [x] **F9 — Workflow consistency.** Approve now writes `Draft`/`draft`, reject writes `Rejected`/`rejected`, archive writes `Archived`/`archived`; the guest queue drops terminal items and the dead "Approved" tab is gone.
-- [ ] **F10 — Orphaned admin pages.** Link `/admin/media` and `/admin/calendar` from the sidebar/dashboard; wire or remove `ContentAuditDashboard`, `SEOScorecard`, `RevisionDiff`, `SocialCardPreview`.
+- [x] **F10 — Orphaned admin pages.** `/admin/media` and `/admin/calendar` are linked from the sidebar; `media.astro` now uses the shared `AdminSidebar` instead of its own copy; `ContentAuditDashboard` is rendered on the dashboard as "Content Health".
+- [ ] **F10b — Editor widgets.** Wire `SEOScorecard`, `RevisionDiff`, and `SocialCardPreview` into `StoryEditor` (they take a `story` prop and are currently imported by nothing), or delete them if the editor already covers the need.
 - [ ] **F11 — Tags and media fields.** Render tags on articles; expose `ambientAudioUrl`, `leftVideoUrl`, `rightVideoUrl` in the editor and pass them to `HeroLoop`.
 - [ ] **F12 — Related stories editor.** Let editors pick `related` stories; render them consistently.
 - [x] **F13 — Settings that do nothing.** `site_name` now drives `og:site_name` and the `<title>` brand; `breaking_news_active` renders a public banner with a new `breaking_news_text` setting (fallback message, hidden under `/admin`). Settings cache TTL dropped to 5s and the save path no longer sends a stale camelCase alias.
