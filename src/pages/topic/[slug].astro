@@ -12,10 +12,15 @@ export const prerender = false;
 
 const { slug } = Astro.params;
 
-// Fetch Live Category Data
-const categoryRecord = await serverCategoryService.getCategoryBySlug(slug);
+// Fetch Live Category Data (never throw: page must still render)
+let categoryRecord: any = null;
+try {
+  categoryRecord = await serverCategoryService.getCategoryBySlug(slug);
+} catch (error: any) {
+  console.error(`[TOPIC] Failed to fetch category "${slug}":`, error?.message || error);
+}
 
-// Logic mapping if Appwrite is empty or for fallback styling
+// Logic mapping if the API is empty or for fallback styling
 const categoryMap: Record<
   string,
   { title: string; description: string; color: string; accent: string }
@@ -23,51 +28,93 @@ const categoryMap: Record<
   politics: {
     title: "Politics",
     description: "Power, policy, and the people who shape it.",
-    color: "bg-blue-200",
-    accent: "text-blue-600",
+    color: "#BFDBFE",
+    accent: "#2563EB",
   },
   technology: {
     title: "Technology",
     description: "The future is already here.",
-    color: "bg-yellow-200",
-    accent: "text-yellow-600",
+    color: "#FEF08A",
+    accent: "#CA8A04",
   },
   culture: {
     title: "Culture",
     description: "How we live, what we consume, and who we are.",
-    color: "bg-pink-200",
-    accent: "text-pink-600",
+    color: "#FBCFE8",
+    accent: "#DB2777",
   },
   science: {
     title: "Science",
     description: "Discoveries that change our understanding of the universe.",
-    color: "bg-green-200",
-    accent: "text-green-600",
+    color: "#BBF7D0",
+    accent: "#16A34A",
   },
 };
 
+// Derive a display name from the slug ("super-feature" -> "Super Feature")
+const titleFromSlug = slug
+  ? slug
+      .split("-")
+      .filter(Boolean)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ")
+  : "";
+
 const fallbackData = slug ? categoryMap[slug] : null;
 
-// Use Appwrite data if available, else fallback to map
-const title = categoryRecord?.name || fallbackData?.title;
-const description =
-  categoryRecord?.description ||
-  fallbackData?.description ||
-  "In-depth investigative journalism and visual storytelling.";
-const color =
-  categoryRecord?.colorClass || fallbackData?.color || "bg-gray-200";
-const accent =
-  categoryRecord?.accentClass || fallbackData?.accent || "text-black";
+// Live record wins, then the static map, then the slug-derived name
+const title = categoryRecord?.name || fallbackData?.title || titleFromSlug;
 
 if (!title) {
   return Astro.redirect("/404");
 }
 
+const description =
+  categoryRecord?.description ||
+  fallbackData?.description ||
+  "In-depth investigative journalism and visual storytelling.";
+
+// Colors are stored as hex; only fall back to Vox yellow when no color exists
+// (#000000 is a valid stored default for text-on-color backgrounds).
+const color = categoryRecord?.color || fallbackData?.color || "#FAFF00";
+const accent =
+  categoryRecord?.accentColor ||
+  categoryRecord?.accentClass ||
+  fallbackData?.accent ||
+  color;
+
+// Categories default to #000000, so the header text cannot be hardcoded black.
+const isDarkHex = (hex: string): boolean => {
+  const match = /^#?([0-9a-f]{6})$/i.exec(String(hex).trim());
+  if (!match) return false;
+  const value = parseInt(match[1], 16);
+  const r = (value >> 16) & 255;
+  const g = (value >> 8) & 255;
+  const b = value & 255;
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.5;
+};
+
+const headerText = isDarkHex(color) ? "text-white" : "text-black";
+
+// Match stories against both the record name and the slug-derived name
+const titleKeys = new Set(
+  [title, titleFromSlug, slug?.replace(/-/g, " ")]
+    .filter(Boolean)
+    .map((value) => (value as string).trim().toLowerCase()),
+);
+
 // Fetch live stories for this category
 const allPublished = await serverStoryService.getPublishedStories();
 const categoryStories = allPublished.filter(
-  (s: any) => s.category.toLowerCase() === title.toLowerCase(),
+  (s: any) =>
+    s?.category && titleKeys.has(String(s.category).trim().toLowerCase()),
 );
+
+// A slug with no category record, no static fallback and no published stories
+// is a genuine miss, not an empty topic page.
+if (!categoryRecord && !fallbackData && categoryStories.length === 0) {
+  return Astro.redirect("/404");
+}
 
 
 // Fallback to mock if no live stories
@@ -98,20 +145,23 @@ const displayStories =
   </script>
   <main class="min-h-screen bg-[#fdfdfd]">
     {/* Vox-style Bold Solid Color Header */}
-    <div class={`w-full py-16 md:py-28 px-6 border-b-8 border-black ${color} relative overflow-hidden transition-colors duration-500`}>
+    <div
+      class="w-full py-16 md:py-28 px-6 border-b-8 border-black relative overflow-hidden transition-colors duration-500"
+      style={{ backgroundColor: color }}
+    >
       <div class="max-w-[1400px] mx-auto relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-12">
         <div class="flex-1">
           <div class="flex items-center gap-3 mb-8">
-            <span class="w-3 h-3 bg-black rounded-full"></span>
-            <span class="font-black uppercase tracking-[0.25em] text-xs text-black">Section</span>
+            <span class="w-3 h-3 bg-current rounded-full"></span>
+            <span class={`font-black uppercase tracking-[0.25em] text-xs ${headerText}`}>Section</span>
           </div>
           <h1
-            class="font-serif-display font-black text-6xl md:text-8xl lg:text-[9rem] mb-6 text-black tracking-tighter leading-[0.85]"
+            class={`font-serif-display font-black text-6xl md:text-8xl lg:text-[9rem] mb-6 ${headerText} tracking-tighter leading-[0.85]`}
           >
             {title}
           </h1>
           <p
-            class="text-2xl md:text-3xl font-serif text-black max-w-2xl text-balance leading-snug"
+            class={`text-2xl md:text-3xl font-serif ${headerText} max-w-2xl text-balance leading-snug`}
           >
             {description}
           </p>
@@ -119,7 +169,7 @@ const displayStories =
       </div>
       {/* Decorative background typography */}
       <div class="absolute -bottom-20 -right-10 opacity-[0.05] pointer-events-none select-none">
-          <span class="font-serif-display font-black text-[20rem] leading-none text-black break-none whitespace-nowrap overflow-hidden block">
+          <span class={`font-serif-display font-black text-[20rem] leading-none ${headerText} break-none whitespace-nowrap overflow-hidden block`}>
             {title}
           </span>
       </div>
@@ -153,7 +203,7 @@ const displayStories =
                         {displayStories[0].headline || displayStories[0].title}
                         </a>
                     </h3>
-                    <p class="text-lg text-gray-600 font-serif leading-relaxed mb-8 border-l-4 border-yellow-400 pl-4">
+                    <p class="text-lg text-gray-600 font-serif leading-relaxed mb-8 border-l-4 pl-4" style={{ borderColor: accent }}>
                         {displayStories[0].subhead || "A deep dive into the underlying metrics shaping our contemporary understanding of this sector."}
                     </p>
                     <div class="flex items-center gap-3 mt-auto">

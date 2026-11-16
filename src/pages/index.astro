@@ -5,7 +5,7 @@ import StreamCard from "../components/ui/StreamCard.astro";
 import VideoSection from "../components/ui/VideoSection.astro";
 import Footer from "../components/Footer.astro";
 import NewsletterForm from "../components/ui/NewsletterForm.jsx";
-import { serverStoryService } from "../lib/server-appwrite.js";
+import { serverStoryService, serverCategoryService } from "../lib/server-appwrite.js";
 import { VOX_HOME_DATA } from "../data/mock";
 import { Image } from "astro:assets";
 
@@ -42,6 +42,40 @@ try {
     fetchError = true;
     console.error("[HOME] Failed to fetch stories from the API:", e.message);
 }
+
+// Fetch categories so topic links use the real slugs (fail-safe: never break the homepage)
+interface CleanCategory {
+    name?: string;
+    slug?: string;
+    color?: string;
+    description?: string | null;
+}
+
+let categories: CleanCategory[] = [];
+
+try {
+    categories = ((await serverCategoryService.getCategories()) || []) as CleanCategory[];
+} catch (e: any) {
+    console.error("[HOME] Failed to fetch categories from the API:", e.message);
+}
+
+const slugify = (value: string): string =>
+    value
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/-{2,}/g, "-")
+        .replace(/^-+|-+$/g, "");
+
+const categorySlugByName = new Map<string, string>();
+for (const category of categories) {
+    if (category?.name && category?.slug) {
+        categorySlugByName.set(category.name.toLowerCase(), category.slug);
+    }
+}
+
+const categoryHref = (catName: string): string =>
+    `/topic/${categorySlugByName.get(catName.toLowerCase()) || slugify(catName)}`;
 
 // Logic to determine which stories go where
 // 1. Hero: Use the latest 'Featured' story, then 'Super Feature', or just the newest story
@@ -221,7 +255,7 @@ const displayVideos = liveVideos.length > 0 ? liveVideos : VOX_HOME_DATA.videos;
                             </h3>
                             <span class="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent"></span>
                             <a
-                                href={`/topic/${catName.toLowerCase()}`}
+                                href={categoryHref(catName)}
                                 class="text-xs font-black uppercase tracking-widest text-black bg-gray-100 hover:bg-[#FAFF00] px-4 py-2 rounded-full transition-all flex items-center gap-2"
                                 >
                                 Explore <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>

@@ -21,9 +21,9 @@
 - [x] **F1 — Date pipeline.** Added a "Publication Date" input; all four layouts now prefer `publishedAt`, then `date`; removed the hardcoded `"Nov 29, 2025"` fallback.
 - [x] **F2 — Scheduling action.** Added a "Schedule" button for editors; writes `status: 'Scheduled'`, `workflow_status: 'scheduled'`, and keeps `scheduledAt`; amber status styling added.
 - [x] **F3 — Guest portal.** Point `/submit` at the public submission endpoint (and remove admin-only upload/save calls).
-- [ ] **F4 — Category links.** Use category slugs in homepage/breadcrumb links; align topic page colors/description with the backend contract.
+- [x] **F4 — Category links.** Homepage/nav links now use real category slugs (with a local `slugify()` fallback); topic page renders the stored hex color with luminance-based text contrast and the live description; unknown slugs 404 again.
 - [ ] **F5 — Layout block coverage.** Briefing/Photo/Scrolly must not silently drop editor blocks. Add renderers or a visible unsupported-block fallback.
-- [ ] **F6 — SEO/article props on every layout.** Pass `seo` overrides, canonical, keywords, and `article` (JSON-LD/breadcrumbs) to `MainLayout` in Scrolly, Briefing, and Photo.
+- [ ] **F6 — SEO/article props on every layout.** Pass `seo` overrides, canonical, keywords, and `article` (JSON-LD/breadcrumbs) to `MainLayout` in Scrolly, Briefing, and Photo. Also fix JSON-LD emission: `<script type="application/ld+json">{JSON.stringify(...)}</script>` is not interpolated, so every page emits the literal text instead of JSON (needs `is:inline` + `set:html`).
 - [ ] **F7 — Author pipeline.** Add an author picker to the editor; make `author/[slug]` read `/api/authors`; link bylines to author pages.
 - [ ] **F8 — Series pipeline.** Make `series/[slug]` data-driven from published stories instead of `VOX_HOME_DATA`; link series parts from articles.
 - [ ] **F9 — Workflow consistency.** `SubmissionsPage` approve and `StoriesPage` archive must set both `status` and `workflow_status`.
@@ -133,3 +133,4 @@ Evidence: `BriefingTemplate.astro:94-130`, `PhotoGalleryTemplate.astro:75-104`, 
 | 2026-11-16 | B3 | Backfill created `super-feature`, `technology`, `news`, `environment`; `/api/categories` now returns all five story categories with slugs. `typecheck` + `build` pass. |
 | 2026-11-16 | F3 | `/submit` → 200; unauthenticated POST `/api/submissions` with `x-forwarded-for: 10.9.9.20` → 201; invalid payload → 400 with a parsed zod message; test row deleted; `astro check` unchanged, 0 errors in `GuestSubmissionPortal.jsx`. |
 | 2026-11-16 | B5 | `db:migrate` applied `0001_lush_cammi`; `information_schema` shows `categories.description text` nullable. POST `{name,description,color}` → 201 with all three; `GET /api/categories/:slug` returns `description`; PATCH `{description:""}` → `null`; DELETE → `{"success":true}`; 501-char description → 400. `typecheck` passes. |
+| 2026-11-16 | F4 | `/topic/{super-feature,news,environment,technology,cities}` → 200; `/topic/foobar` → 302 `/404`; homepage topic hrefs are the five slugs (no `politics`/`culture`/`science`); `/topic/cities` h1 `text-black` on `#FFD400`, `/topic/super-feature` h1 `text-white` on `#000000`; `astro check` 23 pre-existing errors, 0 in touched files; `build` passes. |

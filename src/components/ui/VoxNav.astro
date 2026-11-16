@@ -1,3 +1,38 @@
+---
+import { serverCategoryService } from '../../lib/server-appwrite.js';
+
+interface NavTopic {
+    label: string;
+    slug: string;
+}
+
+const fallbackTopics: NavTopic[] = [
+    { label: 'Technology', slug: 'technology' },
+    { label: 'Politics', slug: 'politics' },
+    { label: 'Culture', slug: 'culture' },
+    { label: 'Science', slug: 'science' },
+];
+
+let topics: NavTopic[] = fallbackTopics;
+
+try {
+    const categories = await serverCategoryService.getCategories();
+    const liveTopics = (categories || [])
+        .filter((category: any) => category?.name && category?.slug)
+        .slice(0, 4)
+        .map((category: any) => ({
+            label: category.name as string,
+            slug: category.slug as string,
+        }));
+
+    if (liveTopics.length > 0) {
+        topics = liveTopics;
+    }
+} catch (error: any) {
+    console.error('[VOXNAV] Failed to load categories:', error?.message || error);
+}
+---
+
 <nav
     class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 font-sans transition-all duration-300"
     id="main-nav"
@@ -42,42 +77,19 @@
                     </span>
                 </a>
                 <div class="hidden md:flex md:space-x-8">
-                    <a
-                        href="/topic/technology"
-                        class="relative text-black px-1 py-2 font-bold text-xs uppercase tracking-widest group"
-                    >
-                        Technology
-                        <span
-                            class="absolute bottom-0 left-0 w-0 h-0.5 bg-black transition-all group-hover:w-full"
-                        ></span>
-                    </a>
-                    <a
-                        href="/topic/politics"
-                        class="relative text-black px-1 py-2 font-bold text-xs uppercase tracking-widest group"
-                    >
-                        Politics
-                        <span
-                            class="absolute bottom-0 left-0 w-0 h-0.5 bg-black transition-all group-hover:w-full"
-                        ></span>
-                    </a>
-                    <a
-                        href="/topic/culture"
-                        class="relative text-black px-1 py-2 font-bold text-xs uppercase tracking-widest group"
-                    >
-                        Culture
-                        <span
-                            class="absolute bottom-0 left-0 w-0 h-0.5 bg-black transition-all group-hover:w-full"
-                        ></span>
-                    </a>
-                    <a
-                        href="/topic/science"
-                        class="relative text-black px-1 py-2 font-bold text-xs uppercase tracking-widest group"
-                    >
-                        Science
-                        <span
-                            class="absolute bottom-0 left-0 w-0 h-0.5 bg-black transition-all group-hover:w-full"
-                        ></span>
-                    </a>
+                    {
+                        topics.map((topic) => (
+                            <a
+                                href={`/topic/${topic.slug}`}
+                                class="relative text-black px-1 py-2 font-bold text-xs uppercase tracking-widest group"
+                            >
+                                {topic.label}
+                                <span
+                                    class="absolute bottom-0 left-0 w-0 h-0.5 bg-black transition-all group-hover:w-full"
+                                ></span>
+                            </a>
+                        ))
+                    }
                 </div>
             </div>
 
@@ -121,26 +133,15 @@
         class="hidden md:hidden bg-white border-t border-gray-100 overflow-hidden transition-all duration-300 ease-in-out max-h-0"
     >
         <div class="px-4 py-6 space-y-4">
-            <a
-                href="/topic/technology"
-                class="block text-black font-black uppercase tracking-widest text-sm py-2 border-b border-gray-50"
-                >Technology</a
-            >
-            <a
-                href="/topic/politics"
-                class="block text-black font-black uppercase tracking-widest text-sm py-2 border-b border-gray-50"
-                >Politics</a
-            >
-            <a
-                href="/topic/culture"
-                class="block text-black font-black uppercase tracking-widest text-sm py-2 border-b border-gray-50"
-                >Culture</a
-            >
-            <a
-                href="/topic/science"
-                class="block text-black font-black uppercase tracking-widest text-sm py-2 border-b border-gray-50"
-                >Science</a
-            >
+            {
+                topics.map((topic) => (
+                    <a
+                        href={`/topic/${topic.slug}`}
+                        class="block text-black font-black uppercase tracking-widest text-sm py-2 border-b border-gray-50"
+                        >{topic.label}</a
+                    >
+                ))
+            }
             <div class="pt-4">
                 <p
                     class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4"

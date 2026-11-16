@@ -111,10 +111,28 @@ export const serverAdminService = {
     },
 };
 
+let categoriesCache = null;
+let categoriesFetchedAt = 0;
+const CATEGORIES_TTL = 60 * 1000;
+
 export const serverCategoryService = {
     async getCategories() {
+        const now = Date.now();
+        if (categoriesCache && now - categoriesFetchedAt < CATEGORIES_TTL) {
+            return categoriesCache;
+        }
+
         const payload = await request('/api/categories', {}, { documents: [] });
-        return unwrapDocuments(payload);
+        const categories = unwrapDocuments(payload);
+
+        if (categories.length > 0) {
+            categoriesCache = categories;
+            categoriesFetchedAt = now;
+            return categories;
+        }
+
+        if (categoriesCache) return categoriesCache;
+        return categories;
     },
 
     async getCategoryBySlug(slug) {

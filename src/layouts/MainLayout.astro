@@ -55,10 +55,18 @@ const breadcrumbs = [
     { name: "Home", item: "https://explainer.africa/" }
 ];
 
+const slugify = (value: string): string =>
+    value
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/-{2,}/g, '-')
+        .replace(/^-+|-+$/g, '');
+
 if (isArticle && articleData.category) {
     breadcrumbs.push({
         name: articleData.category,
-        item: `https://explainer.africa/topic/${articleData.category.toLowerCase()}`
+        item: `https://explainer.africa/topic/${slugify(articleData.category)}`
     });
     breadcrumbs.push({
         name: articleData.headline,
