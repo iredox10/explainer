@@ -117,6 +117,7 @@ export const stories = pgTable(
         seriesPart: integer('series_part'),
         isFeatured: boolean('is_featured').notNull().default(false),
         lockedBy: text('locked_by'),
+        lockedAt: timestamp('locked_at', { withTimezone: true }),
         versionLog: jsonb('version_log').$type<unknown>(),
         tags: jsonb('tags').$type<string[]>().notNull().default([]),
         sources: jsonb('sources').$type<unknown[]>().notNull().default([]),

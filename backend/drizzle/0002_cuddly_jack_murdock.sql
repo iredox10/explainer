@@ -1,0 +1,1 @@
+ALTER TABLE "stories" ADD COLUMN "locked_at" timestamp with time zone;

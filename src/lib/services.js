@@ -83,6 +83,26 @@ export const storyService = {
         }
     },
 
+    async lockStory(id) {
+        assertActiveUser();
+        try {
+            return await apiFetch(`/api/admin/stories/${encodeURIComponent(id)}/lock`, { method: 'POST' });
+        } catch (error) {
+            console.error('Error locking story:', error);
+            throw error;
+        }
+    },
+
+    async unlockStory(id) {
+        assertActiveUser();
+        try {
+            return await apiFetch(`/api/admin/stories/${encodeURIComponent(id)}/unlock`, { method: 'POST' });
+        } catch (error) {
+            console.error('Error unlocking story:', error);
+            throw error;
+        }
+    },
+
     async saveStory(id, data) {
         assertActiveUser();
 

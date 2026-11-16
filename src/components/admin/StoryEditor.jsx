@@ -26,6 +26,7 @@ export default function StoryEditor({ storyId }) {
     const fileInputRef = useRef(null);
     const previewIframeRef = useRef(null);
     const autoSaveTimeoutRef = useRef(null);
+    const lockAcquiredRef = useRef(false);
     const autoSaveEnabled = storyId !== 'new-story';
 
     const isWriter = user?.role === ROLES.WRITER;
@@ -128,6 +129,14 @@ export default function StoryEditor({ storyId }) {
         fetchCategories();
     }, [storyId]);
 
+    useEffect(() => {
+        return () => {
+            if (storyId === 'new-story' || !lockAcquiredRef.current) return;
+            lockAcquiredRef.current = false;
+            storyService.unlockStory(storyId).catch(() => {});
+        };
+    }, [storyId]);
+
     const fetchCategories = async () => {
         try {
             const cats = await categoryService.getCategories();
@@ -185,6 +194,22 @@ export default function StoryEditor({ storyId }) {
                     alert("This story is currently being edited by another team member.");
                     window.location.href = '/admin/stories';
                     return;
+                }
+
+                try {
+                    const lockedStory = await storyService.lockStory(storyId);
+                    lockAcquiredRef.current = true;
+                    if (lockedStory) {
+                        data.locked_by = lockedStory.locked_by;
+                        data.locked_at = lockedStory.locked_at;
+                    }
+                } catch (error) {
+                    if (error.status === 409) {
+                        alert("This story is currently being edited by another team member.");
+                        window.location.href = '/admin/stories';
+                        return;
+                    }
+                    console.error('Failed to acquire story lock:', error);
                 }
 
                 // Migration: Move legacy scrollySections to a content block

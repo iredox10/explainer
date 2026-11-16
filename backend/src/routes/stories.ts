@@ -4,6 +4,7 @@ import { HTTPException } from 'hono/http-exception';
 import { zValidator } from '@hono/zod-validator';
 import { and, asc, count, desc, eq, ilike, lte, or, type SQL } from 'drizzle-orm';
 import { z } from 'zod';
+import type { AppEnv } from '../auth/middleware.js';
 import { db } from '../db/index.js';
 import { stories } from '../db/schema.js';
 import {
@@ -202,6 +203,7 @@ export function serializeStory(row: Record<string, unknown>) {
         series_part: serialized.seriesPart,
         is_featured: serialized.isFeatured,
         locked_by: serialized.lockedBy,
+        locked_at: serialized.lockedAt,
         version_log: serialized.versionLog,
         revision_snapshots: serialized.revisionSnapshots,
         published_at: serialized.publishedAt,
@@ -296,7 +298,14 @@ publicStories.get('/:idOrSlug', async (c) => {
     return c.json(serializeStory(row as unknown as Record<string, unknown>));
 });
 
-export const adminStories = new Hono();
+const LOCK_TTL_MS = 15 * 60 * 1000;
+
+function storyIdentity(value: string) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+    return isUuid ? eq(stories.id, value) : eq(stories.slug, value);
+}
+
+export const adminStories = new Hono<AppEnv>();
 
 adminStories.get('/', async (c) => {
     const { limit, offset } = pagination(c);
@@ -326,6 +335,58 @@ adminStories.get('/:id', async (c) => {
     const [row] = await db.select().from(stories).where(identity).limit(1);
     if (!row) throw new HTTPException(404, { message: 'Story not found' });
     return c.json(serializeStory(row as unknown as Record<string, unknown>));
+});
+
+adminStories.post('/:id/lock', async (c) => {
+    const [row] = await db
+        .select()
+        .from(stories)
+        .where(storyIdentity(c.req.param('id')))
+        .limit(1);
+    if (!row) throw new HTTPException(404, { message: 'Story not found' });
+
+    const userId = c.get('user')?.id;
+    if (!userId) throw new HTTPException(401, { message: 'Unauthorized' });
+
+    const lockAge = row.lockedAt ? Date.now() - row.lockedAt.getTime() : Number.POSITIVE_INFINITY;
+    if (row.lockedBy && row.lockedBy !== userId && lockAge < LOCK_TTL_MS) {
+        return c.json({ message: 'Story is locked', lockedBy: row.lockedBy }, 409);
+    }
+
+    const [updated] = await db
+        .update(stories)
+        .set({ lockedBy: userId, lockedAt: new Date() })
+        .where(eq(stories.id, row.id))
+        .returning();
+
+    return c.json(serializeStory(updated as unknown as Record<string, unknown>));
+});
+
+adminStories.post('/:id/unlock', async (c) => {
+    const [row] = await db
+        .select()
+        .from(stories)
+        .where(storyIdentity(c.req.param('id')))
+        .limit(1);
+    if (!row) throw new HTTPException(404, { message: 'Story not found' });
+
+    if (!row.lockedBy) {
+        return c.json(serializeStory(row as unknown as Record<string, unknown>));
+    }
+
+    const userId = c.get('user')?.id;
+    const role = c.get('profile')?.role ?? c.get('user')?.role;
+    if (row.lockedBy !== userId && role !== 'superadmin') {
+        return c.json({ message: 'Only the lock holder can unlock this story' }, 403);
+    }
+
+    const [updated] = await db
+        .update(stories)
+        .set({ lockedBy: null, lockedAt: null })
+        .where(eq(stories.id, row.id))
+        .returning();
+
+    return c.json(serializeStory(updated as unknown as Record<string, unknown>));
 });
 
 adminStories.post('/', zValidator('json', storyInputSchema), async (c) => {
