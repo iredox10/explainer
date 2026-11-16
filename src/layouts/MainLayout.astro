@@ -14,8 +14,10 @@ import "@fontsource/playfair-display/900.css";
 import "@fontsource/playfair-display/400-italic.css";
 import "@fontsource/playfair-display/700-italic.css";
 import VoxNav from "../components/ui/VoxNav.astro";
+import BreakingNewsBanner from "../components/ui/BreakingNewsBanner.astro";
 import PersistentAudioPlayer from "../components/ui/PersistentAudioPlayer.jsx";
 import CommandMenu from "../components/ui/CommandMenu.jsx";
+import { serverAdminService } from "../lib/server-appwrite.js";
 
 interface Props {
     title: string;
@@ -50,6 +52,28 @@ const keywordsContent = Array.isArray(keywords) ? keywords.join(', ') : '';
 const articleData = article || null;
 const isArticle = !!articleData?.headline;
 const isNoIndex = Astro.url.pathname.startsWith('/admin') || Astro.url.pathname.includes('/preview');
+
+let settings: any = {};
+try {
+    settings = (await serverAdminService.getSettings()) || {};
+} catch (error: any) {
+    console.error('[LAYOUT] Failed to load settings:', error?.message || error);
+}
+
+const siteName = settings?.site_name?.trim() || 'Explainer';
+const baseTitle = (title || '').trim();
+// Pages already brand their own titles ("... - Explainer"), so swap the brand
+// in place instead of stacking a second suffix.
+const pageTitle = !baseTitle
+    ? siteName
+    : baseTitle.toLowerCase().includes(siteName.toLowerCase())
+        ? baseTitle
+        : /explainer/i.test(baseTitle)
+            ? baseTitle.replace(/explainer/i, siteName)
+            : `${baseTitle} | ${siteName}`;
+
+const breakingMessage = (settings?.breaking_news_text || '').trim() || 'Breaking news — see the latest reporting';
+const showBreakingNews = settings?.breaking_news_active === true && !isNoIndex;
 
 const breadcrumbs = [
     { name: "Home", item: "https://explainer.africa/" }
@@ -109,7 +133,7 @@ if (isArticle && articleData.category) {
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:image" content={image} />
-        <meta property="og:site_name" content="Explainer" />
+        <meta property="og:site_name" content={siteName} />
 
         <!-- Twitter -->
         <meta property="twitter:card" content="summary_large_image" />
@@ -177,10 +201,11 @@ gtag('config', '${import.meta.env.PUBLIC_ANALYTICS_KEY}');`}
             />
         )}
 
-        <title>{title}</title>
+        <title>{pageTitle}</title>
         <slot name="head" />
     </head>
     <body class="bg-white text-gray-900 font-sans antialiased">
+        {showBreakingNews && <BreakingNewsBanner message={breakingMessage} />}
         <CommandMenu client:load />
         {showNav && <VoxNav />}
         <slot />

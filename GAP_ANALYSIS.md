@@ -30,7 +30,7 @@
 - [ ] **F10 — Orphaned admin pages.** Link `/admin/media` and `/admin/calendar` from the sidebar/dashboard; wire or remove `ContentAuditDashboard`, `SEOScorecard`, `RevisionDiff`, `SocialCardPreview`.
 - [ ] **F11 — Tags and media fields.** Render tags on articles; expose `ambientAudioUrl`, `leftVideoUrl`, `rightVideoUrl` in the editor and pass them to `HeroLoop`.
 - [ ] **F12 — Related stories editor.** Let editors pick `related` stories; render them consistently.
-- [ ] **F13 — Settings that do nothing.** Use `site_name` in `MainLayout`; render a public breaking-news banner when `breaking_news_active` is true.
+- [x] **F13 — Settings that do nothing.** `site_name` now drives `og:site_name` and the `<title>` brand; `breaking_news_active` renders a public banner with a new `breaking_news_text` setting (fallback message, hidden under `/admin`). Settings cache TTL dropped to 5s and the save path no longer sends a stale camelCase alias.
 - [ ] **F14 — Read time.** Use the stored `readTime` when present, otherwise compute it (or remove the field).
 
 ---
@@ -139,3 +139,4 @@ Evidence: `BriefingTemplate.astro:94-130`, `PhotoGalleryTemplate.astro:75-104`, 
 | 2026-11-16 | F6 | Every page's JSON-LD parses as JSON (`BreadcrumbList` + `WebSite`/`Organization`/`CollectionPage`/`NewsArticle`/`Person`), zero literal `JSON.stringify` in output; all four article layouts emit `NewsArticle` and a `<link rel="canonical">`; `astro check` 23 baseline, `build` passes. |
 | 2026-11-16 | F9 | Probe submission: `Pending Review`/`pending_review` → approve `Draft`/`draft` → reject `Rejected`/`rejected` → archive `Archived`/`archived`; absent from public `/api/stories`; deleted, total back to 7. Guest-queue predicate unit-checked: pending and legacy rows shown, approved/rejected/published hidden. `astro check` 21 (baseline improved by F7), `build` passes. |
 | 2026-11-16 | F7 | Backfill `{"distinct":6,"created":5,"existing":1}`; `/author/{chioma-okafor,chioma-okereke,newsroom-admin,vox-staff,sarah-jenkins}` → 200 and `/author/not-a-real-author` → 302 `/404`; each of the four layouts emits a byline `href="/author/<slug>"` pointing at a 200 page; author page lists that author's stories. `astro check` 21, `build` passes. |
+| 2026-11-16 | F13 | `site_name` "Probe Desk" → homepage title `Probe Desk - Visual Journalism…` and article title `The Big Story \| Probe Desk`, `og:site_name` follows; restored. Banner: text renders once on `/`, zero on `/admin`; empty text falls back to the default message; `breaking_news_active=false` removes all banner markup. Settings left as found. `astro check` 21, `typecheck` + `build` pass. |

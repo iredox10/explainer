@@ -9,7 +9,8 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState({
     site_name: 'EXPLAINER.AFRICA',
     maintenance_mode: false,
-    breaking_news_active: false
+    breaking_news_active: false,
+    breaking_news_text: ''
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -31,7 +32,7 @@ export default function SettingsPage() {
     setIsLoading(true);
     try {
       const data = await adminService.getSettings();
-      if (data) setSettings(data);
+      if (data) setSettings(prev => ({ ...prev, ...data }));
     } catch (e) {
       console.error(e);
     } finally {
@@ -42,8 +43,16 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const { $id, $createdAt, $updatedAt, $permissions, $databaseId, $collectionId, ...dataToSave } = settings;
-      const result = await adminService.updateSettings($id, dataToSave);
+      // Send only the snake_case fields the form edits. The API returns both
+      // snake_case and camelCase aliases; sending both lets a stale camelCase
+      // value win and silently discards the edit.
+      const dataToSave = {
+        site_name: settings.site_name ?? '',
+        maintenance_mode: settings.maintenance_mode === true,
+        breaking_news_active: settings.breaking_news_active === true,
+        breaking_news_text: settings.breaking_news_text ?? '',
+      };
+      const result = await adminService.updateSettings(settings.$id || settings.id, dataToSave);
       setSettings(result);
       setSavedStatus(true);
       setTimeout(() => setSavedStatus(false), 3000);
@@ -145,6 +154,21 @@ export default function SettingsPage() {
                   <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${settings.breaking_news_active ? 'left-7' : 'left-1'}`}></div>
                 </button>
               </div>
+
+              {settings.breaking_news_active && (
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Banner Message</label>
+                  <input
+                    type="text"
+                    maxLength={200}
+                    value={settings.breaking_news_text ?? ''}
+                    onChange={e => setSettings({ ...settings, breaking_news_text: e.target.value })}
+                    placeholder="e.g. Live: Lagos rail line opens today"
+                    className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent focus:border-[#FAFF00] rounded-2xl text-sm font-bold outline-none transition-all"
+                  />
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider ml-1">Leave blank to show the default breaking-news message.</p>
+                </div>
+              )}
             </div>
           </section>
         </div>

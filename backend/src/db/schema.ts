@@ -213,6 +213,7 @@ export const settings = pgTable('settings', {
     siteName: text('site_name').notNull().default('Explainer'),
     maintenanceMode: boolean('maintenance_mode').notNull().default(false),
     breakingNewsActive: boolean('breaking_news_active').notNull().default(false),
+    breakingNewsText: text('breaking_news_text').notNull().default(''),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 

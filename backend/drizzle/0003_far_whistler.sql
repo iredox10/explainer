@@ -1,0 +1,1 @@
+ALTER TABLE "settings" ADD COLUMN "breaking_news_text" text DEFAULT '' NOT NULL;

@@ -15,6 +15,8 @@ const settingsInput = z.object({
     maintenance_mode: z.boolean().optional(),
     breakingNewsActive: z.boolean().optional(),
     breaking_news_active: z.boolean().optional(),
+    breakingNewsText: z.string().max(200).optional(),
+    breaking_news_text: z.string().max(200).optional(),
 });
 
 async function getSettings() {
@@ -29,6 +31,7 @@ function withAliases(row: NonNullable<Awaited<ReturnType<typeof getSettings>>>) 
         site_name: row.siteName,
         maintenance_mode: row.maintenanceMode,
         breaking_news_active: row.breakingNewsActive,
+        breaking_news_text: row.breakingNewsText,
     };
 }
 
@@ -45,6 +48,8 @@ publicSettings.get('/', async (c) => {
             maintenance_mode: false,
             breakingNewsActive: false,
             breaking_news_active: false,
+            breakingNewsText: '',
+            breaking_news_text: '',
         });
     }
     return c.json(withAliases(row));
@@ -63,9 +68,11 @@ adminSettings.patch('/', requireRole('editor', 'superadmin'), zValidator('json',
     const siteName = body.siteName ?? body.site_name;
     const maintenanceMode = body.maintenanceMode ?? body.maintenance_mode;
     const breakingNewsActive = body.breakingNewsActive ?? body.breaking_news_active;
+    const breakingNewsText = body.breakingNewsText ?? body.breaking_news_text;
     if (siteName !== undefined) row.siteName = siteName;
     if (maintenanceMode !== undefined) row.maintenanceMode = maintenanceMode;
     if (breakingNewsActive !== undefined) row.breakingNewsActive = breakingNewsActive;
+    if (breakingNewsText !== undefined) row.breakingNewsText = breakingNewsText;
 
     const [updated] = await db
         .insert(settings)
