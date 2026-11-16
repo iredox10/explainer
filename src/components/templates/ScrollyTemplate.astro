@@ -9,6 +9,8 @@ import ShareButtons from "../../components/ui/ShareButtons.jsx";
 import PersistentAudioPlayer from "../../components/ui/PersistentAudioPlayer.jsx";
 import Timeline from "../../components/ui/Timeline.jsx";
 import BottleneckGraphic from "../../components/ui/BottleneckGraphic.jsx";
+import AnimatedMap from "../../components/ui/AnimatedMap.jsx";
+import AnimatedChart from "../../components/ui/AnimatedChart.jsx";
 import { Bookmark } from "lucide-react";
 import { Image } from "astro:assets";
 
@@ -257,7 +259,84 @@ const readTime = serverStoryService.calculateReadTime(blocks);
                   </div>
                 );
               }
-              return null;
+              if (block.type === "map") {
+                return (
+                  <figure class="my-12">
+                    <div class="border border-gray-100 bg-gray-50 rounded-3xl overflow-hidden relative shadow-sm h-[450px] md:h-[550px]">
+                      <AnimatedMap
+                        client:visible
+                        center={block.center}
+                        zoom={block.zoom}
+                        highlight={block.highlight}
+                        label={block.label}
+                        scope={block.scope}
+                        markers={block.markers}
+                        annotations={block.annotations}
+                        overlayIcons={block.overlayIcons}
+                        showRecenter={true}
+                      />
+                    </div>
+                    {(block.caption || block.text) && (
+                      <figcaption class="mt-4 text-xs font-bold text-gray-400 text-center uppercase tracking-widest">
+                        {block.caption || block.text}
+                      </figcaption>
+                    )}
+                  </figure>
+                );
+              }
+              if (block.type === "chart") {
+                return (
+                  <div class="my-12 bg-gray-50 border border-gray-100 rounded-3xl p-6 shadow-sm min-h-[400px]">
+                    <AnimatedChart
+                      client:visible
+                      type={block.chartType}
+                      data={block.chartData}
+                      labels={block.chartLabels}
+                      colors={block.chartColors}
+                      accentColor={block.accentColor}
+                      label={block.title || block.label}
+                      annotations={block.annotations}
+                    />
+                    {block.text && (
+                      <p class="mt-4 text-xs font-bold text-gray-400 text-center uppercase tracking-widest">
+                        {block.text}
+                      </p>
+                    )}
+                  </div>
+                );
+              }
+              if (block.type === "inline-related") {
+                return (
+                  <div class="my-12 border border-gray-200 border-l-4 border-l-[#FAFF00] bg-gray-50 p-8 rounded-r-3xl">
+                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 block mb-3">
+                      Related
+                    </span>
+                    <h4 class="font-sans font-black text-2xl text-black leading-tight tracking-tight">
+                      {block.title}
+                    </h4>
+                    {block.description && (
+                      <p class="font-serif text-lg text-gray-600 mt-3 leading-snug">
+                        {block.description}
+                      </p>
+                    )}
+                    {block.slug && (
+                      <a
+                        href={`/article/${block.slug}`}
+                        class="inline-flex items-center gap-2 mt-5 text-[10px] font-black uppercase tracking-[0.2em] text-black hover:underline"
+                      >
+                        Read the story →
+                      </a>
+                    )}
+                  </div>
+                );
+              }
+              return (
+                <div class="my-12 border-2 border-dashed border-gray-300 rounded-3xl p-8 text-center">
+                  <span class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                    Unsupported block: {block.type || "unknown"}
+                  </span>
+                </div>
+              );
             })}
           </section>
         </div>

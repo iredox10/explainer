@@ -4,6 +4,7 @@ import MainLayout from "../../layouts/MainLayout.astro";
 import VoxNav from "../../components/ui/VoxNav.astro";
 import ProgressBar from "../../components/ui/ProgressBar.jsx";
 import ShareButtons from "../../components/ui/ShareButtons.jsx";
+import BeforeAfter from "../../components/ui/BeforeAfter.jsx";
 import { Clock } from "lucide-react";
 
 const { story } = Astro.props;
@@ -141,12 +142,125 @@ const readTime = serverStoryService.calculateReadTime(blocks);
                         if (block.type === "callout") {
                             return (
                                 <div class="my-8 bg-gray-50 p-6 border-l-4 border-red-600">
+                                    {block.title && (
+                                        <span class="block text-[10px] font-black uppercase tracking-[0.2em] text-red-600 mb-2">
+                                            {block.title}
+                                        </span>
+                                    )}
                                     <p class="font-sans font-medium text-gray-900 italic">
                                         "{block.text}"
                                     </p>
                                 </div>
                             );
                         }
+                        if (block.type === "quote") {
+                            return (
+                                <blockquote class="my-10 border-l-4 border-red-600 pl-6 font-serif text-2xl italic text-gray-700 leading-snug">
+                                    <Fragment set:html={block.text} />
+                                    {block.author && (
+                                        <cite class="block text-[10px] font-black uppercase tracking-widest text-gray-400 mt-4 not-italic">
+                                            — {block.author}
+                                        </cite>
+                                    )}
+                                </blockquote>
+                            );
+                        }
+                        if (block.type === "video") {
+                            return (
+                                <figure class="my-10 -mx-6 sm:mx-0">
+                                    <video
+                                        src={block.url}
+                                        class="w-full h-auto"
+                                        controls={!block.autoplay}
+                                        autoplay={block.autoplay}
+                                        loop={block.loop}
+                                        muted={block.muted}
+                                        playsinline
+                                    />
+                                    {block.caption && (
+                                        <figcaption class="text-[10px] text-gray-400 font-sans uppercase tracking-widest mt-2 px-6 sm:px-0">
+                                            {block.caption}
+                                        </figcaption>
+                                    )}
+                                </figure>
+                            );
+                        }
+                        if (block.type === "beforeAfter") {
+                            return (
+                                <div class="my-10 -mx-6 sm:mx-0">
+                                    <BeforeAfter
+                                        client:visible
+                                        leftImage={block.leftImage}
+                                        rightImage={block.rightImage}
+                                        leftLabel={block.leftLabel}
+                                        rightLabel={block.rightLabel}
+                                        caption={block.caption}
+                                        displayMode={block.displayMode}
+                                    />
+                                </div>
+                            );
+                        }
+                        if (block.type === "inline-related") {
+                            return (
+                                <div class="my-10 bg-gray-50 border-l-4 border-black p-6 pl-8">
+                                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2 block">
+                                        Related
+                                    </span>
+                                    <h4 class="font-sans font-black text-2xl text-black leading-tight">
+                                        {block.title}
+                                    </h4>
+                                    {block.description && (
+                                        <p class="font-sans text-sm text-gray-600 mt-2 leading-relaxed">
+                                            {block.description}
+                                        </p>
+                                    )}
+                                    {block.slug && (
+                                        <a
+                                            href={`/article/${block.slug}`}
+                                            class="inline-flex items-center gap-2 mt-4 text-xs font-black uppercase tracking-[0.2em] text-black hover:text-red-600 transition-colors"
+                                        >
+                                            Read the story →
+                                        </a>
+                                    )}
+                                </div>
+                            );
+                        }
+                        if (
+                            ["map", "chart", "bottleneck", "timeline", "scrolly-group"].includes(
+                                block.type,
+                            )
+                        ) {
+                            return (
+                                <div class="my-10 bg-gray-50 border border-gray-200 p-6">
+                                    <span class="text-[10px] font-black uppercase tracking-widest text-red-600 block mb-2">
+                                        Interactive · {block.type}
+                                    </span>
+                                    <h4 class="font-sans font-black text-xl text-black leading-tight">
+                                        {block.label ||
+                                            block.title ||
+                                            "Visual story"}
+                                    </h4>
+                                    {(block.text || block.caption) && (
+                                        <p class="font-serif text-base text-gray-600 leading-relaxed mt-2">
+                                            {block.text || block.caption}
+                                        </p>
+                                    )}
+                                    <a
+                                        href={`/article/${ARTICLE_DATA.slug}`}
+                                        class="inline-flex items-center gap-2 mt-4 text-xs font-black uppercase tracking-[0.2em] text-black hover:text-red-600 transition-colors"
+                                    >
+                                        Open the full experience →
+                                    </a>
+                                </div>
+                            );
+                        }
+                        return (
+                            <div class="my-8 border-2 border-dashed border-gray-300 p-6 text-center">
+                                <span class="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                    Unsupported block: {block.type || "unknown"}
+                                </span>
+                            </div>
+                        );
                     })
                 }
             </article>

@@ -123,6 +123,113 @@ const blocks = getBlocks(ARTICLE_DATA.content);
                                 </div>
                             );
                         }
+                        if (block.type === "heading") {
+                            return (
+                                <div class="max-w-4xl mx-auto px-6 py-20 md:py-28">
+                                    <h2 class="font-serif-display font-black text-4xl md:text-6xl tracking-tight leading-none text-white">
+                                        <Fragment set:html={block.text} />
+                                    </h2>
+                                </div>
+                            );
+                        }
+                        if (block.type === "quote") {
+                            return (
+                                <blockquote class="max-w-3xl mx-auto px-6 py-24 md:py-32 border-l-4 border-[#FAFF00] pl-8 font-serif text-3xl md:text-5xl italic text-gray-200 leading-tight">
+                                    <Fragment set:html={block.text} />
+                                    {block.author && (
+                                        <cite class="block text-xs font-black uppercase tracking-[0.25em] text-[#FAFF00] mt-8 not-italic">
+                                            — {block.author}
+                                        </cite>
+                                    )}
+                                </blockquote>
+                            );
+                        }
+                        if (block.type === "callout") {
+                            return (
+                                <div class="max-w-3xl mx-auto px-6 py-16">
+                                    <div class="border border-gray-800 bg-white/5 p-8">
+                                        <span class="text-[10px] font-black uppercase tracking-[0.25em] text-[#FAFF00] block mb-3">
+                                            {block.title || "Note"}
+                                        </span>
+                                        <p class="font-serif text-xl md:text-2xl text-gray-200 leading-snug">
+                                            <Fragment set:html={block.text} />
+                                        </p>
+                                    </div>
+                                </div>
+                            );
+                        }
+                        if (block.type === "video") {
+                            return (
+                                <figure class="relative w-full">
+                                    <video
+                                        src={block.url}
+                                        class="w-full h-screen object-cover"
+                                        controls={!block.autoplay}
+                                        autoplay={block.autoplay}
+                                        loop={block.loop}
+                                        muted={block.muted}
+                                        playsinline
+                                    />
+                                    {block.caption && (
+                                        <figcaption class="max-w-3xl mx-auto px-6 py-8 text-[10px] font-black uppercase tracking-[0.25em] text-gray-500">
+                                            {block.caption}
+                                        </figcaption>
+                                    )}
+                                </figure>
+                            );
+                        }
+                        if (
+                            [
+                                "map",
+                                "chart",
+                                "bottleneck",
+                                "timeline",
+                                "beforeAfter",
+                                "inline-related",
+                                "scrolly-group",
+                            ].includes(block.type)
+                        ) {
+                            return (
+                                <div class="max-w-3xl mx-auto px-6 py-16">
+                                    <div class="bg-neutral-900 border border-gray-800 p-8">
+                                        <span class="text-[10px] font-black uppercase tracking-[0.25em] text-[#FAFF00] block mb-3">
+                                            {block.type === "scrolly-group"
+                                                ? "Interactive feature"
+                                                : block.type}
+                                        </span>
+                                        <h4 class="font-serif-display font-black text-2xl md:text-3xl text-white leading-tight">
+                                            {block.title ||
+                                                block.label ||
+                                                "Visual story"}
+                                        </h4>
+                                        {(block.text ||
+                                            block.caption ||
+                                            block.description) && (
+                                            <p class="font-serif text-lg text-gray-400 leading-relaxed mt-3">
+                                                {block.text ||
+                                                    block.caption ||
+                                                    block.description}
+                                            </p>
+                                        )}
+                                        <a
+                                            href={`/article/${ARTICLE_DATA.slug}`}
+                                            class="inline-flex items-center gap-2 mt-6 text-xs font-black uppercase tracking-[0.2em] text-[#FAFF00] hover:text-white transition-colors"
+                                        >
+                                            Open the full experience →
+                                        </a>
+                                    </div>
+                                </div>
+                            );
+                        }
+                        return (
+                            <div class="max-w-3xl mx-auto px-6 py-16">
+                                <div class="border-2 border-dashed border-gray-700 p-8 text-center">
+                                    <span class="text-[10px] font-black uppercase tracking-[0.25em] text-gray-500">
+                                        Unsupported block: {block.type || "unknown"}
+                                    </span>
+                                </div>
+                            </div>
+                        );
                     })
                 }
             </section>
