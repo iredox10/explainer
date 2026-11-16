@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react';
-import { Send, Upload, X, Loader2, CheckCircle, Image as ImageIcon, Type, Globe } from 'lucide-react';
-import { storyService } from '../../lib/services';
+import { useState } from 'react';
+import { Send, X, Loader2, CheckCircle, Image as ImageIcon, Type, Globe, AlertCircle } from 'lucide-react';
+import { API_URL } from '../../lib/api';
 
 export default function GuestSubmissionPortal() {
     const [step, setStep] = useState(1); // 1: Info, 2: Content, 3: Success
@@ -12,44 +12,51 @@ export default function GuestSubmissionPortal() {
         content: [{ id: 1, type: "p", text: "" }],
         heroImage: ""
     });
-    const [uploading, setUploading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const fileInputRef = useRef(null);
+    const [error, setError] = useState("");
 
     const handleUpdateContent = (newContent) => setFormData(prev => ({ ...prev, content: newContent }));
 
-    const handleFileUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        setUploading(true);
-        try {
-            const url = await storyService.uploadImage(file);
-            setFormData(prev => ({ ...prev, heroImage: url }));
-        } catch (e) { alert("Upload failed: " + e.message); }
-        finally { setUploading(false); }
-    };
-
     const submitToNewsroom = async () => {
         setIsSubmitting(true);
+        setError("");
         try {
             const payload = {
                 headline: formData.headline,
                 subhead: formData.subhead,
-                author: `${formData.authorName} (Guest)`,
-                category: "Guest Submission",
-                workflow_status: "pending_review", // Straight to editors
-                status: "Pending Review",
-                layout: "standard",
-                content: JSON.stringify(formData.content),
-                scrollySections: JSON.stringify([]),
-                heroImage: formData.heroImage,
-                isFeatured: false
+                author: formData.authorName,
+                authorEmail: formData.authorEmail,
+                content: formData.content,
+                heroImage: formData.heroImage.trim() || undefined
             };
 
-            await storyService.saveStory('new-story', payload);
+            const response = await fetch(`${API_URL}/api/submissions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json().catch(() => null);
+
+            if (!response.ok) {
+                // The API returns zod issues as a JSON string in error.message.
+                let firstIssue = null;
+                try {
+                    const issues = JSON.parse(data?.error?.message || '[]');
+                    firstIssue = Array.isArray(issues) ? issues[0] : null;
+                } catch {
+                    firstIssue = null;
+                }
+                const message =
+                    (firstIssue && `${firstIssue.path?.join('.') || 'submission'}: ${firstIssue.message}`) ||
+                    (data && typeof data.error === 'string' && data.error) ||
+                    (data && typeof data.message === 'string' && data.message) ||
+                    `Submission failed with status ${response.status}`;
+                throw new Error(message);
+            }
+
             setStep(3);
         } catch (e) {
-            alert("Submission failed: " + e.message);
+            setError(e.message || 'Submission failed. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
@@ -218,23 +225,34 @@ export default function GuestSubmissionPortal() {
                                 </div>
                             </div>
 
-                            <div className="pt-12 border-t border-white/5 space-y-8">
+                            <div className="pt-12 border-t border-white/5 space-y-4">
                                 <h3 className="text-[10px] font-black uppercase tracking-widest text-[#FAFF00]">Cover Transmission (Primary Image)</h3>
-                                {formData.heroImage ? (
+                                <input
+                                    type="url"
+                                    value={formData.heroImage}
+                                    onChange={e => setFormData({ ...formData, heroImage: e.target.value })}
+                                    className="w-full bg-white/5 border-2 border-transparent focus:border-[#FAFF00] p-5 rounded-2xl outline-none font-bold text-sm transition-all"
+                                    placeholder="https://example.com/your-image.jpg (optional)"
+                                />
+                                <p className="text-[9px] font-bold uppercase tracking-widest text-gray-500">
+                                    Optional — no upload needed. Editors will add final visuals.
+                                </p>
+                                {formData.heroImage && (
                                     <div className="relative aspect-video rounded-3xl overflow-hidden group">
-                                        <img src={formData.heroImage} className="w-full h-full object-cover" />
+                                        <img src={formData.heroImage} alt="Hero preview" className="w-full h-full object-cover" />
                                         <button onClick={() => setFormData({ ...formData, heroImage: "" })} className="absolute top-4 right-4 bg-black/60 p-4 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                                             <X className="w-5 h-5" />
                                         </button>
                                     </div>
-                                ) : (
-                                    <div onClick={() => fileInputRef.current?.click()} className="aspect-video bg-white/5 rounded-3xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center gap-4 cursor-pointer hover:border-[#FAFF00] hover:bg-white/10 transition-all text-gray-500 hover:text-[#FAFF00]">
-                                        {uploading ? <Loader2 className="animate-spin" /> : <Upload className="w-10 h-10" />}
-                                        <span className="text-[10px] font-black uppercase tracking-[0.3em]">Upload Field Intel Image</span>
-                                    </div>
                                 )}
-                                <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileUpload} />
                             </div>
+
+                            {error && (
+                                <div className="flex items-start gap-3 p-5 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-300">
+                                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                                    <span className="text-xs font-bold leading-relaxed">{error}</span>
+                                </div>
+                            )}
 
                             <div className="flex gap-4">
                                 <button onClick={() => setStep(1)} className="px-10 py-6 text-xs font-black uppercase tracking-widest text-gray-500 hover:text-white transition-all">
