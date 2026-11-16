@@ -770,6 +770,16 @@ export default function StoryEditor({ storyId }) {
                                     </div>
                                 </div>
                                 <div>
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Publication Date</label>
+                                    <input
+                                        type="text"
+                                        value={story.date || ''}
+                                        onChange={(e) => handleChange('date', e.target.value)}
+                                        className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-[10px] font-bold"
+                                        placeholder="e.g. Nov 29, 2025"
+                                    />
+                                </div>
+                                <div>
                                     <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Scheduled Publish</label>
                                     <input
                                         type="datetime-local"

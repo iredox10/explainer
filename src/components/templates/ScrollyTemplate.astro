@@ -14,6 +14,22 @@ import { Image } from "astro:assets";
 
 const { story } = Astro.props;
 
+// Prefer the real publish timestamp, then the editor's free-text date.
+const formatDisplayDate = (value: any) => {
+  if (!value) return "";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return String(value);
+  return parsed.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+};
+
+const displayDate =
+  formatDisplayDate(story.publishedAt) || formatDisplayDate(story.date);
+
 // Helper to parse JSON safely
 const parseJSON = (data: any, fallback = []) => {
   if (!data) return fallback;
@@ -73,6 +89,16 @@ const readTime = serverStoryService.calculateReadTime(blocks);
     subhead={story.subhead}
     videoUrl={story.videoUrl}
   />
+
+  {
+    displayDate && (
+      <div class="max-w-7xl mx-auto px-6 pt-10">
+        <span class="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">
+          {displayDate}
+        </span>
+      </div>
+    )
+  }
 
   {
     contentGroups.map((group: any, groupIndex: number) => {

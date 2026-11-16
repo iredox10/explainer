@@ -16,6 +16,23 @@ import { Image } from "astro:assets";
 const { story } = Astro.props;
 const ARTICLE_DATA = story;
 
+// Prefer the real publish timestamp, then the editor's free-text date.
+const formatDisplayDate = (value: any) => {
+  if (!value) return "";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return String(value);
+  return parsed.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+};
+
+const displayDate =
+  formatDisplayDate(ARTICLE_DATA.publishedAt) ||
+  formatDisplayDate(ARTICLE_DATA.date);
+
 // Helper to parse content safely
 const getBlocks = (content: any) => {
   if (!content) return [];
@@ -158,14 +175,19 @@ const parentSeries =
                 </div>
               </div>
 
-              <div class="h-8 w-px bg-gray-300 hidden sm:block"></div>
-
-              <div
-                class="flex items-center gap-2 text-gray-500 text-xs uppercase tracking-widest"
-              >
-                <Calendar className="w-4 h-4" />
-                {ARTICLE_DATA.date || "Nov 29, 2025"}
-              </div>
+              {
+                displayDate && (
+                  <>
+                    <div class="h-8 w-px bg-gray-300 hidden sm:block" />
+                    <div
+                      class="flex items-center gap-2 text-gray-500 text-xs uppercase tracking-widest"
+                    >
+                      <Calendar className="w-4 h-4" />
+                      {displayDate}
+                    </div>
+                  </>
+                )
+              }
 
               <div
                 class="flex items-center gap-2 text-gray-500 text-xs uppercase tracking-widest"

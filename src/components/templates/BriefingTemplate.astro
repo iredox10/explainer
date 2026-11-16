@@ -9,6 +9,24 @@ import { Clock } from "lucide-react";
 const { story } = Astro.props;
 const ARTICLE_DATA = story;
 
+// Prefer the real publish timestamp, then the editor's free-text date.
+const formatDisplayDate = (value: any) => {
+    if (!value) return "";
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return String(value);
+    return parsed.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "UTC",
+    });
+};
+
+const displayDate =
+    formatDisplayDate(ARTICLE_DATA.publishedAt) ||
+    formatDisplayDate(ARTICLE_DATA.date) ||
+    "Just Now";
+
 const getBlocks = (content: any) => {
     if (!content) return [];
     if (Array.isArray(content)) return content;
@@ -69,7 +87,7 @@ const readTime = serverStoryService.calculateReadTime(blocks);
                     >
                         <span class="text-black">{ARTICLE_DATA.author}</span>
                         <span>•</span>
-                        <span>{ARTICLE_DATA.date || "Just Now"}</span>
+                        <span>{displayDate}</span>
                     </div>
                     <div class="flex items-center gap-4">
                         <span
