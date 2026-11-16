@@ -32,7 +32,7 @@
 - [ ] **F11 — Tags and media fields.** Render tags on articles; expose `ambientAudioUrl`, `leftVideoUrl`, `rightVideoUrl` in the editor and pass them to `HeroLoop`.
 - [ ] **F12 — Related stories editor.** Let editors pick `related` stories; render them consistently.
 - [x] **F13 — Settings that do nothing.** `site_name` now drives `og:site_name` and the `<title>` brand; `breaking_news_active` renders a public banner with a new `breaking_news_text` setting (fallback message, hidden under `/admin`). Settings cache TTL dropped to 5s and the save path no longer sends a stale camelCase alias.
-- [ ] **F14 — Read time.** Use the stored `readTime` when present, otherwise compute it (or remove the field).
+- [x] **F14 — Read time.** All four layouts prefer a stored `readTime` (normalising bare numbers to "N min read") and fall back to the computed value; Scrolly and Photo now display a read time where they previously showed none.
 
 ---
 
@@ -143,3 +143,4 @@ Evidence: `BriefingTemplate.astro:94-130`, `PhotoGalleryTemplate.astro:75-104`, 
 | 2026-11-16 | F13 | `site_name` "Probe Desk" → homepage title `Probe Desk - Visual Journalism…` and article title `The Big Story \| Probe Desk`, `og:site_name` follows; restored. Banner: text renders once on `/`, zero on `/admin`; empty text falls back to the default message; `breaking_news_active=false` removes all banner markup. Settings left as found. `astro check` 21, `typecheck` + `build` pass. |
 | 2026-11-16 | F8 | `/series/africa-tech-boom` → 200 with derived title; `/series/does-not-exist` → 302 `/404`. Two-part probe created out of order: series page lists parts 1 then 2, part 1 shows "Up Next in Series" naming part 2 and a `/series/lead-probe-series` badge link, part 2 shows no Up Next, standalone article shows no badge. Probes deleted, back to 7 stories. `astro check` 20, `build` passes. |
 | 2026-11-16 | F10b | All three widget modules compile (200, `SocialCardPreview` was 500 before `html-to-image`); editor page 200; `astro check` 20 with 0 errors in `StoryEditor.jsx`; `build` passes. `package.json`/`bun.lock` changed only by the new dependency. |
+| 2026-11-16 | F14 | Computed read time renders on all four layouts (`1 min read` briefing/scrolly/photo, `12 min read` standard); probe stories with `readTime: "42"` render exactly `42 min read` on standard, scrolly, briefing and photo, then deleted (back to 7). `astro check` 20, `build` passes. |

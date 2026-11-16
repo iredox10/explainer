@@ -81,8 +81,18 @@ const fullText = blocks
 
 import { serverStoryService } from "../../lib/server-appwrite.js";
 
-const readTime = serverStoryService.calculateReadTime(blocks);
-const displayReadTime = `${readTime} min read`;
+// Prefer a stored read time, otherwise derive it from the body.
+const storedReadTime = (value: any) => {
+  if (!value) return "";
+  if (typeof value === "number") return `${value} min read`;
+  const text = String(value).trim();
+  if (!text) return "";
+  return /^\d+$/.test(text) ? `${text} min read` : text;
+};
+
+const computedReadTime = serverStoryService.calculateReadTime(blocks);
+const displayReadTime =
+  storedReadTime(ARTICLE_DATA.readTime) || `${computedReadTime} min read`;
 
 let parentSeries: any = null;
 if (ARTICLE_DATA.seriesSlug) {
@@ -229,7 +239,7 @@ if (ARTICLE_DATA.seriesSlug) {
                 class="flex items-center gap-2 text-gray-500 text-xs uppercase tracking-widest"
               >
                 <Clock className="w-4 h-4" />
-                {ARTICLE_DATA.readTime || displayReadTime}
+                {displayReadTime}
               </div>
             </div>
 

@@ -89,7 +89,19 @@ const fullText = blocks
   .join(". ");
 
 import { serverStoryService } from "../../lib/server-appwrite.js";
-const readTime = serverStoryService.calculateReadTime(blocks);
+
+// Prefer a stored read time, otherwise derive it from the body.
+const storedReadTime = (value: any) => {
+  if (!value) return "";
+  if (typeof value === "number") return `${value} min read`;
+  const text = String(value).trim();
+  if (!text) return "";
+  return /^\d+$/.test(text) ? `${text} min read` : text;
+};
+
+const computedReadTime = serverStoryService.calculateReadTime(blocks);
+const displayReadTime =
+  storedReadTime(ARTICLE_DATA.readTime) || `${computedReadTime} min read`;
 ---
 
 <MainLayout
@@ -110,7 +122,7 @@ const readTime = serverStoryService.calculateReadTime(blocks);
   />
 
   {
-    (ARTICLE_DATA.author || displayDate) && (
+    (ARTICLE_DATA.author || displayDate || displayReadTime) && (
       <div class="max-w-7xl mx-auto px-6 pt-10 flex items-center gap-3">
         {ARTICLE_DATA.author && (
           <a
@@ -120,12 +132,20 @@ const readTime = serverStoryService.calculateReadTime(blocks);
             {ARTICLE_DATA.author}
           </a>
         )}
-        {ARTICLE_DATA.author && displayDate && (
+        {ARTICLE_DATA.author && (displayDate || displayReadTime) && (
           <span class="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">·</span>
         )}
         {displayDate && (
           <span class="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">
             {displayDate}
+          </span>
+        )}
+        {displayDate && displayReadTime && (
+          <span class="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">·</span>
+        )}
+        {displayReadTime && (
+          <span class="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">
+            {displayReadTime}
           </span>
         )}
       </div>

@@ -46,6 +46,21 @@ const getBlocks = (content: any) => {
 };
 
 const blocks = getBlocks(ARTICLE_DATA.content);
+
+import { serverStoryService } from "../../lib/server-appwrite.js";
+
+// Prefer a stored read time, otherwise derive it from the body.
+const storedReadTime = (value: any) => {
+    if (!value) return "";
+    if (typeof value === "number") return `${value} min read`;
+    const text = String(value).trim();
+    if (!text) return "";
+    return /^\d+$/.test(text) ? `${text} min read` : text;
+};
+
+const computedReadTime = serverStoryService.calculateReadTime(blocks);
+const displayReadTime =
+    storedReadTime(ARTICLE_DATA.readTime) || `${computedReadTime} min read`;
 ---
 
 <MainLayout
@@ -87,6 +102,13 @@ const blocks = getBlocks(ARTICLE_DATA.content);
                         class="mt-3 text-[10px] font-bold uppercase tracking-[0.25em] text-gray-500"
                     >
                         {displayDate}
+                    </p>
+                )}
+                {displayReadTime && (
+                    <p
+                        class="mt-2 text-[10px] font-bold uppercase tracking-[0.25em] text-gray-500"
+                    >
+                        {displayReadTime}
                     </p>
                 )}
                 <div class="mt-20 animate-bounce text-gray-500 mx-auto w-max">

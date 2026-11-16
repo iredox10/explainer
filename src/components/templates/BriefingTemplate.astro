@@ -52,7 +52,19 @@ const getBlocks = (content: any) => {
 const blocks = getBlocks(ARTICLE_DATA.content);
 
 import { serverStoryService } from "../../lib/server-appwrite.js";
-const readTime = serverStoryService.calculateReadTime(blocks);
+
+// Prefer a stored read time, otherwise derive it from the body.
+const storedReadTime = (value: any) => {
+    if (!value) return "";
+    if (typeof value === "number") return `${value} min read`;
+    const text = String(value).trim();
+    if (!text) return "";
+    return /^\d+$/.test(text) ? `${text} min read` : text;
+};
+
+const computedReadTime = serverStoryService.calculateReadTime(blocks);
+const displayReadTime =
+    storedReadTime(ARTICLE_DATA.readTime) || `${computedReadTime} min read`;
 ---
 
 <MainLayout
@@ -107,7 +119,7 @@ const readTime = serverStoryService.calculateReadTime(blocks);
                             class="text-[10px] font-black uppercase tracking-widest text-[#FAFF00] bg-black px-2 py-1 flex items-center gap-2"
                         >
                             <Clock className="w-3 h-3" />
-                            {readTime} Min Read
+                            {displayReadTime}
                         </span>
                         <ShareButtons
                             client:load
