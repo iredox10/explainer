@@ -3,7 +3,13 @@ import postgres from 'postgres';
 import { env } from '../env.js';
 import * as schema from './schema.js';
 
-export const sql = postgres(env.DATABASE_URL, {
+// Heroku Postgres requires TLS but injects DATABASE_URL without sslmode.
+const databaseUrl =
+    process.env.DYNO && !/[?&]sslmode=/.test(env.DATABASE_URL)
+        ? `${env.DATABASE_URL}${env.DATABASE_URL.includes('?') ? '&' : '?'}sslmode=require`
+        : env.DATABASE_URL;
+
+export const sql = postgres(databaseUrl, {
     max: 10,
     idle_timeout: 20,
     prepare: false,

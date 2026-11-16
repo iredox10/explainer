@@ -1,0 +1,76 @@
+{
+  "name": "explainer-api",
+  "description": "Hono API, Better Auth, and PostgreSQL for the Explainer visual-journalism platform.",
+  "keywords": ["astro", "hono", "drizzle", "postgres", "better-auth"],
+  "stack": "heroku-24",
+  "buildpacks": [{ "url": "heroku/nodejs" }],
+  "addons": [{ "plan": "heroku-postgresql:essential-0" }],
+  "formation": {
+    "web": { "quantity": 1, "size": "eco" }
+  },
+  "env": {
+    "NODE_ENV": {
+      "value": "production"
+    },
+    "LOG_LEVEL": {
+      "value": "info"
+    },
+    "BETTER_AUTH_SECRET": {
+      "description": "Signing secret for sessions. Generated at setup; rotating it signs everyone out.",
+      "generator": "secret"
+    },
+    "CRON_SECRET": {
+      "description": "Bearer token for the /api/cron/publish-scheduled endpoint.",
+      "generator": "secret"
+    },
+    "INTERNAL_API_KEY": {
+      "description": "Shared secret the Astro frontend uses to preview unpublished stories.",
+      "generator": "secret"
+    },
+    "BETTER_AUTH_URL": {
+      "description": "Public HTTPS URL of this API, e.g. https://explainer-api-xxxx.herokuapp.com",
+      "required": true
+    },
+    "FRONTEND_URL": {
+      "description": "Public URL of the Astro site; used for CORS, reset links, and seeded media URLs.",
+      "required": true
+    },
+    "TRUSTED_ORIGINS": {
+      "description": "Optional comma-separated extra origins (custom domains, preview deployments).",
+      "required": false
+    },
+    "STORAGE_DRIVER": {
+      "value": "s3"
+    },
+    "S3_ENDPOINT": {
+      "description": "S3-compatible endpoint (Cloudflare R2, Backblaze B2). Leave blank for AWS S3.",
+      "required": false
+    },
+    "S3_REGION": {
+      "value": "auto"
+    },
+    "S3_BUCKET": {
+      "description": "Bucket that stores uploaded media.",
+      "required": true
+    },
+    "S3_ACCESS_KEY_ID": {
+      "description": "Bucket access key ID.",
+      "required": true
+    },
+    "S3_SECRET_ACCESS_KEY": {
+      "description": "Bucket secret access key.",
+      "required": true
+    },
+    "S3_PUBLIC_URL": {
+      "description": "Public/CDN base URL for the bucket. Leave blank to proxy reads through /media/* instead.",
+      "required": false
+    },
+    "RESEND_API_KEY": {
+      "description": "Optional Resend API key. Without it, outbound email is logged instead of sent.",
+      "required": false
+    },
+    "EMAIL_FROM": {
+      "value": "news@explainer.africa"
+    }
+  }
+}

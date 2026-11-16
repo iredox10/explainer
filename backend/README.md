@@ -61,6 +61,7 @@ Useful scripts:
 | `bun run db:push` | Push the schema without a migration (dev only) |
 | `bun run db:studio` | Drizzle Studio |
 | `bun run db:seed` | Create/repair the first superadmin |
+| `bun run db:seed:prod` | Same, from the compiled `dist/` build (used on Heroku) |
 | `bun run migrate:appwrite` | One-time Appwrite data import |
 
 ## Environment variables
@@ -196,33 +197,113 @@ also migrates on boot, so both paths are safe. Set the health check to
 
 ### Heroku
 
-The `Procfile` declares a `release` phase that runs migrations before the new
-dyno takes traffic, and a `web` process that runs the compiled server:
+`app.json` describes the app (nodejs buildpack, Heroku Postgres Essential 0,
+generated secrets, required config vars). Heroku applies it when the app is
+created from a manifest or the "Deploy to Heroku" button, which requires a
+repository whose root is this `backend/` directory. In the monorepo, create the
+app with the CLI instead and set the config vars yourself.
+
+Heroku runs `npm install` and then `npm run build` during the build, and the
+`Procfile` adds two processes:
 
 ```
-release: npx drizzle-kit migrate
+release: npm run db:migrate
 web: node dist/index.js
 ```
 
+Because this API lives in a subdirectory of a monorepo, deploy only `backend/`
+with a subtree push (or point the app at a repo that contains just this
+directory):
+
 ```bash
+cd ../                      # repository root
 heroku create explainer-api
 heroku addons:create heroku-postgresql:essential-0
-heroku config:set BETTER_AUTH_URL=https://<app>.herokuapp.com \
+git subtree push --prefix backend heroku feat/dedicated-backend:main
+```
+
+If you create the app from `app.json`, the app and the Postgres addon already
+exist; skip to setting config vars. Heroku injects `DATABASE_URL`
+for the addon; `src/db/index.ts` and `drizzle.config.ts` append
+`sslmode=require` automatically when `DYNO` is present, so do not add it to the
+URL by hand.
+
+Config vars (everything `app.json` marks required must be set before the first
+deploy, or the app fails env validation at boot):
+
+```bash
+heroku config:set \
+  BETTER_AUTH_URL=https://<app>.herokuapp.com \
   FRONTEND_URL=https://explainer.africa \
   BETTER_AUTH_SECRET=$(openssl rand -hex 32) \
   INTERNAL_API_KEY=$(openssl rand -hex 32) \
   CRON_SECRET=$(openssl rand -hex 32) \
-  STORAGE_DRIVER=s3 ...
-git push heroku main
+  STORAGE_DRIVER=s3 \
+  S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com \
+  S3_REGION=auto \
+  S3_BUCKET=explainer-media \
+  S3_ACCESS_KEY_ID=<key> \
+  S3_SECRET_ACCESS_KEY=<secret> \
+  S3_PUBLIC_URL=https://media.explainer.africa
 ```
 
-Use Heroku Scheduler (or any external cron) to `curl` the publish endpoint.
-Because dyno storage is ephemeral, use S3 for media.
+Use the PostgreSQL addon *outside* the Heroku network only with TLS (already
+handled). Dyno storage is ephemeral, so `STORAGE_DRIVER=s3` is required in
+production; the server logs a warning when it boots with `local`.
 
-If the Node.js buildpack does not pick up `bun.lock`, it falls back to
-`npm install` from `package.json`, which still produces `dist/` via the `build`
-script. For container-based deploys (`heroku container:push web`), Heroku skips
-the `release` phase; migrations still run on server boot.
+Migrations run in the release phase and again on boot, and the boot path also
+creates the `pg_trgm` extension, the story search index, and the settings row,
+so a fresh database needs no manual step. If the release phase cannot reach the
+database, the deploy fails instead of serving a half-migrated app.
+
+Create the first superadmin once (the compiled build is used because `tsx` is a
+dev dependency and is pruned before the app runs):
+
+```bash
+heroku config:set SEED_ADMIN_EMAIL=you@example.com \
+  SEED_ADMIN_PASSWORD='a-strong-password' \
+  SEED_ADMIN_NAME='Newsroom Admin'
+heroku run node dist/db/seed.js
+heroku config:unset SEED_ADMIN_EMAIL SEED_ADMIN_PASSWORD SEED_ADMIN_NAME
+```
+
+Schedule publishing with the free Heroku Scheduler add-on. It invokes the same
+code as the cron endpoint but without an HTTP round trip:
+
+```bash
+heroku addons:create scheduler:standard
+heroku addons:open scheduler
+# Add a job: node dist/jobs/publish-scheduled.js — every 10 minutes
+```
+
+Scheduler's minimum interval is 10 minutes. Alternatively, any external cron
+can `curl` `https://<app>.herokuapp.com/api/cron/publish-scheduled` with
+`Authorization: Bearer $CRON_SECRET`.
+
+Eco dynos sleep after 30 minutes without traffic (the first request afterwards
+takes a few seconds to wake) and count against a shared monthly pool. For an
+always-on newsroom API use the Basic dyno:
+
+```bash
+heroku ps:scale web=1:basic   # $7/mo; with Essential 0 ($5/mo) this fits the
+                              # GitHub Student Pack's $13/mo Heroku credit
+```
+
+Heroku's Node buildpack uses npm even though the repo uses Bun locally; commit a
+`package-lock.json` (or let Heroku generate one) when you want reproducible
+installs. For container deploys (`heroku stack:set container` +
+`heroku container:push web`), Heroku skips the `release` phase; migrations still
+run on server boot.
+
+Verify after deploy:
+
+```bash
+heroku logs --tail
+curl -fsS https://<app>.herokuapp.com/health
+```
+
+Then point the frontend at the API (`PUBLIC_API_URL`) and copy the generated
+`INTERNAL_API_KEY` into the frontend's server environment.
 
 ### Docker
 

@@ -2,8 +2,15 @@ import { serve } from '@hono/node-server';
 import { app } from './app.js';
 import { bootstrapDatabase, closeDatabase } from './db/index.js';
 import { runMigrations } from './db/migrate.js';
-import { env } from './env.js';
+import { env, isProduction } from './env.js';
 import { logger } from './lib/logger.js';
+
+if (isProduction && env.STORAGE_DRIVER === 'local') {
+    logger.warn(
+        { uploadDir: env.UPLOAD_DIR },
+        'STORAGE_DRIVER=local on an ephemeral filesystem; uploads will be lost on redeploy',
+    );
+}
 
 async function start() {
     try {
