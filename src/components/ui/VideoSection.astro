@@ -5,11 +5,13 @@ interface Props {
     title: string;
     seriesName: string;
     duration: string;
-    thumbUrl: string;
+    thumbUrl?: string;
   }[];
 }
 
 const { videos } = Astro.props;
+const FALLBACK_THUMB =
+  "https://images.unsplash.com/photo-1585829365294-111320e7588e?w=800&q=80";
 ---
 
 <section class="bg-[#121212] text-white py-24 relative overflow-hidden">
@@ -35,7 +37,7 @@ const { videos } = Astro.props;
           <!-- Thumbnail Container -->
           <div class="relative aspect-[16/9] bg-gray-900 mb-6 overflow-hidden">
             <Image 
-              src={video.thumbUrl} 
+              src={video.thumbUrl || FALLBACK_THUMB} 
               alt={video.title}
               width={640}
               height={360}
