@@ -14,7 +14,9 @@ import {
     serializeRow,
     toDate,
 } from '../lib/http.js';
+import { logger } from '../lib/logger.js';
 import { slugifyOrFallback, uniqueSuffix } from '../lib/slug.js';
+import { ensureCategory } from '../lib/taxonomy.js';
 
 const storyInputSchema = z.object({
     headline: z.string().min(1).max(300).optional(),
@@ -156,6 +158,19 @@ function storyRowFromInput(body: StoryInput, mode: 'create' | 'update') {
     }
 
     return row;
+}
+
+/**
+ * Keeps the categories table in step with the free-text category on a story.
+ * A failure here must never block the story save, so it is logged and swallowed.
+ */
+async function syncCategory(category: unknown): Promise<void> {
+    if (typeof category !== 'string' || !category.trim()) return;
+    try {
+        await ensureCategory(category);
+    } catch (error) {
+        logger.warn({ error, category }, 'failed to ensure category record');
+    }
 }
 
 async function ensureUniqueSlug(base: string, excludeId?: string): Promise<string> {
@@ -317,6 +332,7 @@ adminStories.post('/', zValidator('json', storyInputSchema), async (c) => {
     const body = c.req.valid('json');
     const row = storyRowFromInput(body, 'create');
     row.slug = await ensureUniqueSlug(String(row.slug));
+    await syncCategory(row.category);
 
     const [created] = await db
         .insert(stories)
@@ -334,6 +350,7 @@ adminStories.patch('/:id', zValidator('json', storyInputSchema), async (c) => {
     if (body.slug !== undefined) {
         row.slug = await ensureUniqueSlug(body.slug, id);
     }
+    await syncCategory(row.category);
     if (Object.keys(row).length === 1) {
         const [existing] = await db.select().from(stories).where(eq(stories.id, id)).limit(1);
         if (!existing) throw new HTTPException(404, { message: 'Story not found' });

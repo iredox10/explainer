@@ -12,7 +12,7 @@
 
 - [x] **B1 — Partial updates null out dates.** `toDate(undefined)` returns `null`, so any PATCH that omits `scheduledAt`/`publishedAt` wipes them. Fixed by guarding both writes in `storyRowFromInput`; explicit `null` still clears.
 - [x] **B2 — Public guest submission endpoint.** Added `POST /api/submissions` (public, rate-limited) that forces `Pending Review` / `pending_review`; `/submit` can now work without an admin token.
-- [ ] **B3 — Category records for story categories.** Upsert a category row (name, slug, color) whenever a story is saved, and backfill existing story categories.
+- [x] **B3 — Category records for story categories.** Added `ensureCategory()` on story create/update and a `db:backfill-categories` script; existing story categories now have rows/slugs.
 - [ ] **B4 — Story locking.** Add lock/unlock endpoints and persist `lockedBy` so the editor's existing lock check is real.
 - [ ] **B5 — Category description + color contract.** Decide the public contract for category `color`/`description`; expose what the topic page needs.
 
@@ -130,3 +130,4 @@ Evidence: `BriefingTemplate.astro:94-130`, `PhotoGalleryTemplate.astro:75-104`, 
 | 2026-11-16 | F1 | `date` round-trips through the API; all four article layouts render `Nov 16, 2026` from `publishedAt`; Standard no longer contains the `Nov 29, 2025` fallback. `bun astro check` still reports 23 pre-existing errors (none in the new date code). |
 | 2026-11-16 | B2 | Unauthenticated POST `/api/submissions` → 201; admin list shows `Pending Review` / `pending_review` / `Guest Submission` / `standard`; public `/api/stories` excludes it; invalid payload → 400; rate limit → 429; test row deleted. `typecheck` + `build` pass. |
 | 2026-11-16 | F2 | Schedule button writes `Scheduled`/`scheduled`; cron published a due test story and preserved `scheduledAt`; `/admin/edit/new-story` → 200; `astro check` unchanged at 23 pre-existing errors, 0 in StoryEditor. |
+| 2026-11-16 | B3 | Backfill created `super-feature`, `technology`, `news`, `environment`; `/api/categories` now returns all five story categories with slugs. `typecheck` + `build` pass. |
