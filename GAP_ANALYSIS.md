@@ -19,7 +19,7 @@
 ### Frontend
 
 - [x] **F1 — Date pipeline.** Added a "Publication Date" input; all four layouts now prefer `publishedAt`, then `date`; removed the hardcoded `"Nov 29, 2025"` fallback.
-- [ ] **F2 — Scheduling action.** Add a "Schedule" action that writes `status: 'Scheduled'`, `workflow_status: 'scheduled'`, and `scheduledAt`.
+- [x] **F2 — Scheduling action.** Added a "Schedule" button for editors; writes `status: 'Scheduled'`, `workflow_status: 'scheduled'`, and keeps `scheduledAt`; amber status styling added.
 - [ ] **F3 — Guest portal.** Point `/submit` at the public submission endpoint (and remove admin-only upload/save calls).
 - [ ] **F4 — Category links.** Use category slugs in homepage/breadcrumb links; align topic page colors/description with the backend contract.
 - [ ] **F5 — Layout block coverage.** Briefing/Photo/Scrolly must not silently drop editor blocks. Add renderers or a visible unsupported-block fallback.
@@ -129,3 +129,4 @@ Evidence: `BriefingTemplate.astro:94-130`, `PhotoGalleryTemplate.astro:75-104`, 
 | 2026-11-16 | B1 | Created story with both dates, PATCH `{status,workflow_status}` preserved `scheduledAt` and `publishedAt`; explicit `{"scheduledAt":null}` cleared only that column. `bun run typecheck` + `bun run build` pass. |
 | 2026-11-16 | F1 | `date` round-trips through the API; all four article layouts render `Nov 16, 2026` from `publishedAt`; Standard no longer contains the `Nov 29, 2025` fallback. `bun astro check` still reports 23 pre-existing errors (none in the new date code). |
 | 2026-11-16 | B2 | Unauthenticated POST `/api/submissions` → 201; admin list shows `Pending Review` / `pending_review` / `Guest Submission` / `standard`; public `/api/stories` excludes it; invalid payload → 400; rate limit → 429; test row deleted. `typecheck` + `build` pass. |
+| 2026-11-16 | F2 | Schedule button writes `Scheduled`/`scheduled`; cron published a due test story and preserved `scheduledAt`; `/admin/edit/new-story` → 200; `astro check` unchanged at 23 pre-existing errors, 0 in StoryEditor. |

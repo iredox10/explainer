@@ -428,7 +428,7 @@ export default function StoryEditor({ storyId }) {
                 ...story,
                 workflowStatus: newStatus,
                 workflow_status: newStatus,
-                status: newStatus === 'published' ? 'Published' : (newStatus === 'pending_review' ? 'Pending Review' : 'Draft'),
+                status: newStatus === 'published' ? 'Published' : (newStatus === 'pending_review' ? 'Pending Review' : (newStatus === 'scheduled' ? 'Scheduled' : 'Draft')),
                 content: serializedContent,
                 scrollySections: serializedScrolly,
                 sources: serializedSources,
@@ -495,7 +495,8 @@ export default function StoryEditor({ storyId }) {
                         <div className="min-w-0">
                             <div className="flex items-center gap-2 md:gap-3">
                                 <span className={`text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] px-1.5 py-0.5 rounded border whitespace-nowrap ${story.workflow_status === 'published' ? 'bg-green-50 text-green-700 border-green-100' :
-                                    story.workflow_status === 'pending_review' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-gray-50 text-gray-500 border-gray-100'
+                                    story.workflow_status === 'pending_review' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                                    story.workflow_status === 'scheduled' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-gray-50 text-gray-500 border-gray-100'
                                     }`}>
                                     {story.workflow_status}
                                 </span>
@@ -557,6 +558,18 @@ export default function StoryEditor({ storyId }) {
                                 {(story.workflow_status === 'draft' || story.workflow_status === 'approved' || story.workflow_status === 'published') && (
                                     <button onClick={() => performSave('published')} className="bg-[#FAFF00] text-black px-4 md:px-6 py-2.5 md:py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 md:gap-3 hover:bg-black hover:text-white transition-all shadow-[0_10px_20px_rgba(250,255,0,0.3)] shrink-0">
                                         <CheckSquare className="w-4 h-4" /> <span className="hidden sm:inline">{story.workflow_status === 'published' ? 'Update' : 'Publish'}</span>
+                                    </button>
+                                )}
+
+                                {/* Editor can queue unpublished stories for the scheduled-publish cron */}
+                                {story.workflow_status !== 'published' && (
+                                    <button
+                                        onClick={() => performSave('scheduled')}
+                                        disabled={!story.scheduledAt || saveStatus === 'saving' || isLocked}
+                                        title={!story.scheduledAt ? 'Set a scheduled date first' : 'Publish automatically at the scheduled time'}
+                                        className="bg-amber-400 text-black px-4 md:px-6 py-2.5 md:py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 md:gap-3 hover:bg-black hover:text-white transition-all shadow-[0_10px_20px_rgba(251,191,36,0.3)] shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-amber-400 disabled:hover:text-black"
+                                    >
+                                        <Clock className="w-4 h-4" /> <span className="hidden sm:inline">Schedule</span>
                                     </button>
                                 )}
                             </div>
@@ -814,11 +827,13 @@ export default function StoryEditor({ storyId }) {
                         <section className="space-y-4">
                             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Dispatch Status</h3>
                             <div className={`p-6 rounded-3xl border-2 shadow-sm flex items-center justify-between ${story.workflow_status === 'published' ? 'bg-green-50/50 border-green-100 text-green-900' :
-                                story.workflow_status === 'pending_review' ? 'bg-blue-50/50 border-blue-100 text-blue-900' : 'bg-white border-gray-100'
+                                story.workflow_status === 'pending_review' ? 'bg-blue-50/50 border-blue-100 text-blue-900' :
+                                story.workflow_status === 'scheduled' ? 'bg-amber-50/60 border-amber-200 text-amber-900' : 'bg-white border-gray-100'
                                 }`}>
                                 <div className="flex items-center gap-4">
                                     <div className={`w-3 h-3 rounded-full animate-pulse ${story.workflow_status === 'published' ? 'bg-green-500' :
-                                        story.workflow_status === 'pending_review' ? 'bg-blue-500' : 'bg-gray-300'
+                                        story.workflow_status === 'pending_review' ? 'bg-blue-500' :
+                                        story.workflow_status === 'scheduled' ? 'bg-amber-500' : 'bg-gray-300'
                                         }`} />
                                     <span className="text-sm font-black uppercase tracking-tighter">{story.workflow_status}</span>
                                 </div>
