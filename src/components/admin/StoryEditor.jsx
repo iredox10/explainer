@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Type, X, AlertCircle, Loader2, Upload, Send, CheckSquare, Eye, Clock, History, Search, ChevronRight, ExternalLink, BookOpen, Zap, Settings2, Video, Layers, Map as MapIcon, BarChart3, Smartphone, MoveHorizontal } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, Image as ImageIcon, Type, X, AlertCircle, Loader2, Upload, Send, CheckSquare, Eye, Clock, History, Search, ChevronRight, ExternalLink, BookOpen, Zap, Settings2, Video, Layers, Map as MapIcon, BarChart3, Smartphone, MoveHorizontal, Share2 } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import BlockWrapper from './BlockWrapper';
 import ImageCropper from './ImageCropper';
+import SEOScorecard from './SEOScorecard';
+import RevisionDiff from './RevisionDiff';
+import SocialCardPreview from '../ui/SocialCardPreview';
 import { getCurrentUser, ROLES } from '../../lib/authStore';
 import { storyService, categoryService, authorService } from '../../lib/services';
 
@@ -23,6 +26,7 @@ export default function StoryEditor({ storyId }) {
     const [authors, setAuthors] = useState([]);
     const [pendingImageFile, setPendingImageFile] = useState(null);
     const [showImageCropper, setShowImageCropper] = useState(false);
+    const [showSocialCard, setShowSocialCard] = useState(false);
 
     const fileInputRef = useRef(null);
     const previewIframeRef = useRef(null);
@@ -925,6 +929,16 @@ export default function StoryEditor({ storyId }) {
                                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-center py-4 italic">No history logged yet.</p>
                                 )}
                             </div>
+                            <RevisionDiff
+                                snapshots={(story.revisionSnapshots || []).map((snap) => ({
+                                    id: snap.id,
+                                    timestamp: snap.createdAt,
+                                    savedBy: snap.user,
+                                    content: parseJSONField(snap.story?.content, []),
+                                }))}
+                                currentContent={parseJSONField(story.content, [])}
+                                onRestore={(snap) => snap?.id && restoreSnapshot(snap.id)}
+                            />
                             <div className="space-y-3">
                                 <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-300">Snapshots</h4>
                                 {(story.revisionSnapshots || []).slice().reverse().map((snap) => (
@@ -998,6 +1012,7 @@ export default function StoryEditor({ storyId }) {
                                 />
                             </div>
                             <div className="space-y-3">
+                                <SEOScorecard story={{ ...story, content: parseJSONField(story.content, []) }} />
                                 <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block">SEO Overrides</label>
                                 <input
                                     className="w-full bg-white border border-gray-100 p-3 rounded-2xl text-[10px] font-bold"
@@ -1031,6 +1046,17 @@ export default function StoryEditor({ storyId }) {
                                     onChange={(e) => handleChange('seo', { ...story.seo, keywords: e.target.value.split(',').map(k => k.trim()).filter(Boolean) })}
                                 />
                             </div>
+                        </section>
+
+                        <section className="space-y-4">
+                            <button
+                                type="button"
+                                onClick={() => setShowSocialCard(true)}
+                                className="w-full flex items-center justify-between group"
+                            >
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 group-hover:text-gray-600 transition-colors">Social Card</h3>
+                                <Share2 className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors" />
+                            </button>
                         </section>
 
                         <section className="space-y-4">
@@ -1077,6 +1103,23 @@ export default function StoryEditor({ storyId }) {
                 const target = window._currentUploadTarget || 'hero';
                 handleFileUpload(e, target);
             }} />
+
+            {/* Social Card Modal - full-bleed component, so it needs its own canvas */}
+            {showSocialCard && (
+                <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm overflow-y-auto p-4 md:p-10">
+                    <div className="max-w-5xl mx-auto bg-white rounded-3xl shadow-2xl relative overflow-hidden">
+                        <button
+                            type="button"
+                            onClick={() => setShowSocialCard(false)}
+                            className="absolute top-4 right-4 z-20 bg-black text-white p-3 rounded-full hover:bg-gray-800 transition-colors"
+                            aria-label="Close social card preview"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                        <SocialCardPreview article={story} />
+                    </div>
+                </div>
+            )}
 
             {/* Image Cropper Modal - Uses portal to render at document body */}
             {showImageCropper && pendingImageFile && (
