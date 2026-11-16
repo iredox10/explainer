@@ -24,8 +24,14 @@ export default function SubmissionsPage() {
         setIsLoading(true);
         try {
             const data = await storyService.getAllStories();
-            // Filter for stories submitted via the guest portal or in pending_review
-            setSubmissions(data.filter(s => s.category === 'Guest Submission' || s.workflow_status === 'pending_review'));
+            // Guest queue: anything awaiting review. Once an item is approved or
+            // rejected it leaves the queue, so terminal workflow states are excluded
+            // even when the category is still "Guest Submission".
+            const terminal = ['draft', 'rejected', 'published', 'archived'];
+            setSubmissions(data.filter(s =>
+                s.workflow_status === 'pending_review' ||
+                (s.category === 'Guest Submission' && !terminal.includes(s.workflow_status))
+            ));
         } catch (e) {
             console.error(e);
         } finally {
@@ -33,11 +39,15 @@ export default function SubmissionsPage() {
         }
     };
 
-    const handleAction = async (id, status) => {
+    const handleAction = async (id, action) => {
+        const next = action === 'approve'
+            ? { status: 'Draft', workflow_status: 'draft' }
+            : { status: 'Rejected', workflow_status: 'rejected' };
+
         try {
-            await storyService.saveStory(id, { workflow_status: status });
-            setSubmissions(prev => prev.map(s => s.$id === id ? { ...s, workflow_status: status } : s));
-            alert(`Dispatch status updated to ${status}`);
+            await storyService.saveStory(id, next);
+            setSubmissions(prev => prev.map(s => s.$id === id ? { ...s, ...next } : s));
+            alert(action === 'approve' ? 'Submission approved — moved to Draft' : 'Submission rejected');
         } catch (e) {
             alert("Action failed: " + e.message);
         }
@@ -132,10 +142,10 @@ export default function SubmissionsPage() {
                                         <a href={`/admin/edit/${dispatch.$id}`} className="flex-1 xl:flex-none p-4 bg-gray-50 hover:bg-black hover:text-white rounded-2xl text-gray-400 transition-all flex items-center justify-center border border-gray-100" title="Review Intelligence">
                                             <ExternalLink className="w-5 h-5" />
                                         </a>
-                                        <button onClick={() => handleAction(dispatch.$id, 'approved')} className="flex-1 xl:flex-none p-4 bg-green-50 hover:bg-green-600 hover:text-white rounded-2xl text-green-600 transition-all flex items-center justify-center border border-green-100" title="Authorize Publication">
+                                        <button onClick={() => handleAction(dispatch.$id, 'approve')} className="flex-1 xl:flex-none p-4 bg-green-50 hover:bg-green-600 hover:text-white rounded-2xl text-green-600 transition-all flex items-center justify-center border border-green-100" title="Authorize Publication">
                                             <CheckCircle className="w-5 h-5" />
                                         </button>
-                                        <button onClick={() => handleAction(dispatch.$id, 'draft')} className="flex-1 xl:flex-none p-4 bg-red-50 hover:bg-red-600 hover:text-white rounded-2xl text-red-600 transition-all flex items-center justify-center border border-red-100" title="Reject Transmission">
+                                        <button onClick={() => handleAction(dispatch.$id, 'reject')} className="flex-1 xl:flex-none p-4 bg-red-50 hover:bg-red-600 hover:text-white rounded-2xl text-red-600 transition-all flex items-center justify-center border border-red-100" title="Reject Transmission">
                                             <XCircle className="w-5 h-5" />
                                         </button>
                                     </div>

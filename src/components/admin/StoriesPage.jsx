@@ -140,7 +140,8 @@ export default function StoriesPage() {
                     case 'archive':
                         await storyService.saveStory(storyId, {
                             ...story,
-                            status: 'Archived'
+                            status: 'Archived',
+                            workflow_status: 'archived'
                         });
                         break;
                 }
@@ -220,8 +221,7 @@ export default function StoriesPage() {
         const matchesTab = activeTab === 'all' ? true :
             activeTab === 'draft' ? story.workflow_status === 'draft' :
                 activeTab === 'pending' ? story.workflow_status === 'pending_review' :
-                    activeTab === 'approved' ? story.workflow_status === 'approved' :
-                        activeTab === 'published' ? story.workflow_status === 'published' : true;
+                    activeTab === 'published' ? story.workflow_status === 'published' : true;
 
         const matchesSearch = (story.headline || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
             (story.author || '').toLowerCase().includes(searchQuery.toLowerCase());
@@ -257,14 +257,14 @@ export default function StoriesPage() {
 
                 <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8">
                     <div className="flex items-center gap-2 bg-white p-2 rounded-2xl border border-gray-100 overflow-x-auto w-full xl:w-fit shadow-sm no-scrollbar">
-                        {['all', 'draft', 'pending', 'approved', 'published'].map((tab) => (
+                        {['all', 'draft', 'pending', 'published'].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
                                 className={`px-4 md:px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === tab ? 'bg-black text-[#FAFF00]' : 'text-gray-400 hover:bg-gray-50 hover:text-black'
                                     }`}
                             >
-                                {tab === 'pending' ? 'Review' : tab === 'approved' ? 'Approved' : tab}
+                                {tab === 'pending' ? 'Review' : tab}
                             </button>
                         ))}
                     </div>
