@@ -289,6 +289,24 @@ const displayReadTime =
                 }
             </article>
 
+            {
+                Array.isArray(ARTICLE_DATA.tags) && ARTICLE_DATA.tags.length > 0 && (
+                    <div class="flex flex-wrap items-center gap-2 mt-10 pt-6 border-t border-gray-200">
+                        <span class="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400 mr-2">
+                            Tags
+                        </span>
+                        {ARTICLE_DATA.tags.map((tag: string) => (
+                            <a
+                                href={`/search?q=${encodeURIComponent(tag)}`}
+                                class="text-[10px] font-black uppercase tracking-[0.15em] border border-black px-2.5 py-1 hover:bg-[#FAFF00] hover:border-transparent transition-colors"
+                            >
+                                {tag}
+                            </a>
+                        ))}
+                    </div>
+                )
+            }
+
             <div class="mt-16 pt-8 border-t border-gray-200 text-center">
                 <a
                     href="/"

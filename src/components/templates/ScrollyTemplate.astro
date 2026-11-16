@@ -119,6 +119,9 @@ const displayReadTime =
     headline={story.headline}
     subhead={story.subhead}
     videoUrl={story.videoUrl}
+    leftVideoUrl={story.leftVideoUrl}
+    rightVideoUrl={story.rightVideoUrl}
+    ambientAudioUrl={story.ambientAudioUrl}
   />
 
   {
@@ -392,6 +395,26 @@ const displayReadTime =
         </div>
       );
     })
+  }
+
+  {
+    Array.isArray(ARTICLE_DATA.tags) && ARTICLE_DATA.tags.length > 0 && (
+      <div class="max-w-7xl mx-auto px-6">
+        <div class="flex flex-wrap items-center gap-2 py-10 border-t border-gray-100">
+          <span class="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400 mr-2">
+            Tags
+          </span>
+          {ARTICLE_DATA.tags.map((tag: string) => (
+            <a
+              href={`/search?q=${encodeURIComponent(tag)}`}
+              class="text-[10px] font-black uppercase tracking-[0.15em] border border-black px-2.5 py-1 hover:bg-[#FAFF00] hover:border-transparent transition-colors"
+            >
+              {tag}
+            </a>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   <PersistentAudioPlayer client:load text={fullText} title={story.headline} />

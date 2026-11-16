@@ -268,6 +268,26 @@ const displayReadTime =
                 }
             </section>
 
+            {
+                Array.isArray(ARTICLE_DATA.tags) && ARTICLE_DATA.tags.length > 0 && (
+                    <div class="max-w-3xl mx-auto px-6 pt-16">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="text-[10px] font-black uppercase tracking-[0.25em] text-gray-500 mr-2">
+                                Tags
+                            </span>
+                            {ARTICLE_DATA.tags.map((tag: string) => (
+                                <a
+                                    href={`/search?q=${encodeURIComponent(tag)}`}
+                                    class="text-[10px] font-black uppercase tracking-[0.15em] border border-gray-700 text-gray-300 px-2.5 py-1 hover:bg-[#FAFF00] hover:text-black hover:border-transparent transition-colors"
+                                >
+                                    {tag}
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+                )
+            }
+
             {/* Outro */}
             <section
                 class="max-w-3xl mx-auto px-6 py-32 text-center border-t border-gray-900 mt-20"

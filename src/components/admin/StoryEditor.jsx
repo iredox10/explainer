@@ -183,6 +183,9 @@ export default function StoryEditor({ storyId }) {
                 status: "Draft", // Legacy field mapping
                 layout: "standard",
                 videoUrl: "",
+                leftVideoUrl: "",
+                rightVideoUrl: "",
+                ambientAudioUrl: "",
                 isFeatured: false,
                 tags: [],
                 sources: [],
@@ -441,6 +444,9 @@ export default function StoryEditor({ storyId }) {
                     status: story.status,
                     layout: story.layout,
                     videoUrl: story.videoUrl,
+                    leftVideoUrl: story.leftVideoUrl,
+                    rightVideoUrl: story.rightVideoUrl,
+                    ambientAudioUrl: story.ambientAudioUrl,
                     isFeatured: story.isFeatured,
                     seriesSlug: story.seriesSlug || '',
                     seriesPart: story.seriesPart || null,
@@ -995,12 +1001,36 @@ export default function StoryEditor({ storyId }) {
                                 )}
                             </div>
                             {story.layout === 'scrolly' && (
-                                <input
-                                    className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-[10px] font-bold"
-                                    placeholder="External Video URL (Optional)"
-                                    value={story.videoUrl}
-                                    onChange={(e) => handleChange('videoUrl', e.target.value)}
-                                />
+                                <div className="space-y-3">
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block">Hero Media</label>
+                                    <input
+                                        className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-[10px] font-bold"
+                                        placeholder="External Video URL (Optional)"
+                                        value={story.videoUrl || ''}
+                                        onChange={(e) => handleChange('videoUrl', e.target.value)}
+                                    />
+                                    <input
+                                        className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-[10px] font-bold"
+                                        placeholder="Split Video — Left (Optional)"
+                                        value={story.leftVideoUrl || ''}
+                                        onChange={(e) => handleChange('leftVideoUrl', e.target.value)}
+                                    />
+                                    <input
+                                        className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-[10px] font-bold"
+                                        placeholder="Split Video — Right (Optional)"
+                                        value={story.rightVideoUrl || ''}
+                                        onChange={(e) => handleChange('rightVideoUrl', e.target.value)}
+                                    />
+                                    <p className="text-[9px] font-bold text-gray-400 leading-relaxed">
+                                        Set both split videos to use the two-up hero; otherwise the single video is used.
+                                    </p>
+                                    <input
+                                        className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-[10px] font-bold"
+                                        placeholder="Ambient Audio URL (Optional)"
+                                        value={story.ambientAudioUrl || ''}
+                                        onChange={(e) => handleChange('ambientAudioUrl', e.target.value)}
+                                    />
+                                </div>
                             )}
                             <div className="space-y-3">
                                 <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block">Tags</label>
