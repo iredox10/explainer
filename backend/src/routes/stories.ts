@@ -107,8 +107,15 @@ function storyRowFromInput(body: StoryInput, mode: 'create' | 'update') {
     set('seriesPart', firstDefined(body, 'seriesPart', 'series_part'));
     set('isFeatured', firstDefined(body, 'isFeatured', 'is_featured'));
     set('lockedBy', firstDefined(body, 'lockedBy', 'locked_by'));
-    set('publishedAt', toDate(firstDefined(body, 'publishedAt', 'published_at')));
-    set('scheduledAt', toDate(firstDefined(body, 'scheduledAt', 'scheduled_at')));
+    // Only touch date columns when the key was actually sent: toDate(undefined) is null,
+    // so an unconditional set() would wipe stored values on unrelated partial updates.
+    // An explicit null from the client still clears the column.
+    if (body.publishedAt !== undefined || body.published_at !== undefined) {
+        row.publishedAt = toDate(firstDefined(body, 'publishedAt', 'published_at'));
+    }
+    if (body.scheduledAt !== undefined || body.scheduled_at !== undefined) {
+        row.scheduledAt = toDate(firstDefined(body, 'scheduledAt', 'scheduled_at'));
+    }
 
     const content = firstDefined(body, 'content');
     if (content !== undefined) row.content = normalizeJsonArray(content);

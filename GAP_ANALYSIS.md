@@ -10,7 +10,7 @@
 
 ### Backend
 
-- [ ] **B1 — Partial updates null out dates.** `toDate(undefined)` returns `null`, so any PATCH that omits `scheduledAt`/`publishedAt` wipes them. Fix the write guard in `storyRowFromInput`.
+- [x] **B1 — Partial updates null out dates.** `toDate(undefined)` returns `null`, so any PATCH that omits `scheduledAt`/`publishedAt` wipes them. Fixed by guarding both writes in `storyRowFromInput`; explicit `null` still clears.
 - [ ] **B2 — Public guest submission endpoint.** Add `POST /api/submissions` so `/submit` works without an admin token.
 - [ ] **B3 — Category records for story categories.** Upsert a category row (name, slug, color) whenever a story is saved, and backfill existing story categories.
 - [ ] **B4 — Story locking.** Add lock/unlock endpoints and persist `lockedBy` so the editor's existing lock check is real.
@@ -126,3 +126,4 @@ Evidence: `BriefingTemplate.astro:94-130`, `PhotoGalleryTemplate.astro:75-104`, 
 | Date | Item | Evidence |
 |---|---|---|
 | 2026-11-16 | Baseline | `/topic/super%20feature`, `/topic/news`, `/topic/environment` → 302 `/404`; `/author/newsroom-admin` → 302 `/404`; unauthenticated admin POSTs → 401; cron ignored Draft + past `scheduledAt`; PATCH without `scheduledAt` nulled it in Postgres. |
+| 2026-11-16 | B1 | Created story with both dates, PATCH `{status,workflow_status}` preserved `scheduledAt` and `publishedAt`; explicit `{"scheduledAt":null}` cleared only that column. `bun run typecheck` + `bun run build` pass. |
