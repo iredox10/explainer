@@ -80,17 +80,40 @@ const fullText = blocks
   .join(". ");
 
 import { serverStoryService } from "../../lib/server-appwrite.js";
-import { VOX_HOME_DATA } from "../../data/mock.js";
 
 const readTime = serverStoryService.calculateReadTime(blocks);
 const displayReadTime = `${readTime} min read`;
 
-const parentSeries =
-  ARTICLE_DATA.seriesSlug && VOX_HOME_DATA.series
-    ? VOX_HOME_DATA.series[
-        ARTICLE_DATA.seriesSlug as keyof typeof VOX_HOME_DATA.series
-      ]
-    : null;
+let parentSeries: any = null;
+if (ARTICLE_DATA.seriesSlug) {
+  try {
+    const allPublished = await serverStoryService.getPublishedStories();
+    const articles = allPublished
+      .filter((s: any) => s?.seriesSlug === ARTICLE_DATA.seriesSlug)
+      .map((s: any, index: number) => ({
+        slug: s.slug,
+        title: s.headline,
+        partNumber:
+          typeof s.seriesPart === "number" ? s.seriesPart : index + 1,
+      }))
+      .sort((a: any, b: any) => a.partNumber - b.partNumber);
+
+    if (articles.length > 0) {
+      parentSeries = {
+        slug: ARTICLE_DATA.seriesSlug,
+        title: String(ARTICLE_DATA.seriesSlug)
+          .split("-")
+          .filter(Boolean)
+          .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" "),
+        articles,
+      };
+    }
+  } catch (error) {
+    console.error("Failed to load series for article:", error);
+    parentSeries = null;
+  }
+}
 ---
 
 <MainLayout

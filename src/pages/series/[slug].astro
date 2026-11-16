@@ -1,23 +1,61 @@
 ---
 import MainLayout from "../../layouts/MainLayout.astro";
 import Footer from "../../components/Footer.astro";
-import { VOX_HOME_DATA } from "../../data/mock";
+import { serverStoryService } from "../../lib/server-appwrite.js";
 import { Image } from "astro:assets";
 
 export const prerender = false;
 const { slug } = Astro.params;
 
-// In a real app we'd fetch from Appwrite, using mock data for the structure
-const seriesData = slug && VOX_HOME_DATA.series[slug];
-
-if (!seriesData) {
+if (!slug) {
     return Astro.redirect("/404");
 }
+
+// Derive a display name from the slug ("africa-tech-boom" -> "Africa Tech Boom")
+const titleFromSlug = slug
+    .split("-")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+let parts: any[] = [];
+try {
+    const allPublished = await serverStoryService.getPublishedStories();
+    parts = allPublished
+        .filter((s: any) => s?.seriesSlug === slug)
+        .map((s: any, index: number) => ({
+            slug: s.slug,
+            title: s.headline,
+            partNumber:
+                typeof s.seriesPart === "number" ? s.seriesPart : index + 1,
+            heroImage: s.heroImage,
+            subhead: s.subhead,
+        }))
+        .sort((a: any, b: any) => a.partNumber - b.partNumber);
+} catch (error) {
+    console.error("Failed to load series stories:", error);
+    return Astro.redirect("/404");
+}
+
+if (parts.length === 0) {
+    return Astro.redirect("/404");
+}
+
+const seriesData = {
+    slug,
+    title: titleFromSlug,
+    description:
+        parts[0].subhead ||
+        "A multi-part series from the Explainer newsroom.",
+    heroImage: parts[0].heroImage || null,
+    articles: parts,
+};
 ---
 
 <MainLayout
     title={`${seriesData.title} | Explainer Feature Series`}
     description={seriesData.description}
+    image={seriesData.heroImage || undefined}
 >
     <main class="min-h-screen bg-[#fdfdfd]">
         {/* Series Hero */}
