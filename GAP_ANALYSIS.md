@@ -11,7 +11,7 @@
 ### Backend
 
 - [x] **B1 — Partial updates null out dates.** `toDate(undefined)` returns `null`, so any PATCH that omits `scheduledAt`/`publishedAt` wipes them. Fixed by guarding both writes in `storyRowFromInput`; explicit `null` still clears.
-- [ ] **B2 — Public guest submission endpoint.** Add `POST /api/submissions` so `/submit` works without an admin token.
+- [x] **B2 — Public guest submission endpoint.** Added `POST /api/submissions` (public, rate-limited) that forces `Pending Review` / `pending_review`; `/submit` can now work without an admin token.
 - [ ] **B3 — Category records for story categories.** Upsert a category row (name, slug, color) whenever a story is saved, and backfill existing story categories.
 - [ ] **B4 — Story locking.** Add lock/unlock endpoints and persist `lockedBy` so the editor's existing lock check is real.
 - [ ] **B5 — Category description + color contract.** Decide the public contract for category `color`/`description`; expose what the topic page needs.
@@ -128,3 +128,4 @@ Evidence: `BriefingTemplate.astro:94-130`, `PhotoGalleryTemplate.astro:75-104`, 
 | 2026-11-16 | Baseline | `/topic/super%20feature`, `/topic/news`, `/topic/environment` → 302 `/404`; `/author/newsroom-admin` → 302 `/404`; unauthenticated admin POSTs → 401; cron ignored Draft + past `scheduledAt`; PATCH without `scheduledAt` nulled it in Postgres. |
 | 2026-11-16 | B1 | Created story with both dates, PATCH `{status,workflow_status}` preserved `scheduledAt` and `publishedAt`; explicit `{"scheduledAt":null}` cleared only that column. `bun run typecheck` + `bun run build` pass. |
 | 2026-11-16 | F1 | `date` round-trips through the API; all four article layouts render `Nov 16, 2026` from `publishedAt`; Standard no longer contains the `Nov 29, 2025` fallback. `bun astro check` still reports 23 pre-existing errors (none in the new date code). |
+| 2026-11-16 | B2 | Unauthenticated POST `/api/submissions` → 201; admin list shows `Pending Review` / `pending_review` / `Guest Submission` / `standard`; public `/api/stories` excludes it; invalid payload → 400; rate limit → 429; test row deleted. `typecheck` + `build` pass. |

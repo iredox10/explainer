@@ -23,6 +23,7 @@ import { adminUsers } from './routes/users.js';
 import { adminEditorial } from './routes/editorial.js';
 import { adminCampaigns, publicCampaigns } from './routes/campaigns.js';
 import { cronRoutes } from './routes/cron.js';
+import { publicSubmissions } from './routes/submissions.js';
 import { internalRoutes } from './routes/internal.js';
 
 export const app = new Hono<AppEnv>();
@@ -80,6 +81,7 @@ app.route('/api/settings', publicSettings);
 app.route('/api/subscribers', publicSubscribers);
 app.route('/api/analytics', publicAnalytics);
 app.route('/api/campaigns', publicCampaigns);
+app.route('/api/submissions', publicSubmissions);
 app.route('/api/cron', cronRoutes);
 app.route('/api/internal', internalRoutes);
 
