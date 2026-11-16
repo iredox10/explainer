@@ -30,8 +30,11 @@ const authorStories = publishedStories.filter(s => s.author === author.name || s
     description={author.bio}
     image={(author as any).imageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author.name}`}
 >
-  <script type="application/ld+json" slot="head">
-    {JSON.stringify({
+  <script
+    type="application/ld+json"
+    slot="head"
+    is:inline
+    set:html={JSON.stringify({
         "@context": "https://schema.org",
         "@type": "Person",
         "name": author.name,
@@ -43,8 +46,8 @@ const authorStories = publishedStories.filter(s => s.author === author.name || s
             author.social?.twitter ? `https://twitter.com/${author.social.twitter.replace('@', '')}` : null,
             (author.social as any)?.linkedin ? `https://${(author.social as any).linkedin}` : null
         ].filter(Boolean)
-    })}
-  </script>
+    }).replace(/</g, '\\u003c')}
+  />
   <VoxNav />
   
   <main class="min-h-screen bg-[#fdfdfd]">

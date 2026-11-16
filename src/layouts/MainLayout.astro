@@ -85,6 +85,7 @@ if (isArticle && articleData.category) {
         />
         <meta name="viewport" content="width=device-width" />
         <meta name="theme-color" content="#FAFF00" />
+        <link rel="canonical" href={canonicalURL} />
 
         <!-- Resource Hints for Performance -->
         <link rel="preconnect" href={apiOrigin} />
@@ -131,8 +132,10 @@ gtag('config', '${import.meta.env.PUBLIC_ANALYTICS_KEY}');`}
             </script>
         )}
 
-        <script type="application/ld+json">
-            {JSON.stringify({
+        <script
+            type="application/ld+json"
+            is:inline
+            set:html={JSON.stringify({
                 "@context": "https://schema.org",
                 "@type": "BreadcrumbList",
                 "itemListElement": breadcrumbs.map((b, i) => ({
@@ -141,12 +144,14 @@ gtag('config', '${import.meta.env.PUBLIC_ANALYTICS_KEY}');`}
                     "name": b.name,
                     "item": b.item
                 }))
-            })}
-        </script>
+            }).replace(/</g, '\\u003c')}
+        />
 
         {isArticle && (
-            <script type="application/ld+json">
-                {JSON.stringify({
+            <script
+                type="application/ld+json"
+                is:inline
+                set:html={JSON.stringify({
                     "@context": "https://schema.org",
                     "@type": "NewsArticle",
                     headline: articleData.headline,
@@ -168,8 +173,8 @@ gtag('config', '${import.meta.env.PUBLIC_ANALYTICS_KEY}');`}
                             url: "https://explainer.africa/favicon.svg"
                         }
                     }
-                })}
-            </script>
+                }).replace(/</g, '\\u003c')}
+            />
         )}
 
         <title>{title}</title>

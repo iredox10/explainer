@@ -50,6 +50,10 @@ const readTime = serverStoryService.calculateReadTime(blocks);
 <MainLayout
     title={ARTICLE_DATA.seo?.ogTitle || ARTICLE_DATA.headline}
     description={ARTICLE_DATA.seo?.ogDescription || ARTICLE_DATA.subhead}
+    image={ARTICLE_DATA.seo?.ogImage || ARTICLE_DATA.heroImage || ARTICLE_DATA.imageUrl}
+    canonical={ARTICLE_DATA.seo?.canonicalUrl}
+    keywords={ARTICLE_DATA.seo?.keywords?.length ? ARTICLE_DATA.seo.keywords : ARTICLE_DATA.tags}
+    article={ARTICLE_DATA}
     showNav={false}
 >
     <div

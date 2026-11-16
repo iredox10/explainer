@@ -130,8 +130,11 @@ const displayVideos = liveVideos.length > 0 ? liveVideos : VOX_HOME_DATA.videos;
 ---
 
 <MainLayout title="Explainer - Visual Journalism That Makes Sense of the World">
-    <script type="application/ld+json" slot="head">
-        {JSON.stringify({
+    <script
+        type="application/ld+json"
+        slot="head"
+        is:inline
+        set:html={JSON.stringify({
             "@context": "https://schema.org",
             "@type": "WebSite",
             "name": "Explainer",
@@ -142,10 +145,13 @@ const displayVideos = liveVideos.length > 0 ? liveVideos : VOX_HOME_DATA.videos;
                 "target": "https://explainer.africa/search?q={search_term_string}",
                 "query-input": "required name=search_term_string"
             }
-        })}
-    </script>
-    <script type="application/ld+json" slot="head">
-        {JSON.stringify({
+        }).replace(/</g, '\\u003c')}
+    />
+    <script
+        type="application/ld+json"
+        slot="head"
+        is:inline
+        set:html={JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Organization",
             "name": "Explainer",
@@ -155,8 +161,8 @@ const displayVideos = liveVideos.length > 0 ? liveVideos : VOX_HOME_DATA.videos;
                 "https://twitter.com/explainer_africa",
                 "https://www.linkedin.com/company/explainer-africa"
             ]
-        })}
-    </script>
+        }).replace(/</g, '\\u003c')}
+    />
     <main class="max-w-7xl mx-auto px-6 py-12">
         <!-- Live Data Sync Debug (Hidden) -->
         <div style="display:none" data-appwrite-sync-status={publishedStories.length} data-fetch-error={fetchError}></div>
