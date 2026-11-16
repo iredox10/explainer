@@ -7,6 +7,14 @@ import { Image } from "astro:assets";
 const { story } = Astro.props;
 const ARTICLE_DATA = story;
 
+const slugify = (value: string): string =>
+    value
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/-{2,}/g, '-')
+        .replace(/^-+|-+$/g, '');
+
 // Prefer the real publish timestamp, then the editor's free-text date.
 const formatDisplayDate = (value: any) => {
     if (!value) return "";
@@ -72,7 +80,7 @@ const blocks = getBlocks(ARTICLE_DATA.content);
                 <p
                     class="text-xs font-black uppercase tracking-[0.2em] text-[#FAFF00]"
                 >
-                    Photography By {ARTICLE_DATA.author}
+                    Photography By <a href={`/author/${slugify(ARTICLE_DATA.author)}`} class="hover:underline">{ARTICLE_DATA.author}</a>
                 </p>
                 {displayDate && (
                     <p

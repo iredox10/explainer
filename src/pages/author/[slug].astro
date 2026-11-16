@@ -3,32 +3,68 @@ import MainLayout from "../../layouts/MainLayout.astro";
 import VoxNav from "../../components/ui/VoxNav.astro";
 import StreamCard from "../../components/ui/StreamCard.astro";
 import Footer from "../../components/Footer.astro";
-import { AUTHORS } from "../../data/mock";
-import { storyService } from "../../lib/services";
-import { Mail, Twitter, Globe, Linkedin } from 'lucide-react';
+import { serverAuthorService, serverStoryService } from "../../lib/server-appwrite.js";
+import { Mail, Twitter } from 'lucide-react';
 import { Image } from "astro:assets";
 
 export const prerender = false;
 
 const { slug } = Astro.params;
 
-// Find author from mock data or service
-const author = AUTHORS.find(a => a.slug === slug);
-
-if (!author) {
-    return Astro.redirect('/404');
+// Fetch the live author record (never throw: a miss falls back to the slug)
+let authorRecord: any = null;
+try {
+  authorRecord = await serverAuthorService.getAuthorBySlug(slug);
+} catch (error: any) {
+  console.error(`[AUTHOR] Failed to fetch author "${slug}":`, error?.message || error);
 }
 
-// Fetch all published stories and filter by this author
-const publishedStories = await storyService.getPublishedStories();
-const authorStories = publishedStories.filter(s => s.author === author.name || s.authorSlug === author.slug);
+// Derive a display name from the slug ("chioma-okafor" -> "Chioma Okafor")
+const nameFromSlug = slug
+  ? slug
+      .split("-")
+      .filter(Boolean)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ")
+  : "";
 
+const name = authorRecord?.name || nameFromSlug;
+
+// Match stories against both the record name and the slug-derived name
+const nameKeys = new Set(
+  [authorRecord?.name, nameFromSlug]
+    .filter(Boolean)
+    .map((value) => (value as string).trim().toLowerCase()),
+);
+
+const publishedStories = await serverStoryService.getPublishedStories();
+const authorStories = publishedStories.filter(
+  (s: any) => s?.author && nameKeys.has(String(s.author).trim().toLowerCase()),
+);
+
+// A slug with no author record and no published stories is a genuine miss.
+if (!authorRecord && authorStories.length === 0) {
+  return Astro.redirect("/404");
+}
+
+const author = {
+  name,
+  slug: authorRecord?.slug || slug,
+  role: authorRecord?.role || "",
+  bio: authorRecord?.bio || "",
+  email: authorRecord?.email || "",
+  imageUrl: authorRecord?.imageUrl || "",
+  social: authorRecord?.social || {},
+};
+
+const avatarUrl =
+  author.imageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author.name}`;
 ---
 
 <MainLayout 
     title={`${author.name} - Explainer`}
     description={author.bio}
-    image={(author as any).imageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author.name}`}
+    image={avatarUrl}
 >
   <script
     type="application/ld+json"
@@ -38,13 +74,13 @@ const authorStories = publishedStories.filter(s => s.author === author.name || s
         "@context": "https://schema.org",
         "@type": "Person",
         "name": author.name,
-        "jobTitle": author.role,
-        "description": author.bio,
+        "jobTitle": author.role || undefined,
+        "description": author.bio || undefined,
         "url": `https://explainer.africa/author/${author.slug}`,
-        "image": (author as any).imageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author.name}`,
+        "image": avatarUrl,
         "sameAs": [
             author.social?.twitter ? `https://twitter.com/${author.social.twitter.replace('@', '')}` : null,
-            (author.social as any)?.linkedin ? `https://${(author.social as any).linkedin}` : null
+            author.social?.linkedin ? `https://${author.social.linkedin}` : null
         ].filter(Boolean)
     }).replace(/</g, '\\u003c')}
   />
@@ -56,7 +92,7 @@ const authorStories = publishedStories.filter(s => s.author === author.name || s
             <div class="mb-8 relative inline-block">
                 <div class="w-32 h-32 rounded-full bg-white border-4 border-white shadow-md overflow-hidden mx-auto">
                     <Image 
-                        src={(author as any).imageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author.name}`} 
+                        src={avatarUrl} 
                         alt={author.name} 
                         width={128}
                         height={128}
@@ -65,11 +101,11 @@ const authorStories = publishedStories.filter(s => s.author === author.name || s
                 </div>
             </div>
             <h1 class="font-serif-display font-black text-4xl md:text-5xl text-black mb-3">{author.name}</h1>
-            <p class="text-[#008751] font-bold uppercase tracking-widest text-xs mb-6">{author.role}</p>
-            <p class="text-xl text-gray-600 font-serif leading-relaxed max-w-2xl mx-auto mb-8">{author.bio}</p>
+            {author.role && <p class="text-[#008751] font-bold uppercase tracking-widest text-xs mb-6">{author.role}</p>}
+            {author.bio && <p class="text-xl text-gray-600 font-serif leading-relaxed max-w-2xl mx-auto mb-8">{author.bio}</p>}
             <div class="flex justify-center gap-4">
                 {author.email && <a href={`mailto:${author.email}`} class="p-2 text-gray-400 hover:text-black border border-transparent hover:border-gray-200 shadow-sm rounded-full"><Mail className="w-5 h-5" /></a>}
-                {author.social?.twitter && <a href="#" class="p-2 text-gray-400 hover:text-[#1DA1F2] border border-transparent hover:border-gray-200 shadow-sm rounded-full"><Twitter className="w-5 h-5" /></a>}
+                {author.social?.twitter && <a href={`https://twitter.com/${author.social.twitter.replace('@', '')}`} class="p-2 text-gray-400 hover:text-[#1DA1F2] border border-transparent hover:border-gray-200 shadow-sm rounded-full"><Twitter className="w-5 h-5" /></a>}
             </div>
         </div>
     </div>
@@ -82,7 +118,7 @@ const authorStories = publishedStories.filter(s => s.author === author.name || s
 
         <div class="space-y-12">
             {authorStories.length > 0 ? (
-                authorStories.map(story => (
+                authorStories.map((story: any) => (
                     <StreamCard article={story as any} />
                 ))
             ) : (

@@ -4,7 +4,7 @@ import { Reorder } from 'framer-motion';
 import BlockWrapper from './BlockWrapper';
 import ImageCropper from './ImageCropper';
 import { getCurrentUser, ROLES } from '../../lib/authStore';
-import { storyService, categoryService } from '../../lib/services';
+import { storyService, categoryService, authorService } from '../../lib/services';
 
 export default function StoryEditor({ storyId }) {
     const [user, setUser] = useState(null);
@@ -20,6 +20,7 @@ export default function StoryEditor({ storyId }) {
     const [focusedStepIndex, setFocusedStepIndex] = useState(null);
     const [activeBlockId, setActiveBlockId] = useState(null);
     const [categories, setCategories] = useState([]);
+    const [authors, setAuthors] = useState([]);
     const [pendingImageFile, setPendingImageFile] = useState(null);
     const [showImageCropper, setShowImageCropper] = useState(false);
 
@@ -127,6 +128,7 @@ export default function StoryEditor({ storyId }) {
         setUser(u);
         loadStory(u);
         fetchCategories();
+        fetchAuthors();
     }, [storyId]);
 
     useEffect(() => {
@@ -148,6 +150,15 @@ export default function StoryEditor({ storyId }) {
             }
         } catch (e) {
             console.error("Failed to fetch categories", e);
+        }
+    };
+
+    const fetchAuthors = async () => {
+        try {
+            const rows = await authorService.getAuthors();
+            setAuthors(rows);
+        } catch (e) {
+            console.error("Failed to fetch authors", e);
         }
     };
 
@@ -777,6 +788,23 @@ export default function StoryEditor({ storyId }) {
                         <section className="space-y-4">
                             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Distribution Protocol</h3>
                             <div className="space-y-4">
+                                <div>
+                                    <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Author Byline</label>
+                                    <select
+                                        value={story.author || ''}
+                                        onChange={(e) => handleChange('author', e.target.value)}
+                                        disabled={isLocked}
+                                        className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-xs font-bold appearance-none shadow-sm focus:border-black transition-all"
+                                    >
+                                        {!story.author && <option value="">Select an author…</option>}
+                                        {story.author && !authors.some(a => a.name === story.author) && (
+                                            <option value={story.author}>{story.author}</option>
+                                        )}
+                                        {authors.map(a => (
+                                            <option key={a.$id} value={a.name}>{a.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
                                 <div>
                                     <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Primary Category</label>
                                     <select

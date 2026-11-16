@@ -90,7 +90,10 @@ export const serverStoryService = {
 
 let settingsCache = null;
 let settingsFetchedAt = 0;
-const SETTINGS_TTL = 5 * 60 * 1000;
+// Settings drive sitewide behaviour (site name, breaking-news banner,
+// maintenance mode) and editors expect their changes to show up immediately,
+// so keep the cache window very short rather than the old 5 minutes.
+const SETTINGS_TTL = 5 * 1000;
 
 export const serverAdminService = {
     async getSettings() {
@@ -137,6 +140,37 @@ export const serverCategoryService = {
 
     async getCategoryBySlug(slug) {
         return request(`/api/categories/${encodeURIComponent(slug)}`);
+    },
+};
+
+let authorsCache = null;
+let authorsFetchedAt = 0;
+const AUTHORS_TTL = 60 * 1000;
+
+export const serverAuthorService = {
+    async getAuthors() {
+        const now = Date.now();
+        if (authorsCache && now - authorsFetchedAt < AUTHORS_TTL) {
+            return authorsCache;
+        }
+
+        const payload = await request('/api/authors', {}, { documents: [] });
+        const authors = unwrapDocuments(payload);
+
+        if (authors.length > 0) {
+            authorsCache = authors;
+            authorsFetchedAt = now;
+            return authors;
+        }
+
+        if (authorsCache) return authorsCache;
+        return authors;
+    },
+
+    // request() already resolves to null for a 404 (it only retries network
+    // errors and returns the fallback), so a missing author never throws here.
+    async getAuthorBySlug(slug) {
+        return request(`/api/authors/${encodeURIComponent(slug)}`, {}, null);
     },
 };
 

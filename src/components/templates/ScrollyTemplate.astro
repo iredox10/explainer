@@ -17,6 +17,14 @@ import { Image } from "astro:assets";
 const { story } = Astro.props;
 const ARTICLE_DATA = story;
 
+const slugify = (value: string): string =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '');
+
 // Prefer the real publish timestamp, then the editor's free-text date.
 const formatDisplayDate = (value: any) => {
   if (!value) return "";
@@ -102,11 +110,24 @@ const readTime = serverStoryService.calculateReadTime(blocks);
   />
 
   {
-    displayDate && (
-      <div class="max-w-7xl mx-auto px-6 pt-10">
-        <span class="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">
-          {displayDate}
-        </span>
+    (ARTICLE_DATA.author || displayDate) && (
+      <div class="max-w-7xl mx-auto px-6 pt-10 flex items-center gap-3">
+        {ARTICLE_DATA.author && (
+          <a
+            href={`/author/${slugify(ARTICLE_DATA.author)}`}
+            class="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400 hover:underline"
+          >
+            {ARTICLE_DATA.author}
+          </a>
+        )}
+        {ARTICLE_DATA.author && displayDate && (
+          <span class="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">·</span>
+        )}
+        {displayDate && (
+          <span class="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400">
+            {displayDate}
+          </span>
+        )}
       </div>
     )
   }

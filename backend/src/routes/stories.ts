@@ -17,7 +17,7 @@ import {
 } from '../lib/http.js';
 import { logger } from '../lib/logger.js';
 import { slugifyOrFallback, uniqueSuffix } from '../lib/slug.js';
-import { ensureCategory } from '../lib/taxonomy.js';
+import { ensureAuthor, ensureCategory } from '../lib/taxonomy.js';
 
 const storyInputSchema = z.object({
     headline: z.string().min(1).max(300).optional(),
@@ -171,6 +171,19 @@ async function syncCategory(category: unknown): Promise<void> {
         await ensureCategory(category);
     } catch (error) {
         logger.warn({ error, category }, 'failed to ensure category record');
+    }
+}
+
+/**
+ * Keeps the authors table in step with the free-text byline on a story.
+ * A failure here must never block the story save, so it is logged and swallowed.
+ */
+async function syncAuthor(author: unknown): Promise<void> {
+    if (typeof author !== 'string' || !author.trim()) return;
+    try {
+        await ensureAuthor(author);
+    } catch (error) {
+        logger.warn({ error, author }, 'failed to ensure author record');
     }
 }
 
@@ -394,6 +407,7 @@ adminStories.post('/', zValidator('json', storyInputSchema), async (c) => {
     const row = storyRowFromInput(body, 'create');
     row.slug = await ensureUniqueSlug(String(row.slug));
     await syncCategory(row.category);
+    await syncAuthor(row.author);
 
     const [created] = await db
         .insert(stories)
@@ -412,6 +426,7 @@ adminStories.patch('/:id', zValidator('json', storyInputSchema), async (c) => {
         row.slug = await ensureUniqueSlug(body.slug, id);
     }
     await syncCategory(row.category);
+    await syncAuthor(row.author);
     if (Object.keys(row).length === 1) {
         const [existing] = await db.select().from(stories).where(eq(stories.id, id)).limit(1);
         if (!existing) throw new HTTPException(404, { message: 'Story not found' });

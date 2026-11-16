@@ -16,6 +16,14 @@ import { Image } from "astro:assets";
 const { story } = Astro.props;
 const ARTICLE_DATA = story;
 
+const slugify = (value: string): string =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '');
+
 // Prefer the real publish timestamp, then the editor's free-text date.
 const formatDisplayDate = (value: any) => {
   if (!value) return "";
@@ -165,7 +173,12 @@ const parentSeries =
                 </div>
                 <div>
                   <div class="uppercase text-black text-xs tracking-widest">
-                    {ARTICLE_DATA.author}
+                    <a
+                      href={`/author/${slugify(ARTICLE_DATA.author)}`}
+                      class="hover:underline"
+                    >
+                      {ARTICLE_DATA.author}
+                    </a>
                   </div>
                   <div
                     class="text-gray-500 text-[10px] uppercase tracking-widest font-normal"
@@ -602,7 +615,12 @@ const parentSeries =
                 </div>
                 <div>
                   <h3 class="font-serif-display font-bold text-xl text-black">
-                    {ARTICLE_DATA.author}
+                    <a
+                      href={`/author/${slugify(ARTICLE_DATA.author)}`}
+                      class="hover:underline"
+                    >
+                      {ARTICLE_DATA.author}
+                    </a>
                   </h3>
                   <p class="text-sm text-gray-500">
                     {ARTICLE_DATA.role || "Staff Writer"}

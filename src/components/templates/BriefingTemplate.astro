@@ -10,6 +10,14 @@ import { Clock } from "lucide-react";
 const { story } = Astro.props;
 const ARTICLE_DATA = story;
 
+const slugify = (value: string): string =>
+    value
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/-{2,}/g, '-')
+        .replace(/^-+|-+$/g, '');
+
 // Prefer the real publish timestamp, then the editor's free-text date.
 const formatDisplayDate = (value: any) => {
     if (!value) return "";
@@ -90,7 +98,7 @@ const readTime = serverStoryService.calculateReadTime(blocks);
                     <div
                         class="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-gray-500"
                     >
-                        <span class="text-black">{ARTICLE_DATA.author}</span>
+                        <a href={`/author/${slugify(ARTICLE_DATA.author)}`} class="text-black hover:underline">{ARTICLE_DATA.author}</a>
                         <span>•</span>
                         <span>{displayDate}</span>
                     </div>
