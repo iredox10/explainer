@@ -12,6 +12,7 @@ import { slugifyOrFallback, uniqueSuffix } from '../lib/slug.js';
 const categoryInput = z.object({
     name: z.string().min(1).max(120).optional(),
     slug: z.string().max(140).optional(),
+    description: z.string().max(500).nullable().optional(),
     color: z.string().max(30).optional(),
 });
 
@@ -73,6 +74,7 @@ adminCategories.post('/', requireRole('editor', 'superadmin'), zValidator('json'
         .values({
             name: body.name,
             slug: await uniqueCategorySlug(body.slug || body.name),
+            description: body.description || null,
             color: body.color || '#000000',
         })
         .returning();
@@ -86,6 +88,7 @@ adminCategories.patch('/:id', requireRole('editor', 'superadmin'), zValidator('j
     const row: Record<string, unknown> = { updatedAt: new Date() };
     if (body.name !== undefined) row.name = body.name;
     if (body.color !== undefined) row.color = body.color;
+    if (body.description !== undefined) row.description = body.description || null;
     if (body.slug !== undefined) row.slug = await uniqueCategorySlug(body.slug, id);
 
     const [updated] = await db.update(categories).set(row).where(eq(categories.id, id)).returning();

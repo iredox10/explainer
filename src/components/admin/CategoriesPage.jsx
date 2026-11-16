@@ -31,7 +31,7 @@ export default function CategoriesPage() {
   };
 
   const openAddModal = () => {
-    setEditingCategory({ name: "", slug: "", color: "#000000" });
+    setEditingCategory({ name: "", slug: "", description: "", color: "#000000" });
     setIsModalOpen(true);
   };
 
@@ -93,23 +93,31 @@ export default function CategoriesPage() {
 
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[600px]">
+            <table className="w-full text-left border-collapse min-w-[760px]">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500 font-bold">
                 <th className="px-6 py-4">Name</th>
                 <th className="px-6 py-4">Slug</th>
+                <th className="px-6 py-4">Description</th>
                 <th className="px-6 py-4">Color</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {isLoading ? (
-                <tr><td colSpan="4" className="px-6 py-12 text-center"><Loader2 className="animate-spin w-8 h-8 text-gray-200 mx-auto" /></td></tr>
+                <tr><td colSpan="5" className="px-6 py-12 text-center"><Loader2 className="animate-spin w-8 h-8 text-gray-200 mx-auto" /></td></tr>
               ) : categories.length > 0 ? (
                 categories.map((cat) => (
                   <tr key={cat.$id} className="hover:bg-gray-50 transition-colors group">
                     <td className="px-6 py-4"><span className="font-bold text-gray-900">{cat.name}</span></td>
                     <td className="px-6 py-4"><code className="text-xs bg-gray-100 px-2 py-1 rounded border border-gray-200 text-gray-600">{cat.slug}</code></td>
+                    <td className="px-6 py-4">
+                      {cat.description ? (
+                        <span className="block max-w-[240px] truncate text-sm text-gray-500" title={cat.description}>{cat.description}</span>
+                      ) : (
+                        <span className="text-xs text-gray-300 font-medium">—</span>
+                      )}
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 rounded-full border border-gray-200 shadow-sm" style={{ backgroundColor: cat.color }}></div>
@@ -125,7 +133,7 @@ export default function CategoriesPage() {
                   </tr>
                 ))
               ) : (
-                <tr><td colSpan="4" className="px-6 py-12 text-center text-gray-400 text-sm font-medium">No categories found.</td></tr>
+                <tr><td colSpan="5" className="px-6 py-12 text-center text-gray-400 text-sm font-medium">No categories found.</td></tr>
                 )}
               </tbody>
             </table>
@@ -143,6 +151,18 @@ export default function CategoriesPage() {
               <form onSubmit={handleSave} className="p-6 space-y-4">
                 <div><label className="block text-xs font-bold text-gray-500 mb-1">Category Name</label><input type="text" className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#008751]" value={editingCategory.name} onChange={e => handleModalChange('name', e.target.value)} required /></div>
                 <div><label className="block text-xs font-bold text-gray-500 mb-1">Slug</label><input type="text" className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#008751]" value={editingCategory.slug} onChange={e => handleModalChange('slug', e.target.value)} required /></div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-1">Description</label>
+                  <textarea
+                    rows={3}
+                    maxLength={500}
+                    placeholder="Short summary shown on the topic page"
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-[#008751] resize-none"
+                    value={editingCategory.description ?? ''}
+                    onChange={e => handleModalChange('description', e.target.value)}
+                  />
+                  <p className="mt-1 text-right text-[10px] text-gray-400 font-medium">{(editingCategory.description ?? '').length}/500</p>
+                </div>
                 <div><label className="block text-xs font-bold text-gray-500 mb-1">Accent Color</label><div className="flex items-center gap-2"><input type="color" className="w-10 h-10 rounded border-0 cursor-pointer" value={editingCategory.color} onChange={e => handleModalChange('color', e.target.value)} /><span className="text-sm font-mono text-gray-600">{editingCategory.color}</span></div></div>
                 <div className="pt-4 flex justify-end gap-3">
                   <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors">Cancel</button>

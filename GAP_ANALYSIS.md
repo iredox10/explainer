@@ -14,7 +14,7 @@
 - [x] **B2 — Public guest submission endpoint.** Added `POST /api/submissions` (public, rate-limited) that forces `Pending Review` / `pending_review`; `/submit` can now work without an admin token.
 - [x] **B3 — Category records for story categories.** Added `ensureCategory()` on story create/update and a `db:backfill-categories` script; existing story categories now have rows/slugs.
 - [ ] **B4 — Story locking.** Add lock/unlock endpoints and persist `lockedBy` so the editor's existing lock check is real.
-- [ ] **B5 — Category description + color contract.** Decide the public contract for category `color`/`description`; expose what the topic page needs.
+- [x] **B5 — Category description + color contract.** `categories.description` (nullable text, max 500) added via migration `0001`; public/admin category endpoints return it; admin modal has a description field. `color` stays a hex string.
 
 ### Frontend
 
@@ -132,3 +132,4 @@ Evidence: `BriefingTemplate.astro:94-130`, `PhotoGalleryTemplate.astro:75-104`, 
 | 2026-11-16 | F2 | Schedule button writes `Scheduled`/`scheduled`; cron published a due test story and preserved `scheduledAt`; `/admin/edit/new-story` → 200; `astro check` unchanged at 23 pre-existing errors, 0 in StoryEditor. |
 | 2026-11-16 | B3 | Backfill created `super-feature`, `technology`, `news`, `environment`; `/api/categories` now returns all five story categories with slugs. `typecheck` + `build` pass. |
 | 2026-11-16 | F3 | `/submit` → 200; unauthenticated POST `/api/submissions` with `x-forwarded-for: 10.9.9.20` → 201; invalid payload → 400 with a parsed zod message; test row deleted; `astro check` unchanged, 0 errors in `GuestSubmissionPortal.jsx`. |
+| 2026-11-16 | B5 | `db:migrate` applied `0001_lush_cammi`; `information_schema` shows `categories.description text` nullable. POST `{name,description,color}` → 201 with all three; `GET /api/categories/:slug` returns `description`; PATCH `{description:""}` → `null`; DELETE → `{"success":true}`; 501-char description → 400. `typecheck` passes. |

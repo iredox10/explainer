@@ -160,6 +160,7 @@ export const categories = pgTable(
         id: uuid('id').defaultRandom().primaryKey(),
         name: text('name').notNull(),
         slug: text('slug').notNull().unique(),
+        description: text('description'),
         color: text('color').notNull().default('#000000'),
         createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
         updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
