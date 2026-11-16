@@ -290,6 +290,36 @@ const displayReadTime =
             </article>
 
             {
+                Array.isArray(ARTICLE_DATA.related) && ARTICLE_DATA.related.length > 0 && (
+                    <section class="mt-14 pt-8 border-t border-gray-200">
+                        <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-6">
+                            Related Stories
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {ARTICLE_DATA.related.map((item: any) => (
+                                <a
+                                    href={`/article/${item.slug}`}
+                                    class="group block border border-gray-200 hover:border-black transition-colors"
+                                >
+                                    {item.image && (
+                                        <img
+                                            src={item.image}
+                                            alt={item.title || item.slug}
+                                            class="w-full aspect-[16/10] object-cover"
+                                            loading="lazy"
+                                        />
+                                    )}
+                                    <h4 class="font-serif text-base font-bold text-black leading-snug p-4 group-hover:text-red-600 transition-colors">
+                                        {item.title || item.slug}
+                                    </h4>
+                                </a>
+                            ))}
+                        </div>
+                    </section>
+                )
+            }
+
+            {
                 Array.isArray(ARTICLE_DATA.tags) && ARTICLE_DATA.tags.length > 0 && (
                     <div class="flex flex-wrap items-center gap-2 mt-10 pt-6 border-t border-gray-200">
                         <span class="text-[10px] font-black uppercase tracking-[0.25em] text-gray-400 mr-2">

@@ -269,6 +269,36 @@ const displayReadTime =
             </section>
 
             {
+                Array.isArray(ARTICLE_DATA.related) && ARTICLE_DATA.related.length > 0 && (
+                    <section class="max-w-3xl mx-auto px-6 pt-16">
+                        <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mb-6">
+                            Related Stories
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {ARTICLE_DATA.related.map((item: any) => (
+                                <a
+                                    href={`/article/${item.slug}`}
+                                    class="group block bg-neutral-900 border border-gray-800 hover:border-[#FAFF00] transition-colors"
+                                >
+                                    {item.image && (
+                                        <img
+                                            src={item.image}
+                                            alt={item.title || item.slug}
+                                            class="w-full aspect-[16/10] object-cover"
+                                            loading="lazy"
+                                        />
+                                    )}
+                                    <h4 class="font-serif-display text-base font-black text-white leading-snug p-4 group-hover:text-[#FAFF00] transition-colors">
+                                        {item.title || item.slug}
+                                    </h4>
+                                </a>
+                            ))}
+                        </div>
+                    </section>
+                )
+            }
+
+            {
                 Array.isArray(ARTICLE_DATA.tags) && ARTICLE_DATA.tags.length > 0 && (
                     <div class="max-w-3xl mx-auto px-6 pt-16">
                         <div class="flex flex-wrap items-center gap-2">

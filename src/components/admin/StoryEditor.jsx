@@ -24,6 +24,8 @@ export default function StoryEditor({ storyId }) {
     const [activeBlockId, setActiveBlockId] = useState(null);
     const [categories, setCategories] = useState([]);
     const [authors, setAuthors] = useState([]);
+    const [publishedStories, setPublishedStories] = useState([]);
+    const [relatedPick, setRelatedPick] = useState('');
     const [pendingImageFile, setPendingImageFile] = useState(null);
     const [showImageCropper, setShowImageCropper] = useState(false);
     const [showSocialCard, setShowSocialCard] = useState(false);
@@ -54,6 +56,7 @@ export default function StoryEditor({ storyId }) {
         return {
             ...data,
             tags: parseJSONField(data.tags, []),
+            related: parseJSONField(data.related, []),
             sources: parseJSONField(data.sources, []),
             footnotes: parseJSONField(data.footnotes, []),
             seo: parseJSONField(data.seo, {
@@ -133,6 +136,7 @@ export default function StoryEditor({ storyId }) {
         loadStory(u);
         fetchCategories();
         fetchAuthors();
+        fetchPublishedStories();
     }, [storyId]);
 
     useEffect(() => {
@@ -166,6 +170,15 @@ export default function StoryEditor({ storyId }) {
         }
     };
 
+    const fetchPublishedStories = async () => {
+        try {
+            const rows = await storyService.getPublishedStories();
+            setPublishedStories(rows || []);
+        } catch (e) {
+            console.error("Failed to fetch published stories", e);
+        }
+    };
+
     const loadStory = async (currentUser) => {
         setIsLoading(true);
         if (storyId === 'new-story') {
@@ -188,6 +201,7 @@ export default function StoryEditor({ storyId }) {
                 ambientAudioUrl: "",
                 isFeatured: false,
                 tags: [],
+                related: [],
                 sources: [],
                 footnotes: [],
                 scheduledAt: null,
@@ -265,6 +279,24 @@ export default function StoryEditor({ storyId }) {
     };
 
     const updateContent = (newContent) => { handleChange('content', JSON.stringify(newContent)); };
+
+    const addRelatedStory = (slug) => {
+        if (!slug) return;
+        const current = Array.isArray(story?.related) ? story.related : [];
+        const picked = publishedStories.find(s => s.slug === slug);
+        if (!picked || current.some(item => item.slug === slug)) return;
+        handleChange('related', [...current, {
+            slug: picked.slug,
+            title: picked.headline || '',
+            image: picked.heroImage || ''
+        }]);
+        setRelatedPick('');
+    };
+
+    const removeRelatedStory = (slug) => {
+        const current = Array.isArray(story?.related) ? story.related : [];
+        handleChange('related', current.filter(item => item.slug !== slug));
+    };
 
     const handleInsertBlock = (type) => {
         const newId = Date.now() + Math.random();
@@ -1040,6 +1072,47 @@ export default function StoryEditor({ storyId }) {
                                     value={(story.tags || []).join(', ')}
                                     onChange={(e) => handleChange('tags', e.target.value.split(',').map(tag => tag.trim()).filter(Boolean))}
                                 />
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 block">Related Stories</label>
+                                <div className="flex gap-2">
+                                    <select
+                                        className="flex-1 bg-white border border-gray-100 p-4 rounded-2xl text-[10px] font-bold"
+                                        value={relatedPick}
+                                        onChange={(e) => addRelatedStory(e.target.value)}
+                                        disabled={isLocked}
+                                    >
+                                        <option value="" disabled>Add a related story…</option>
+                                        {publishedStories
+                                            .filter(s => s.slug && s.slug !== story.slug && !(story.related || []).some(item => item.slug === s.slug))
+                                            .map(s => (
+                                                <option key={s.slug} value={s.slug}>{s.headline || s.slug}</option>
+                                            ))}
+                                    </select>
+                                </div>
+                                {(story.related || []).length === 0 ? (
+                                    <p className="text-[9px] font-bold text-gray-400">No related stories selected.</p>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {(story.related || []).map(item => (
+                                            <div key={item.slug} className="flex items-center gap-3 bg-white border border-gray-100 p-3 rounded-2xl">
+                                                {item.image && (
+                                                    <img src={item.image} alt={item.title || item.slug} className="w-12 h-12 object-cover rounded-xl flex-shrink-0" />
+                                                )}
+                                                <span className="flex-1 text-[10px] font-bold text-gray-700 truncate">{item.title || item.slug}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeRelatedStory(item.slug)}
+                                                    disabled={isLocked}
+                                                    className="text-gray-300 hover:text-red-500 transition-colors"
+                                                    aria-label={`Remove ${item.title || item.slug}`}
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                             <div className="space-y-3">
                                 <SEOScorecard story={{ ...story, content: parseJSONField(story.content, []) }} />
