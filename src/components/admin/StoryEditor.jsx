@@ -1022,7 +1022,10 @@ export default function StoryEditor({ storyId }) {
 
                         <section className="space-y-4">
                             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Hero Distribution</h3>
-                            <div className="aspect-video rounded-3xl overflow-hidden bg-gray-100 border border-gray-100 relative group">
+                            <div
+                                className="w-full aspect-video rounded-3xl overflow-hidden bg-gray-100 border border-gray-100 relative group shrink-0"
+                                style={{ aspectRatio: '16 / 9', minHeight: '190px' }}
+                            >
                                 {story.heroImage ? (
                                     <img src={story.heroImage} className="w-full h-full object-cover" />
                                 ) : (

@@ -28,7 +28,7 @@ import { internalRoutes } from './routes/internal.js';
 
 export const app = new Hono<AppEnv>();
 
-app.use('*', secureHeaders());
+app.use('*', secureHeaders({ crossOriginResourcePolicy: 'cross-origin' }));
 app.use('*', async (c, next) => {
     const startedAt = Date.now();
     await next();
