@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Filter, MoreVertical, FileText, CheckCircle, Clock, AlertCircle, Loader2, Send, Trash2, Edit3, MoreHorizontal, ChevronDown, Archive, Check, X, User, Copy, Star, ExternalLink } from 'lucide-react';
+import { Plus, Search, Filter, MoreVertical, FileText, CheckCircle, Clock, AlertCircle, Loader2, Send, Trash2, Edit3, MoreHorizontal, ChevronDown, Archive, Check, X, User, Copy, Star, ExternalLink, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminSidebar from './AdminSidebar';
+import SocialCardPreview from '../ui/SocialCardPreview';
 import { getCurrentUser, ROLES } from '../../lib/authStore';
 import { storyService, activityService } from '../../lib/services';
 
@@ -15,6 +16,7 @@ export default function StoriesPage() {
     const [showBulkActions, setShowBulkActions] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(null);
     const [bulkLoading, setBulkLoading] = useState(false);
+    const [bannerStory, setBannerStory] = useState(null);
 
     useEffect(() => {
         const u = getCurrentUser();
@@ -391,6 +393,14 @@ export default function StoriesPage() {
 
                                 <div className="flex items-center justify-between md:justify-end gap-4 md:ml-8 border-t md:border-t-0 pt-4 md:pt-0">
                                     <div className="flex h-10 md:h-12 gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity md:translate-x-4 md:group-hover:translate-x-0">
+                                        <button
+                                            onClick={() => setBannerStory(story)}
+                                            className="h-10 px-3 md:h-12 md:px-4 flex items-center justify-center gap-2 rounded-xl md:rounded-2xl bg-[#FAFF00] text-black hover:bg-black hover:text-[#FAFF00] transition-all text-[10px] font-black uppercase tracking-widest"
+                                            title="Generate Share Banner"
+                                        >
+                                            <Share2 className="w-4 h-4" />
+                                            <span className="hidden lg:inline">Banner</span>
+                                        </button>
                                         <a
                                             href={`/admin/edit/${story.$id}`}
                                             className="h-10 w-10 md:h-12 md:w-12 flex items-center justify-center rounded-xl md:rounded-2xl bg-gray-50 text-gray-400 hover:bg-black hover:text-[#FAFF00] transition-all"
@@ -495,6 +505,22 @@ export default function StoriesPage() {
                     </div>
                 )}
             </main>
+
+            {bannerStory && (
+                <div className="fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm overflow-y-auto p-4 md:p-10">
+                    <div className="max-w-5xl mx-auto bg-white rounded-3xl shadow-2xl relative overflow-hidden">
+                        <button
+                            type="button"
+                            onClick={() => setBannerStory(null)}
+                            className="absolute top-4 right-4 z-20 bg-black text-white p-3 rounded-full hover:bg-gray-800 transition-colors"
+                            aria-label="Close banner studio"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                        <SocialCardPreview article={bannerStory} />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

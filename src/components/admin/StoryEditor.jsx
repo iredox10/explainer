@@ -606,6 +606,14 @@ export default function StoryEditor({ storyId }) {
                         </a>
 
                         <button
+                            onClick={() => setShowSocialCard(true)}
+                            className="bg-black hover:bg-[#FAFF00] text-[#FAFF00] hover:text-black px-4 md:px-5 py-2.5 md:py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shrink-0"
+                            title="Generate Social News Banner"
+                        >
+                            <Share2 className="w-4 h-4" /> <span className="hidden sm:inline">Banner</span>
+                        </button>
+
+                        <button
                             onClick={handlePreview}
                             className="bg-gray-100 hover:bg-gray-200 text-black px-4 md:px-6 py-2.5 md:py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 md:gap-3 transition-all shrink-0"
                         >
