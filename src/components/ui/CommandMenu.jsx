@@ -89,9 +89,11 @@ export default function CommandMenu() {
   const handleNavigation = (e) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
+      if (allItems.length === 0) return;
       setSelectedIndex((prev) => (prev + 1) % allItems.length);
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
+      if (allItems.length === 0) return;
       setSelectedIndex((prev) => (prev - 1 + allItems.length) % allItems.length);
     } else if (e.key === 'Enter') {
       e.preventDefault();

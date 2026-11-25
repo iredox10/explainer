@@ -9,10 +9,15 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
     site: 'https://explainer.africa',
     output: 'server',
-    adapter: netlify(),
+    adapter: netlify({
+        imageCDN: process.env.NETLIFY === 'true',
+        devFeatures: {
+            images: false,
+        },
+    }),
     integrations: [react(), tailwind(), sitemap()],
     image: {
-        domains: ['cloud.appwrite.io', 'api.dicebear.com', 'images.unsplash.com'],
+        domains: ['cloud.appwrite.io', 'api.dicebear.com', 'images.unsplash.com', 'localhost', '127.0.0.1'],
     },
     vite: {
         // Keep builds from replacing dependencies used by a running dev server.

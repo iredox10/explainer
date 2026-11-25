@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { TrendingUp, Users, Eye, Clock, ArrowUpRight, Loader2, BarChart3, MapPin, Globe, Monitor, Smartphone, Tablet } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { analyticsService } from '../../lib/analytics';
+import { analyticsService } from '../../lib/readerMetrics';
 import { storyService } from '../../lib/services';
 
 function RealTrafficChart({ data }) {
@@ -133,6 +133,7 @@ export default function AnalyticsPanel() {
                     stories.slice(0, 5).map(async ({ storyId, views }) => {
                         try {
                             const story = await storyService.getStoryById(storyId);
+                            if (!story) return { $id: storyId, headline: 'Deleted Story', views };
                             return { ...story, views };
                         } catch {
                             return { $id: storyId, headline: 'Unknown', views };
@@ -285,7 +286,7 @@ export function StoryAnalyticsWidget({ storyId }) {
                 </div>
             </div>
             
-            {scrollDepth && (
+            {scrollDepth && scrollDepth.totalReaders > 0 && (
                 <div className="mt-4 pt-4 border-t border-gray-100">
                     <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Scroll Depth</p>
                     <div className="h-2 bg-gray-100 rounded-full overflow-hidden flex">

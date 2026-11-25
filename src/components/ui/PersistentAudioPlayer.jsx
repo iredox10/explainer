@@ -20,7 +20,6 @@ export default function PersistentAudioPlayer({ text, title }) {
     // This prevents empty/placeholder players (like in MainLayout) from interfering
     // with active players by cancelling speech on unmount/re-render.
     if (!text) {
-      console.warn("PersistentAudioPlayer: No text received");
       return;
     }
 

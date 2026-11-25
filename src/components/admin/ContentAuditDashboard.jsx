@@ -57,7 +57,7 @@ export default function ContentAuditDashboard() {
                     });
                 }
                 
-                const content = story.content || [];
+                const content = Array.isArray(story.content) ? story.content : [];
                 const contentText = content
                     .filter(b => b.type === 'p' || b.type === 'heading')
                     .map(b => b.text || '')

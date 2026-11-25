@@ -1,5 +1,5 @@
 import { apiFetch, mediaUrl, unwrapDocuments, withQuery } from './api';
-export { analyticsService, useAnalytics } from './analytics';
+export { analyticsService, useAnalytics } from './readerMetrics';
 export { mediaService, useImageOptimizer } from './media';
 export { emailService, emailTemplates } from './email';
 export { commentService, assignmentService, notificationService, activityService, activityTypes } from './collaboration';

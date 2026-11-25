@@ -68,8 +68,6 @@ export default function AdminDashboard() {
 
     if (!user) return null;
 
-    const isSuper = user.role === ROLES.ADMIN;
-
     return (
         <div className="min-h-screen bg-transparent flex font-sans text-gray-900">
             <CommandMenu />
@@ -124,12 +122,17 @@ export default function AdminDashboard() {
                         </div>
 
                         <div className="flex-1 space-y-4 relative z-10 overflow-y-auto max-h-[300px] custom-scrollbar pr-2">
-                            {stories.filter(s => s.workflow_status === 'pending_review').length > 0 ? (
-                                stories.filter(s => s.workflow_status === 'pending_review').map((s) => (
+                            {isLoading ? (
+                                <div className="flex flex-col items-center justify-center py-10 opacity-50">
+                                    <Loader2 className="w-6 h-6 animate-spin text-[#FAFF00] mb-3" />
+                                    <p className="text-[10px] font-black uppercase tracking-widest">Loading Queue...</p>
+                                </div>
+                            ) : stories.filter(s => s.workflow_status === 'pending_review' || s.status === 'Pending Review').length > 0 ? (
+                                stories.filter(s => s.workflow_status === 'pending_review' || s.status === 'Pending Review').map((s) => (
                                     <div key={s.$id} className="p-4 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all cursor-pointer group" onClick={() => window.location.href = `/admin/edit/${s.$id}`}>
-                                        <h3 className="text-xs font-bold truncate group-hover:text-[#FAFF00] transition-colors">{s.headline}</h3>
+                                        <h3 className="text-xs font-bold truncate group-hover:text-[#FAFF00] transition-colors">{s.headline || 'Untitled Dispatch'}</h3>
                                         <div className="flex justify-between items-center mt-2">
-                                            <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">{s.author}</span>
+                                            <span className="text-[9px] font-black uppercase tracking-widest text-gray-500">{s.author || 'Unassigned'}</span>
                                             <ArrowUpRight className="w-3 h-3 text-[#FAFF00] opacity-0 group-hover:opacity-100 transition-all" />
                                         </div>
                                     </div>
@@ -236,6 +239,7 @@ export default function AdminDashboard() {
 }
 
 function formatActivityType(type) {
+    if (!type) return 'performed an action';
     const labels = {
         'story_created': 'created a story',
         'story_updated': 'updated a story',
@@ -247,12 +251,14 @@ function formatActivityType(type) {
         'user_invited': 'invited a user',
         'settings_updated': 'updated settings'
     };
-    return labels[type] || type.replace(/_/g, ' ');
+    return labels[type] || String(type).replace(/_/g, ' ');
 }
 
 function formatTimeAgo(timestamp) {
+    if (!timestamp) return '';
     const now = new Date();
     const then = new Date(timestamp);
+    if (Number.isNaN(then.getTime())) return '';
     const diff = Math.floor((now - then) / 1000);
     
     if (diff < 60) return 'now';

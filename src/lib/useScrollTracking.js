@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { analyticsService } from '../lib/analytics';
+import { analyticsService } from '../lib/readerMetrics';
 
 export function useScrollTracking(storyId, options = {}) {
     const {
