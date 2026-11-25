@@ -187,7 +187,10 @@ export default function SocialCardPreview({ article }) {
                         <div ref={cardRef} className="bg-[#050505]">
                             {format === 'portrait' ? (
                                 /* --- 4:5 EDITORIAL NEWS BANNER (BBC-INSPIRED, EXPLAINER COLORS) --- */
-                                <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#050505] select-none">
+                                <div
+                                    className="relative aspect-[4/5] w-full overflow-hidden bg-[#050505] select-none"
+                                    style={{ aspectRatio: '4 / 5' }}
+                                >
                                     {/* Full-bleed Photo */}
                                     <img
                                         src={safeHero}
@@ -250,7 +253,10 @@ export default function SocialCardPreview({ article }) {
                                 </div>
                             ) : (
                                 /* --- 1:1 SQUARE CARD --- */
-                                <div className="relative aspect-square w-full overflow-hidden">
+                                <div
+                                    className="relative aspect-square w-full overflow-hidden bg-[#050505] select-none"
+                                    style={{ aspectRatio: '1 / 1', minHeight: '420px' }}
+                                >
                                     <div className="absolute inset-0 z-0">
                                         <div className="absolute inset-0 bg-neutral-900" />
                                         <img
