@@ -899,7 +899,12 @@ export default function StoryEditor({ storyId }) {
                                     <label className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Scheduled Publish</label>
                                     <input
                                         type="datetime-local"
-                                        value={story.scheduledAt ? new Date(story.scheduledAt).toISOString().slice(0, 16) : ''}
+                                        value={(() => {
+                                            if (!story.scheduledAt) return '';
+                                            const d = new Date(story.scheduledAt);
+                                            if (Number.isNaN(d.getTime())) return '';
+                                            return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                                        })()}
                                         onChange={(e) => handleChange('scheduledAt', e.target.value ? new Date(e.target.value).toISOString() : null)}
                                         className="w-full bg-white border border-gray-100 p-4 rounded-2xl text-[10px] font-bold"
                                     />
@@ -951,7 +956,7 @@ export default function StoryEditor({ storyId }) {
                             </div>
                             <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-xl space-y-3">
                                 <p className="text-[#1a0dab] text-lg font-bold hover:underline cursor-pointer leading-tight">{story.headline || 'Your Headline Here'}</p>
-                                <p className="text-[#006621] text-xs">explainer.africa › {story.category.toLowerCase()} › {story.slug || '...'}</p>
+                                <p className="text-[#006621] text-xs">explainer.africa › {(story.category || 'general').toLowerCase()} › {story.slug || '...'}</p>
                                 <p className="text-gray-500 text-xs line-clamp-2">{story.subhead || 'No subhead provided. This will default to the first paragraph in search results.'}</p>
                             </div>
                         </section>
