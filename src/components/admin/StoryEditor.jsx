@@ -6,7 +6,7 @@ import ImageCropper from './ImageCropper';
 import SEOScorecard from './SEOScorecard';
 import RevisionDiff from './RevisionDiff';
 import SocialCardPreview from '../ui/SocialCardPreview';
-import { getCurrentUser, ROLES } from '../../lib/authStore';
+import { getCurrentUser, fetchSyncUser, ROLES } from '../../lib/authStore';
 import { storyService, categoryService, authorService } from '../../lib/services';
 
 export default function StoryEditor({ storyId }) {
@@ -127,16 +127,20 @@ export default function StoryEditor({ storyId }) {
     }, [autoSaveEnabled, story, isLocked, isDirty, saveStatus, storyId]);
 
     useEffect(() => {
-        const u = getCurrentUser();
-        if (!u) {
-            window.location.href = '/admin/login';
-            return;
-        }
-        setUser(u);
-        loadStory(u);
-        fetchCategories();
-        fetchAuthors();
-        fetchPublishedStories();
+        const init = async () => {
+            let u = getCurrentUser();
+            if (!u) u = await fetchSyncUser();
+            if (!u) {
+                window.location.href = '/admin/login';
+                return;
+            }
+            setUser(u);
+            loadStory(u);
+            fetchCategories();
+            fetchAuthors();
+            fetchPublishedStories();
+        };
+        init();
     }, [storyId]);
 
     useEffect(() => {
@@ -216,7 +220,7 @@ export default function StoryEditor({ storyId }) {
                 content: JSON.stringify([{ id: 1, type: "p", text: "" }]),
                 scrollySections: JSON.stringify([]),
                 heroImage: "",
-                version_log: JSON.stringify([{ action: "Dispatch Created", user: currentUser.name, timestamp: new Date().toISOString() }])
+                version_log: [{ action: "Dispatch Created", user: currentUser.name, timestamp: new Date().toISOString() }]
             });
         } else {
             const data = await storyService.getStoryById(storyId);
@@ -453,7 +457,7 @@ export default function StoryEditor({ storyId }) {
         window._currentUploadTarget = null;
     };
 
-    const performSave = async (newStatus) => {
+    const performSave = async (newStatus, { redirect = true } = {}) => {
         setSaveStatus('saving');
         try {
             const serializedContent = typeof story.content === 'string' ? story.content : JSON.stringify(story.content || []);
@@ -524,7 +528,7 @@ export default function StoryEditor({ storyId }) {
             setIsDirty(false);
             setSaveStatus('saved');
             setTimeout(() => setSaveStatus('idle'), 3000);
-            if (storyId === 'new-story') window.location.href = `/admin/edit/${result.$id}`;
+            if (redirect && storyId === 'new-story') window.location.href = `/admin/edit/${result.$id}`;
             return result;
         } catch (e) {
             setSaveStatus('idle');
@@ -550,15 +554,19 @@ export default function StoryEditor({ storyId }) {
 
     const handlePreview = async () => {
         let currentId = storyId;
-        if (isDirty || storyId === 'new-story') {
+        const isNew = storyId === 'new-story';
+        if (isDirty || isNew) {
             try {
-                const saved = await performSave(story.workflow_status);
+                const saved = await performSave(story.workflow_status, { redirect: false });
                 currentId = saved.$id;
             } catch (e) {
                 return;
             }
         }
         window.open(`/admin/preview/${currentId}`, '_blank');
+        if (isNew && currentId && currentId !== 'new-story') {
+            window.location.href = `/admin/edit/${currentId}`;
+        }
     };
 
     return (

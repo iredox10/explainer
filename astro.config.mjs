@@ -12,6 +12,7 @@ export default defineConfig({
     adapter: netlify({
         imageCDN: process.env.NETLIFY === 'true',
         devFeatures: {
+            environmentVariables: false,
             images: false,
         },
     }),
