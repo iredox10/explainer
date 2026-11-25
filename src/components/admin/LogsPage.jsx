@@ -25,16 +25,19 @@ export default function LogsPage() {
         setIsLoading(true);
         try {
             const rawLogs = await logService.getSystemLogs();
-            const mappedLogs = rawLogs.map(l => ({
-                id: l.$id,
-                action: l.event.split('.').pop().toUpperCase(),
-                user: `${l.ip} (${l.countryName || 'Global'})`,
-                time: new Date(l.time).toLocaleDateString() + ' ' + new Date(l.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                level: l.event.includes('delete') || l.event.includes('failure') ? 'warning' :
-                    l.event.includes('create') ? 'success' : 'info',
-                detail: `Client: ${l.clientName} on ${l.osName} (${l.deviceModel || 'Desktop'})`,
-                icon: l.event.includes('session') ? <Terminal className="w-3 h-3" /> : <Shield className="w-3 h-3" />
-            }));
+            const mappedLogs = rawLogs.map(l => {
+                const eventName = String(l.event || 'system.event');
+                return {
+                    id: l.$id,
+                    action: eventName.split('.').pop().toUpperCase(),
+                    user: `${l.ip || '127.0.0.1'} (${l.countryName || 'Global'})`,
+                    time: l.time ? new Date(l.time).toLocaleDateString() + ' ' + new Date(l.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+                    level: eventName.includes('delete') || eventName.includes('failure') ? 'warning' :
+                        eventName.includes('create') ? 'success' : 'info',
+                    detail: `Client: ${l.clientName || 'Unknown'} on ${l.osName || 'Unknown'} (${l.deviceModel || 'Desktop'})`,
+                    icon: eventName.includes('session') ? <Terminal className="w-3 h-3" /> : <Shield className="w-3 h-3" />
+                };
+            });
             setLogs(mappedLogs);
         } catch (e) {
             console.error(e);

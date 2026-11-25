@@ -8,10 +8,10 @@ export async function GET(context) {
     title: 'Explainer',
     description: 'In-depth investigative journalism and visual storytelling.',
     site: context.site,
-    items: stories.map((story) => ({
-      title: story.headline,
-      pubDate: new Date(story.publishedAt || story.$createdAt),
-      description: story.subhead,
+    items: (stories || []).map((story) => ({
+      title: story.headline || 'Untitled',
+      pubDate: new Date(story.publishedAt || story.$createdAt || Date.now()),
+      description: story.subhead || '',
       link: `/article/${story.slug}/`,
     })),
     customData: `<language>en-us</language>`,

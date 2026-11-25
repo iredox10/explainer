@@ -38,8 +38,8 @@ export default function AdminsPage() {
       setCategories(categoryData);
 
       // Filter: Show members who are in the team but haven't created a profile yet
-      const activeEmails = new Set(profileData.map(p => p.email.toLowerCase()));
-      const pending = membershipData.filter(m => !activeEmails.has(m.userEmail.toLowerCase()));
+      const activeEmails = new Set(profileData.filter(p => p.email).map(p => p.email.toLowerCase()));
+      const pending = membershipData.filter(m => m.userEmail && !activeEmails.has(m.userEmail.toLowerCase()));
 
       setInvitations(pending);
     } catch (e) {

@@ -58,7 +58,7 @@ const author = {
 };
 
 const avatarUrl =
-  author.imageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author.name}`;
+  author.imageUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(author.name)}`;
 ---
 
 <MainLayout 

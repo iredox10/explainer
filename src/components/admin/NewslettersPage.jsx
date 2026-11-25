@@ -27,7 +27,7 @@ export default function NewslettersPage() {
     const fetchSubscribers = async () => {
         try {
             const response = await newsletterService.getSubscribers(500);
-            setSubscribers(response.documents);
+            setSubscribers(response?.documents || []);
         } catch (error) {
             console.error('Error fetching subscribers:', error);
         } finally {

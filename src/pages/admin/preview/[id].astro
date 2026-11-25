@@ -2,6 +2,8 @@
 import { serverStoryService } from "../../../lib/server-appwrite.js";
 import ScrollyTemplate from "../../../components/templates/ScrollyTemplate.astro";
 import StandardTemplate from "../../../components/templates/StandardTemplate.astro";
+import BriefingTemplate from "../../../components/templates/BriefingTemplate.astro";
+import PhotoGalleryTemplate from "../../../components/templates/PhotoGalleryTemplate.astro";
 import "../../../styles/base.css";
 import "../../../styles/global.css";
 
@@ -33,6 +35,10 @@ if (!story) {
     {
         story.layout === "scrolly" ? (
             <ScrollyTemplate story={story} />
+        ) : story.layout === "briefing" ? (
+            <BriefingTemplate story={story} />
+        ) : story.layout === "photo" ? (
+            <PhotoGalleryTemplate story={story} />
         ) : (
             <StandardTemplate story={story} />
         )

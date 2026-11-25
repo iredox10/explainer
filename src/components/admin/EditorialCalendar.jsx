@@ -81,7 +81,7 @@ export default function EditorialCalendar({ onSelectStory }) {
     const getItemsForDate = (date) => {
         if (!date) return [];
         
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         const items = [];
 
         stories.forEach(story => {
