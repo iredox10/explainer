@@ -117,13 +117,14 @@ export default function CommandMenu() {
             className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[200]"
           />
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            transition={{ duration: 0.2 }}
-            className="fixed top-[20%] left-1/2 -translate-x-1/2 w-full max-w-2xl bg-white shadow-2xl rounded-xl overflow-hidden z-[201] border border-gray-200 font-sans"
-          >
+          <div className="fixed inset-0 z-[201] flex items-start justify-center pt-[15vh] px-4 pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -20 }}
+              transition={{ duration: 0.2 }}
+              className="pointer-events-auto w-full max-w-2xl bg-white shadow-2xl rounded-xl overflow-hidden border border-gray-200 font-sans"
+            >
             <div className="flex items-center border-b border-gray-100 px-4 py-4">
               <Search className="w-5 h-5 text-gray-400 mr-3" />
               <input
@@ -231,7 +232,8 @@ export default function CommandMenu() {
               </div>
               <span>Explainer Live Intelligence</span>
             </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>
