@@ -5,13 +5,13 @@ interface Props {
     title: string;
     seriesName: string;
     duration: string;
+    slug?: string;
     thumbUrl?: string;
   }[];
 }
 
 const { videos } = Astro.props;
-const FALLBACK_THUMB =
-  "https://images.unsplash.com/photo-1585829365294-111320e7588e?w=800&q=80";
+const FALLBACK_THUMB = "/social-preview.jpg";
 ---
 
 <section class="bg-[#121212] text-white py-24 relative overflow-hidden">
@@ -33,7 +33,7 @@ const FALLBACK_THUMB =
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
       {videos.map((video) => (
-        <article class="group cursor-pointer flex flex-col">
+        <article class="group cursor-pointer flex flex-col relative">
           <!-- Thumbnail Container -->
           <div class="relative aspect-[16/9] bg-gray-900 mb-6 overflow-hidden">
             <Image 
@@ -69,7 +69,13 @@ const FALLBACK_THUMB =
             </div>
             
             <h3 class="text-xl font-bold leading-tight text-white group-hover:text-yellow-400 transition-colors duration-300">
-              {video.title}
+              {video.slug ? (
+                <a href={`/article/${video.slug}`} class="before:absolute before:inset-0">
+                  {video.title}
+                </a>
+              ) : (
+                video.title
+              )}
             </h3>
           </div>
         </article>

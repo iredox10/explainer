@@ -107,14 +107,14 @@ const sortedCategories = Object.keys(categoriesWithStories).sort(
 
 // Trending: Use any featured stories or just the latest 5
 const trending = (publishedStories.length > 0 
-    ? publishedStories.slice(0, 5).map(s => s.headline || s.title)
+    ? publishedStories.slice(0, 5).map(s => ({ title: s.headline || s.title, slug: s.slug }))
     : [
-    "The case for abolishing the penny",
-    "Why everyone is playing this word game",
-    "How to sleep better",
-    "The future of electric planes",
-    "Why coffee is getting more expensive",
-]) as string[];
+    { title: "The case for abolishing the penny", slug: null },
+    { title: "Why everyone is playing this word game", slug: null },
+    { title: "How to sleep better", slug: null },
+    { title: "The future of electric planes", slug: null },
+    { title: "Why coffee is getting more expensive", slug: null },
+]);
 
 // Videos: Filter stories that have videoUrl
 const liveVideos = publishedStories
@@ -123,7 +123,8 @@ const liveVideos = publishedStories
         title: s.headline || s.title,
         seriesName: s.category,
         duration: "Live",
-        thumbUrl: s.heroImage || s.imageUrl || 'https://images.unsplash.com/photo-1585829365294-111320e7588e?w=800&q=80'
+        slug: s.slug,
+        thumbUrl: s.heroImage || s.imageUrl || '/social-preview.jpg'
     }));
 
 const displayVideos = liveVideos.length > 0 ? liveVideos : VOX_HOME_DATA.videos;
@@ -189,9 +190,15 @@ const displayVideos = liveVideos.length > 0 ? liveVideos : VOX_HOME_DATA.videos;
                                     <div class="text-[4rem] font-serif-display font-black text-gray-200 group-hover:text-black transition-colors leading-[0.8] mb-2 -ml-1">
                                         0{i + 1}
                                     </div>
-                                    <div class="text-base font-bold leading-snug text-gray-800 group-hover:text-black transition-colors">
-                                        {item}
-                                    </div>
+                                    {item.slug ? (
+                                        <a href={`/article/${item.slug}`} class="block text-base font-bold leading-snug text-gray-800 group-hover:text-black transition-colors before:absolute before:inset-0">
+                                            {item.title}
+                                        </a>
+                                    ) : (
+                                        <div class="text-base font-bold leading-snug text-gray-800 group-hover:text-black transition-colors">
+                                            {item.title}
+                                        </div>
+                                    )}
                                 </div>
                             ))
                         }
@@ -273,7 +280,7 @@ const displayVideos = liveVideos.length > 0 ? liveVideos : VOX_HOME_DATA.videos;
                                 categoriesWithStories[catName].slice(0, 3).map((s: any, i: number) => (
                                     <article class={`group relative flex flex-col justify-end overflow-hidden rounded-3xl bg-black shadow-lg hover:shadow-2xl transition-all duration-500 ${i === 0 ? 'md:col-span-2 aspect-[4/3] md:aspect-[16/10]' : 'md:col-span-1 aspect-[4/5] md:aspect-[3/4]'}`}>
                                         <Image
-                                            src={s.heroImage || s.imageUrl || 'https://images.unsplash.com/photo-1585829365294-111320e7588e?w=800&q=80'}
+                                            src={s.heroImage || s.imageUrl || '/social-preview.jpg'}
                                             alt={s.headline || s.title}
                                             width={i === 0 ? 1000 : 500}
                                             height={i === 0 ? 600 : 650}

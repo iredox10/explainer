@@ -36,7 +36,7 @@ export default function NewsletterForm() {
 
     if (status === 'success') {
         return (
-            <div className="bg-black/5 p-8 rounded-2xl border border-black/5 animate-in zoom-in duration-500">
+            <div className="bg-white text-black p-8 rounded-2xl border border-black/5 animate-in zoom-in duration-500">
                 <div className="flex flex-col items-center text-center space-y-4">
                     <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center">
                         <CheckCircle className="w-8 h-8 text-[#FAFF00]" />
