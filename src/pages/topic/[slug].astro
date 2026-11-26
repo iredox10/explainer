@@ -166,9 +166,9 @@ const leadHeroImage = displayStories[0]?.heroImage || displayStories[0]?.imageUr
     }).replace(/</g, '\\u003c')}
   />
   <main class="min-h-screen bg-[#fdfdfd]">
-    {/* Redesigned Editorial Section Masthead */}
+    {/* Compact Editorial Section Masthead */}
     <section
-      class={`w-full pt-14 pb-16 md:pt-20 md:pb-24 px-6 relative overflow-hidden border-b-8 ${isDarkHeader ? "border-[#FAFF00]" : "border-black"}`}
+      class={`w-full py-8 md:py-11 px-6 relative overflow-hidden border-b-4 ${isDarkHeader ? "border-[#FAFF00]" : "border-black"}`}
       style={{ backgroundColor: color }}
     >
       {/* Atmospheric Backdrop: Lead Story Image + Radial Glow + Subtle Grid */}
@@ -190,21 +190,21 @@ const leadHeroImage = displayStories[0]?.heroImage || displayStories[0]?.imageUr
         </div>
       )}
       <div
-        class="absolute -top-32 -right-32 w-[520px] h-[520px] rounded-full blur-[140px] pointer-events-none opacity-25"
+        class="absolute -top-24 -right-24 w-[360px] h-[360px] rounded-full blur-[110px] pointer-events-none opacity-25"
         style={{ backgroundColor: isDarkHeader ? "#FAFF00" : accent }}
       />
       <div
         class="absolute inset-0 pointer-events-none opacity-[0.06]"
-        style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 24px 24px;"
+        style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 20px 20px;"
       />
 
-      <div class="max-w-[1400px] mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-end">
+      <div class="max-w-[1400px] mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
         {/* Left: Editorial Title & Deck */}
         <div class="lg:col-span-8">
-          <div class="flex flex-wrap items-center gap-3 mb-7">
+          <div class="flex flex-wrap items-center gap-2.5 mb-3.5">
             <a
               href="/"
-              class={`text-[10px] font-black uppercase tracking-[0.25em] px-3 py-1 rounded-full border transition-colors ${
+              class={`text-[9px] font-black uppercase tracking-[0.25em] px-2.5 py-0.5 rounded-full border transition-colors ${
                 isDarkHeader
                   ? "border-white/20 text-white/70 hover:text-[#FAFF00] hover:border-[#FAFF00]"
                   : "border-black/20 text-black/70 hover:text-black hover:border-black"
@@ -213,38 +213,38 @@ const leadHeroImage = displayStories[0]?.heroImage || displayStories[0]?.imageUr
               Explainer
             </a>
             <span class={`text-xs ${isDarkHeader ? "text-white/30" : "text-black/30"}`}>/</span>
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FAFF00] text-black">
-              <span class="w-2 h-2 rounded-full bg-black animate-pulse"></span>
-              <span class="font-black uppercase tracking-[0.22em] text-[10px]">Section</span>
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FAFF00] text-black">
+              <span class="w-1.5 h-1.5 rounded-full bg-black animate-pulse"></span>
+              <span class="font-black uppercase tracking-[0.22em] text-[9px]">Section</span>
             </div>
           </div>
 
           <h1
-            class={`font-serif-display font-black text-5xl sm:text-7xl md:text-8xl lg:text-[7.5rem] mb-6 ${headerText} tracking-tighter leading-[0.88]`}
+            class={`font-serif-display font-black text-4xl sm:text-5xl md:text-6xl mb-3 ${headerText} tracking-tighter leading-[0.92]`}
           >
             {title}
           </h1>
 
           <div
-            class={`pl-5 border-l-4 max-w-2xl`}
+            class="pl-4 border-l-4 max-w-2xl"
             style={{ borderColor: isDarkHeader ? "#FAFF00" : "#000000" }}
           >
             <p
-              class={`text-xl md:text-2xl font-serif ${isDarkHeader ? "text-white/85" : "text-black/85"} text-balance leading-snug`}
+              class={`text-base md:text-lg font-serif ${isDarkHeader ? "text-white/85" : "text-black/85"} text-balance leading-snug`}
             >
               {description}
             </p>
           </div>
 
           {relatedTopics.length > 0 && (
-            <div class="mt-8 flex flex-wrap items-center gap-2">
-              <span class={`text-[10px] font-black uppercase tracking-[0.22em] mr-2 ${isDarkHeader ? "text-white/45" : "text-black/50"}`}>
+            <div class="mt-4 flex flex-wrap items-center gap-1.5">
+              <span class={`text-[9px] font-black uppercase tracking-[0.22em] mr-1.5 ${isDarkHeader ? "text-white/45" : "text-black/50"}`}>
                 Also Explore:
               </span>
               {relatedTopics.map((topic) => (
                 <a
                   href={`/topic/${topic.slug}`}
-                  class={`text-[10px] font-black uppercase tracking-[0.18em] px-3 py-1.5 rounded-full transition-all ${
+                  class={`text-[9px] font-black uppercase tracking-[0.18em] px-2.5 py-1 rounded-full transition-all ${
                     isDarkHeader
                       ? "bg-white/10 text-white hover:bg-[#FAFF00] hover:text-black"
                       : "bg-black/10 text-black hover:bg-black hover:text-[#FAFF00]"
@@ -257,33 +257,33 @@ const leadHeroImage = displayStories[0]?.heroImage || displayStories[0]?.imageUr
           )}
         </div>
 
-        {/* Right: Live Section Intelligence Card */}
+        {/* Right: Compact Desk Summary Card */}
         <div class="lg:col-span-4">
           <div
-            class={`rounded-3xl p-6 md:p-7 backdrop-blur-xl border shadow-2xl ${
+            class={`rounded-2xl p-4 md:p-5 backdrop-blur-xl border shadow-xl ${
               isDarkHeader
                 ? "bg-white/[0.06] border-white/15 text-white"
                 : "bg-white/85 border-black/15 text-black"
             }`}
           >
-            <div class="flex items-center justify-between pb-4 mb-4 border-b border-current/10">
-              <span class={`text-[10px] font-black uppercase tracking-[0.25em] ${isDarkHeader ? "text-[#FAFF00]" : "text-black/60"}`}>
+            <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-current/10">
+              <span class={`text-[9px] font-black uppercase tracking-[0.25em] ${isDarkHeader ? "text-[#FAFF00]" : "text-black/60"}`}>
                 Desk Summary
               </span>
-              <span class={`text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full ${isDarkHeader ? "bg-[#FAFF00] text-black" : "bg-black text-[#FAFF00]"}`}>
+              <span class={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${isDarkHeader ? "bg-[#FAFF00] text-black" : "bg-black text-[#FAFF00]"}`}>
                 {categoryStories.length} {categoryStories.length === 1 ? "Dispatch" : "Dispatches"}
               </span>
             </div>
 
             {displayStories[0] && (
               <a href={`/article/${displayStories[0].slug}`} class="group block">
-                <p class={`text-[9px] font-black uppercase tracking-[0.22em] mb-2 ${isDarkHeader ? "text-white/50" : "text-black/50"}`}>
+                <p class={`text-[8px] font-black uppercase tracking-[0.22em] mb-1 ${isDarkHeader ? "text-white/50" : "text-black/50"}`}>
                   Lead Investigation
                 </p>
-                <p class={`font-serif-display font-bold text-lg leading-snug mb-3 group-hover:underline ${isDarkHeader ? "group-hover:text-[#FAFF00]" : ""}`}>
+                <p class={`font-serif-display font-bold text-base leading-snug mb-2 line-clamp-2 group-hover:underline ${isDarkHeader ? "group-hover:text-[#FAFF00]" : ""}`}>
                   {displayStories[0].headline || displayStories[0].title}
                 </p>
-                <div class={`flex items-center justify-between text-[10px] font-black uppercase tracking-widest ${isDarkHeader ? "text-[#FAFF00]" : "text-black"}`}>
+                <div class={`flex items-center justify-between text-[9px] font-black uppercase tracking-widest ${isDarkHeader ? "text-[#FAFF00]" : "text-black"}`}>
                   <span>By {displayStories[0].author || "Staff"}</span>
                   <span class="group-hover:translate-x-1 transition-transform">Read →</span>
                 </div>
@@ -294,16 +294,16 @@ const leadHeroImage = displayStories[0]?.heroImage || displayStories[0]?.imageUr
       </div>
 
       {/* Subtle Oversized Watermark */}
-      <div class="absolute -bottom-16 -right-8 opacity-[0.04] pointer-events-none select-none">
-        <span class={`font-serif-display font-black text-[18rem] leading-none ${headerText} whitespace-nowrap block`}>
+      <div class="absolute -bottom-8 -right-6 opacity-[0.04] pointer-events-none select-none">
+        <span class={`font-serif-display font-black text-[10rem] leading-none ${headerText} whitespace-nowrap block`}>
           {title}
         </span>
       </div>
     </section>
 
-    <div class="max-w-[1400px] mx-auto px-6 py-16 md:py-24">
+    <div class="max-w-[1400px] mx-auto px-6 py-10 md:py-12">
       {displayStories.length > 0 && (
-        <div class="mb-24">
+        <div class="mb-16">
             <div class="flex items-center justify-between mb-8 border-b-4 border-black pb-4">
                 <h2 class="text-3xl md:text-4xl font-serif-display font-black text-black tracking-tighter">
                     Featured
